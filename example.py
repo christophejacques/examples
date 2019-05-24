@@ -205,7 +205,57 @@ def exemple13():
             print("%d est un nombre parfait" % x)
 
 
-exemple13()
+def exemple14():
+    """
+    Tests des Fonctions sur liste
+    :return:
+    """
+    couleurs = ["red", "green", "blue", "yellow", "green"]
+    print("Liste : ", couleurs)
+    print("Taille de la liste : {0}".format(couleurs.__len__()))
+
+    s = "blue"
+    print("Position de '%s' : %d" % (s, couleurs.index(s)))
+
+    s = "orange"
+    couleurs.append("orange")
+    print("Ajout de la valeur '%s' dans la liste : " % s, couleurs)
+
+    couleurs.pop(0)
+    print("Suppression du premier élément de la liste : ", couleurs)
+
+    couleurs.pop()
+    print("Suppression du dernier élément de la liste : ", couleurs)
+
+    s = "green"
+    print("Compte le nombre de '%s' dans la liste : %d" % (s, couleurs.count(s)))
+
+    l = ["pink", "red", "marron"]
+    couleurs.extend(l)
+    print("Ajout de la liste %s : " % l, couleurs)
+
+    print("Extraction d'une partir de la liste [1:4:2] : ", couleurs[1:4:2])
+
+    if True:
+        lf = []
+        lf.append(lambda x : 0)
+        lf.append(lambda x : x)
+        lf.append(lambda x : 2 * x)
+        lf.append(lambda x : 3 * x)
+        lf.append(lambda x : 4 * x)
+    else:
+        lf = [(lambda y: y * x) for x in range(5)]
+
+    print("Fabrication liste par fonction x*y :")
+    taille = len(lf)
+    for i, f in enumerate(lf):
+        print("Table des %d =" % i, [f(x) for x in range(10)])
+
+    couleurs.clear()
+    print("Suppression du contenu de la liste : ", couleurs)
+
+
+exemple14()
 
 
 # -------------------------------------------------------------------------------------------------------------------
