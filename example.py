@@ -238,6 +238,7 @@ def exemple14():
 
     if True:
         lf = []
+
         lf.append(lambda x : 0)
         lf.append(lambda x : x)
         lf.append(lambda x : 2 * x)
