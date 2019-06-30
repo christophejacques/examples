@@ -156,11 +156,11 @@ def exemple9():
     pere.faitBebeAvec(fille, mere)
 
     fille = Femme("BERNARD","Claudine")
-    fille.faitBebeAvec(Homme("FOURTOU", "Fabrice"))
+    fille.faitBebeAvec(Homme("FOURTOU", "Fabrice"), Homme("FOURTOU", "Claumi"))
     pere.faitBebeAvec(fille, mere)
 
     fille = Femme("BERNARD","Brigitte")
-    fille.faitBebeAvec(Homme("JACQUES", "Christophe"))
+    fille.faitBebeAvec(Homme("JACQUES", "Christophe"), Homme("JACQUES", "Jean-Claude"))
     pere.faitBebeAvec(fille, mere)
 
 #    pere.printIdentite()
@@ -170,11 +170,11 @@ def exemple9():
 def exemple10():
     for x in range(1, 100):
 
-        lsTNbPremiers = decomposePremiers(x)
-        if len(lsTNbPremiers) == 1:
+        listeNombresPremiers = decomposePremiers(x)
+        if len(listeNombresPremiers) == 1:
             print("%d est un nombre premier" % x)
         else:
-            print(x, "=>", lsTNbPremiers)
+            print(x, "=>", listeNombresPremiers)
 
 
 def exemple11():
@@ -256,7 +256,7 @@ def exemple14():
     print("Suppression du contenu de la liste : ", couleurs)
 
 
-exemple14()
+exemple13()
 
 
 # -------------------------------------------------------------------------------------------------------------------
