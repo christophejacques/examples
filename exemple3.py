@@ -8,7 +8,7 @@ def fonction(*args):
 
 
 def createTable(nomTable, listeChamps):
-    print(f"Création de la table *{nomTable}*")
+    print(f"Création de la table *{nomTable}*", end="")
     tableStr = f"CREATE TABLE {nomTable} (\n"
     for nomchamp, typeChamp in listeChamps[:-1]:
         tableStr += f"    {nomchamp} {typeChamp},\n"
@@ -18,6 +18,8 @@ def createTable(nomTable, listeChamps):
 
     with conn:
         c.execute(tableStr)
+
+    print(" => table créée")
 
 
 def getDatas(sqlCode):
@@ -39,15 +41,17 @@ def insertData(nomTable, *donnees):
     insertColsNames += f":{nomChamp})"
     insertColsValues.append(valeurChamp)
 
-    print(insertColsNames, insertColsValues)
+    print(insertColsNames, insertColsValues, end="")
 
     with conn:
         c.execute(insertColsNames, insertColsValues)
 
+    print(" => OK")
+
 
 # conn = sqlite3.connect("basededonnees.db")
 conn = sqlite3.connect(":memory:")
-print("database ouverte")
+print("database ouverte en mémoire")
 
 c = conn.cursor()
 
@@ -56,7 +60,46 @@ createTable("personnes",[("nom", "text"), ("prenom","text"), ("datedenaissance",
 insertData("personnes", ("nom", "JACQUES"), ("prenom", "christophe"), ("datedenaissance", "1971-09-02"))
 insertData("personnes", ("nom", "BERNARD"), ("prenom", "brigitte"), ("datedenaissance", "1951-09-16"))
 
-print(getDatas("select * from personnes"))
+for enreg in getDatas("select * from personnes"):
+    print(enreg)
 
 conn.close()
 print("database fermée")
+
+print()
+
+
+import math
+
+
+def monPrint(chaine):
+    l = chaine[1:]
+    print(l)
+
+
+class Polynome:
+    def __init__(self, *coef):
+        self.coef = coef
+        print(coef)
+
+    def __repr__(self):
+        return "Polynome{!r}".format(self.coef)
+
+    def __add__(self, other):
+        return Polynome(*(x+y for x, y in zip(self.coef, other.coef)))
+
+    def __call__(self, *args, **kwargs):
+        somme = 0
+        for p, d in enumerate(reversed(self.coef)):
+            somme += d * math.pow(args[0], p)
+
+        return somme
+
+
+a=Polynome(1, 2, 3)
+b=Polynome(4, -1, 2)
+c=a+b
+print(a)
+print(b)
+print(c)
+print("a(2)=", a(2))
