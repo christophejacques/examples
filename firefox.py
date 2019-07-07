@@ -53,6 +53,10 @@ def wait_for_element(source, type_element, nom_element, continu = True):
 
             found = True
 
+
+        except BaseException:
+            raise
+
         except:
             msg = "{:%Y%m%d-%H%M%S}_wait_elt_{}-{}_n_{}.png"\
                 .format(datetime.datetime.now(), type_element, nom_element, loop_count)
