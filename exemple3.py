@@ -1,5 +1,6 @@
 import sqlite3
-onction(*args):
+
+def fonction(*args):
     print(f"fonction(*args): avec {len(args)} arguments")
 
     for i, arg in enumerate(args):
