@@ -10,6 +10,7 @@ def fonction(*args):
 def createTable(nomTable, listeChamps):
     print(f"Création de la table *{nomTable}*", end="")
     tableStr = f"CREATE TABLE {nomTable} (\n"
+
     for nomchamp, typeChamp in listeChamps[:-1]:
         tableStr += f"    {nomchamp} {typeChamp},\n"
 

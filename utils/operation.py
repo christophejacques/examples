@@ -75,5 +75,9 @@ def suppressionDoublons(liste):
 
     return liste
 
-# print(suppressionDoublons([1, 2, 2, 3]) )
-# print( decomposeDiviseurs(2) )
+
+l = [1, 2, 2, 3]
+# print(suppressionDoublons(l) )
+# print(list(set(l)))
+# print( decomposeDiviseurs(200) )
+# print( decomposePremiers(32119) )

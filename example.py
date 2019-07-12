@@ -1,11 +1,11 @@
 __author__ = "JACQUES Christophe"
 
-import time
 from utils.operation import *
 from utils.personnes import Homme, Femme
 # from utils.robot import *
+from datetime import datetime
 
-debut = time.perf_counter()
+debut = datetime.now()
 print()
 
 if __name__ != '__main__':
@@ -261,5 +261,5 @@ exemple13()
 
 # -------------------------------------------------------------------------------------------------------------------
 print()
-fin = time.perf_counter()
-print("Duree = %f micro sec" % ((fin - debut) * 1000000))
+fin = datetime.now()
+print("Duree = " , fin - debut)

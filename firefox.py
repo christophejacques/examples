@@ -72,7 +72,7 @@ def wait_for_element(source, type_element, nom_element, continu = True):
 
 
 num_page = 1
-max_page = 3
+max_page = 2
 
 try:
     while num_page < max_page:
@@ -100,8 +100,7 @@ try:
 
 except:
     print("erreur detectee !")
-    driver.close()
     raise
 
-
-driver.close()
+finally:
+    driver.close()
