@@ -46,8 +46,8 @@ class Polynome:
         return somme
 
 
-a = Polynome(0, 2, 3)
-b = Polynome(-1, -2)
+a = Polynome(2, 2, 3)
+b = Polynome(-3, -1)
 c = a + b
 
 print(a)
