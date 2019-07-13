@@ -1,8 +1,18 @@
 class mon_iterateur:
 
-    def __init__(self, debut, fin):
-        self.debut = debut
-        self.fin = fin
+    def __init__(self, debut, fin=None):
+        if type(debut) != int:
+            raise TypeError("Le 1er paramêtre n'est pas de type Entier")
+
+        if fin != None and type(fin) != int:
+            raise TypeError("Le 2ème paramêtre n'est pas de type Entier")
+
+        if fin == None:
+            self.debut = 1
+            self.fin = debut
+        else:
+            self.debut = debut
+            self.fin = fin
 
     def __iter__(self):
         return self
@@ -16,21 +26,29 @@ class mon_iterateur:
         return courant
 
 
-print("Iterateur :", end="")
-mi = mon_iterateur(3, 6)
-for i in mi:
-    print(i," ", end="")
+def mon_generateur(debut, fin=None):
+    if type(debut) != int:
+        raise TypeError("Le 1er paramêtre n'est pas de type Entier")
 
+    if fin != None and type(fin) != int:
+        raise TypeError("Le 2ème paramêtre n'est pas de type Entier")
 
-def mon_generateur(debut, fin):
+    if fin == None:
+        fin = debut
+        debut = 1
+
     valeur = debut
     while valeur <= fin:
         yield valeur
         valeur += 1
 
-print()
-print("Générateur :", end="")
 
-for g in mon_generateur(4, 8):
+print("Iterateur : ", end="")
+for i in mon_iterateur(4):
+    print(i, " ", end="")
+
+print("\nGénérateur : ", end="")
+for g in mon_generateur(4):
     print(g, " ", end="")
+
 print()
