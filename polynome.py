@@ -1,4 +1,9 @@
 # content:UTF-8
+import itertools
+
+
+def nz(val, sinone):
+    return sinone if val == None else val
 
 
 class Polynome:
@@ -8,7 +13,7 @@ class Polynome:
     def __repr__(self):
         s = ""
         signe = ""
-        for i, coef in enumerate(reversed(self.coef)):
+        for i, coef in enumerate(self.coef):
             if coef == 0:
                 continue
 
@@ -31,18 +36,18 @@ class Polynome:
         return "f(x) = " + s
 
     def __add__(self, other):
-        return Polynome(*(x+y for x, y in zip(self.coef, other.coef)))
+        return Polynome(*(nz(x, 0)+nz(y, 0) for x, y in itertools.zip_longest(self.coef, other.coef)))
 
     def __call__(self, *args, **kwargs):
         somme = 0
-        for p, d in enumerate(reversed(self.coef)):
+        for p, d in enumerate(self.coef):
             somme += d * pow(args[0], p)
 
         return somme
 
 
 a = Polynome(0, 2, 3)
-b = Polynome(-1, 0, -2)
+b = Polynome(-1, -2)
 c = a + b
 
 print(a)
@@ -50,4 +55,3 @@ print(b)
 print(c)
 
 print("a(2)=", a(2))
-print(type(a))
