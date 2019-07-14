@@ -73,9 +73,16 @@ class monsql:
 
     def getDatas(self, sqlCode):
         print(f"getDatas({sqlCode}) : ", end="")
-        self.curs.execute(sqlCode)
-        res = self.curs.fetchall()
-        print(f"{len(res)} enregs")
+        res = ()
+        try:
+            self.curs.execute(sqlCode)
+            res = self.curs.fetchall()
+            print(f"{len(res)} enregs")
+        except:
+            errcls, errlib, errobj = sys.exc_info()
+            print(f"{errcls}".split("'")[1] + " :")
+            print(f" - ligne {errobj.tb_lineno} : {errlib}")
+
         return res
 
     def deleteData(self, nomTable, *conditions):
