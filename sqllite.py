@@ -23,6 +23,9 @@ class monsql:
             self.conn = None
             print(f"Ko ({e})")
 
+        except Exception as e:
+            print(f"Err ({e})")
+
     def __enter__(self):
         return self
 

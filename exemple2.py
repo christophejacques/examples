@@ -4,7 +4,7 @@ print("start timer...")
 td = datetime.now()
 
 
-# definition d'un decoreur
+# definition d'un decorateur
 def fdebugger(fonction):
 
     def methode(*args, **kvargs):

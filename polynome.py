@@ -38,6 +38,9 @@ class Polynome:
     def __add__(self, other):
         return Polynome(*(nz(x, 0)+nz(y, 0) for x, y in itertools.zip_longest(self.coef, other.coef)))
 
+    def __sub__(self, other):
+        return Polynome(*(nz(x, 0)-nz(y, 0) for x, y in itertools.zip_longest(self.coef, other.coef)))
+
     def __call__(self, *args, **kwargs):
         somme = 0
         for p, d in enumerate(self.coef):
@@ -46,12 +49,14 @@ class Polynome:
         return somme
 
 
-a = Polynome(2, 2, 3)
+a = Polynome(2, -2, 3)
 b = Polynome(-3, -1)
 c = a + b
+d = a - b
 
 print(a)
 print(b)
 print(c)
+print(d)
 
 print("a(2)=", a(2))

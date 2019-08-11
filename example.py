@@ -5,6 +5,7 @@ from utils.personnes import Homme, Femme
 # from utils.robot import *
 from datetime import datetime
 
+
 debut = datetime.now()
 print()
 
@@ -255,8 +256,46 @@ def exemple14():
     couleurs.clear()
     print("Suppression du contenu de la liste : ", couleurs)
 
+import re
 
-exemple13()
+def exemple15():
+    chaine = '''
+azerty
+AZERTY
+123_456_789
+
+02.38.62.77.06
+06.66.43.94.47
+
+mail : cjacques@noos.fr
+mail = brigitte.bernard54@noos.fr
+    '''
+    print("Numeros de telephone :")
+    pattern = re.compile(r"(\d\d\.){4}\d\d")
+    results = pattern.finditer(chaine)
+
+    for res in results:
+        print(">", chaine[res.span(0)[0]:res.span(0)[1]] )
+
+    print()
+    print("Adresses mails :")
+    pattern = re.compile(r"[\w.]+@[\w.]*\.\w+")
+    results = pattern.finditer(chaine)
+
+    for res in results:
+        print(">", chaine[res.span(0)[0]:res.span(0)[1]])
+
+    print()
+    print("Nombres :")
+    pattern = re.compile(r"\d{1,3}(_\d{3})+")
+    results = pattern.finditer(chaine)
+    print(dir(pattern.findall(chaine, 0, 10)))
+
+    for res in results:
+        print(">", chaine[res.span(0)[0]:res.span(0)[1]])
+
+
+exemple15()
 
 
 # -------------------------------------------------------------------------------------------------------------------
