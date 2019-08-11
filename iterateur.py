@@ -1,5 +1,21 @@
+
+
+# definition d'un decorateur
+def decorateur(fonction):
+
+    def methode(*args, **kvargs):
+        print(f"Exec {fonction.__name__}{args}", end='')
+        res = fonction(*args, **kvargs)
+        print(f" = {res}")
+
+        return res
+
+    return methode
+
+
 class mon_iterateur:
 
+    @decorateur
     def __init__(self, debut, fin=None):
         if type(debut) != int:
             raise TypeError("Le 1er paramêtre n'est pas de type Entier")
@@ -26,6 +42,7 @@ class mon_iterateur:
         return courant
 
 
+@decorateur
 def mon_generateur(debut, fin=None):
     if type(debut) != int:
         raise TypeError("Le 1er paramêtre n'est pas de type Entier")
@@ -45,10 +62,10 @@ def mon_generateur(debut, fin=None):
 
 print("Iterateur : ", end="")
 for i in mon_iterateur(4):
-    print(i, " ", end="")
+    print(i, end=" ")
 
 print("\nGénérateur : ", end="")
 for g in mon_generateur(4):
-    print(g, " ", end="")
+    print(g, end=" ")
 
 print()
