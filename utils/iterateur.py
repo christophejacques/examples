@@ -1,4 +1,4 @@
-
+#modif git
 
 # definition d'un decorateur
 def decorateur(fonction):
