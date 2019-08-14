@@ -5,6 +5,14 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 import datetime
 
+# ---------------------------------------------------------
+#
+# codage UTF-8 des instruction affichée via commande print()
+#
+import sys, codecs
+sys.stdout = codecs.getwriter("utf-8")(sys.stdout.detach())
+# ---------------------------------------------------------
+
 
 driver = webdriver.Firefox()
 driver.set_window_rect(1000, 1, 920, 1050)

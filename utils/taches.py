@@ -111,7 +111,7 @@ lst = mesTaches()
 lst.add(MONOTACHE, somme, 7, 12)
 lst.add(MONOTACHE, multiplication, 3, 7)
 lst.add(MULTITACHE, message, "Comment allez vous ?")
-lst.add(MULTITACHE, message, "Ca code comme des ouf !")
+lst.add(MONOTACHE, message, "il était une fois l'èsoîse")
 
 lst.run()
 print("Suite/Fin du code ...")

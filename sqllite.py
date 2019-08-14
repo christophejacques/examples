@@ -70,6 +70,7 @@ class monsql:
         tableStr += f"    {nomchamp} {typeChamp} )"
 
         # with conn:
+        # print(tableStr)
         self.curs.execute(tableStr)
 
         print(" => table créée")
@@ -105,24 +106,29 @@ class monsql:
 
         print(sqlstring, lstCondValues, end=" : ")
         nb = self.curs.execute(sqlstring, lstCondValues)
-        print(f"{nb.rowcount} enregs => OK")
+        print(f"(Id:{nb.lastrowid:03}) {nb.rowcount} enregs => OK")
 
     def insertData(self, nomTable, *donnees):
 
-        insertColsNames = f"INSERT INTO {nomTable} VALUES ("
+        insertColsNames = "("
         insertColsValues = []
+        listeColsNames = "("
 
         for nomChamp, valeurChamp in donnees[:-1]:
+            listeColsNames += f"{nomChamp}, "
             insertColsNames += f":{nomChamp}, "
             insertColsValues.append(valeurChamp)
 
         nomChamp, valeurChamp = donnees[-1]
+        listeColsNames += f"{nomChamp})"
         insertColsNames += f":{nomChamp})"
         insertColsValues.append(valeurChamp)
 
+        insertColsNames = f"INSERT INTO {nomTable} {listeColsNames} VALUES {insertColsNames}"
+
         print(insertColsNames, insertColsValues, end="")
-        self.curs.execute(insertColsNames, insertColsValues)
-        print(" => OK")
+        res = self.curs.execute(insertColsNames, insertColsValues)
+        print(f" => OK (Id:{res.lastrowid:03})")
 
 
 # with monsql("basededonnees.db") as mabd:
@@ -130,15 +136,11 @@ with monsql(":memory:") as mabd:
     if mabd.isconnected():
         try:
             if not mabd.existTable("personnes"):
-                mabd.createTable("personnes",[("nom", "text"), ("prenom","text"), ("datedenaissance","text")])
+                mabd.createTable("personnes",[("idPersonne", "integer PRIMARY KEY AUTOINCREMENT"), ("nom", "text"), ("prenom","text"), ("datedenaissance","text")])
 
             if not mabd.existTable("metiers"):
-                mabd.createTable("metiers",[("num", "int"), ("libelle","text")])
-
-            print("Liste des tables :")
-            for enreg in mabd.getDatas("SELECT name FROM sqlite_master WHERE type = 'table'"):
-                print(f"{enreg}", end=" ")
-            print("")
+                mabd.createTable("metiers",[("idMetier", "integer PRIMARY KEY AUTOINCREMENT"), ("libelle","text")])
+            mabd.commit()
 
             mabd.insertData("personnes", ("nom", "JACQUES"), ("prenom", "christophe"), ("datedenaissance", "1971-09-02"))
             mabd.insertData("personnes", ("nom", "BERNARD"), ("prenom", "brigitte"), ("datedenaissance", "1951-09-16"))
@@ -147,11 +149,18 @@ with monsql(":memory:") as mabd:
             mabd.insertData("personnes", ("nom", "BERNARD"), ("prenom", "brigitte"), ("datedenaissance", "1951-09-16"))
             mabd.commit()
 
-            for l in mabd.getDatas("PRAGMA table_info(metiers)"):
-                print(f"  - {l}")
+            mabd.insertData("metiers", ("libelle", "Informaticien"))
+            mabd.insertData("metiers", ("libelle", "Fonctionnaire"))
 
-            for enreg in mabd.getDatas("select * from personnes"):
-                print(f"  - {enreg}")
+            for l in mabd.getDatas("PRAGMA table_info(personnes)"):
+                print(f"  - {l}")
+            print()
+
+            print("Liste des tables :")
+            for t in mabd.getDatas("SELECT name FROM sqlite_master WHERE type = 'table' ORDER BY name"):
+                for enreg in mabd.getDatas(f"select * from {t[0]}"):
+                    print(f"  - {enreg}")
+                print()
 
         except sqlite3.OperationalError as oe:
             print(f"Ko ({oe})")
