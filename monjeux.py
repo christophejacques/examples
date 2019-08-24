@@ -21,9 +21,10 @@ class Etoiles:
         # creation d'un nouveau point
         if len(self.liste) < self.maximum:
             au_centre = False
+            retrecicement = 10
             while not au_centre:
-                x = random.randint(self.zone[0][0], self.zone[1][0])
-                y = random.randint(self.zone[0][1], self.zone[1][1])
+                x = random.randint(self.zone[0][0]+retrecicement, self.zone[1][0]-retrecicement)
+                y = random.randint(self.zone[0][1]+retrecicement, self.zone[1][1]-retrecicement)
                 z = random.randint(10, max_star_dist)
                 au_centre = math.sqrt( \
                     (self.center[0]-x)*(self.center[0]-x) + (self.center[1]-y)*(self.center[1]-y)) > 10
@@ -31,9 +32,9 @@ class Etoiles:
                                y, \
                                z, \
                                random.randint(1, 10),
-                               self.center[0] + int(200 * (x - self.center[0])) // z,
-                               self.center[1] + int(200 * (y - self.center[1])) // z, \
-                               self.zone[0][0] // z
+                               self.center[0] + int(2 * (x - self.center[0])) // z,
+                               self.center[1] + int(2 * (y - self.center[1])) // z, \
+                               self.zone[0][0] // z // 2
                               ])
 
         # animation des points
@@ -42,18 +43,20 @@ class Etoiles:
             if e[2] < 1:
                 self.liste.pop(i)
             else:
-                e[4] = self.center[0] + int(200 * (e[0] - self.center[0])) // e[2]
-                e[5] = self.center[1] + int(200 * (e[1] - self.center[1])) // e[2]
-                e[6] = self.zone[0][0] // e[2]
+                e[4] = self.center[0] + int(100 * (e[0] - self.center[0])) // e[2]
+                e[5] = self.center[1] + int(100 * (e[1] - self.center[1])) // e[2]
+                e[6] = self.zone[0][0] // e[2] // 2
                 if e[4] - e[6] < self.zone[0][0] or e[5] - e[6] < self.zone[0][1] or \
                    e[4] + e[6] > self.zone[1][0] or e[5] + e[6] > self.zone[1][1]:
                     self.liste.pop(i)
 
     def get_coords(self):
+        color = lambda z : 255 * (max_star_dist - z) // max_star_dist
         l = [(
               nx, \
               ny, \
-              nz
+              nz,
+              (color(z), color(z), color(z))
              ) \
             for x, y, z, t, nx, ny, nz in self.liste]
 
@@ -111,6 +114,11 @@ def init_vars():
 
 pygame.init()
 
+pygame.mixer_music.load("D:\\Mes Documents\\Musique\\Youtube Compilation\\DJ RN SR MEGA DANCE Vol 17 TRN DJ.mp3")
+
+clock = pygame.time.Clock()
+pygame.time.set_timer(pygame.USEREVENT, 500)
+
 pygame.display.set_caption("Ma fenêtre pygame")
 window_size = (1280, 600)
 zone = (window_size[0] // 2, window_size[1])
@@ -133,10 +141,19 @@ etoiles = Etoiles(0, [zone,window_size])
 mouse_pos = (window_size[0]//2, window_size[1]//2)
 mouse_cursor_circle_size = 40
 mouse_button_pressed = False
+user_event = True
+
+font = pygame.font.SysFont("Arial", 12, 0, 0)
+text_font = font.render(f"{clock.get_fps():3.1f} FPS", 0, white)
+nbstars_font = font.render(f"{len(etoiles.liste)} FPS", 0, white)
+
+# pygame.mixer_music.play()
 
 while Application_launched:
 
+    clock.tick()
     pygame.time.wait(10)
+
     if Application_active:
         screen.fill(black)
         pygame.draw.rect(screen, white, [(0, 0), window_size], 1)
@@ -147,7 +164,7 @@ while Application_launched:
 
         etoiles.update()
         for e in etoiles.get_coords():
-            pygame.draw.circle(screen, grey, e[:2], e[2])
+            pygame.draw.circle(screen, e[3], e[:2], e[2])
             # print(f"({x}, {y})", end=" ")
 
         if mouse_button_pressed:
@@ -158,8 +175,13 @@ while Application_launched:
             #pygame.draw.circle(screen, random_color(), mouse_pos, mouse_cursor_circle_size, 2)
 
         # affichage des modifications
+        screen.blit(text_font, (10, 10))
+        screen.blit(nbstars_font, (zone[0]+10, 10))
+
+
         pygame.display.flip()
 
+    # print(f"busy ? {pygame.mixer_music.get_busy()}")
 
     # gestion des evennements
     for event in pygame.event.get():
@@ -180,6 +202,9 @@ while Application_launched:
 
             elif key_code == pygame.K_F11:
                 pass
+
+            elif key_code == pygame.K_p:
+                pygame.mixer_music.play()
 
         # - touche souris enfoncée ------------------------------------------------------------------------
         elif event.type in [pygame.MOUSEBUTTONDOWN]:
@@ -215,7 +240,7 @@ while Application_launched:
             zone = (window_size[0] // 2, window_size[1])
 
             ballet = init_vars()
-            etoiles = Etoiles(100, [(zone[0], 0), window_size])
+            etoiles = Etoiles(150, [(zone[0], 0), window_size])
 
             screen = pygame.display.set_mode(window_size, pygame.RESIZABLE, 8)
 
@@ -223,6 +248,11 @@ while Application_launched:
         elif event.type == pygame.ACTIVEEVENT:
             # Application_active = event.dict.get("gain", 0) == 1
             pass
+
+        # - USEREVENT activé toutes les 500ms -------------------------------------------------------------
+        elif event.type == pygame.USEREVENT:
+            text_font = font.render(f"{clock.get_fps():.1f} FPS", 0, white)
+            nbstars_font = font.render(f"{len(etoiles.liste)} étoiles", 0, white)
 
         else:
             print(event.dict, event.type)
