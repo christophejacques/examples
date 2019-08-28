@@ -57,6 +57,7 @@ class LibreOfficeFile:
         return f"print : {self.feuilles}\n"
 
 
+
 try:
     with LibreOfficeFile("objFdCR") as fichier:
 
