@@ -1,6 +1,7 @@
 import msvcrt
 import random
 
+print("loading LibreOfficeFile")
 
 class LibreOfficeFile:
 
