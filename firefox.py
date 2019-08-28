@@ -13,6 +13,7 @@ import sys, codecs
 sys.stdout = codecs.getwriter("utf-8")(sys.stdout.detach())
 # ---------------------------------------------------------
 
+print("loading")
 
 driver = webdriver.Firefox()
 driver.set_window_rect(1000, 1, 920, 1050)
