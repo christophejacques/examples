@@ -1,3 +1,7 @@
+if __name__ != "__main__":
+    print("loading complexe.py", end=" ... ")
+
+
 from math import sqrt, atan2, degrees
 
 
@@ -124,3 +128,7 @@ class Complexe():
             return atan2(self.imaginaire, self.reel)
         else:
             return degrees(atan2(self.imaginaire, self.reel))
+
+if __name__ != "__main__":
+    print("ok")
+

@@ -1,4 +1,8 @@
 # coding: utf-8
+
+if __name__ != "__main__":
+    print("loading operation.py", end=" ... ")
+
 from math import sqrt
 
 def ajoute_deux(v):
@@ -75,9 +79,12 @@ def suppressionDoublons(liste):
 
     return liste
 
+if __name__ != "__main__":
+    print("ok")
 
 l = [1, 2, 2, 3]
 # print(suppressionDoublons(l) )
 # print(list(set(l)))
 # print( decomposeDiviseurs(200) )
 # print( decomposePremiers(32119) )
+

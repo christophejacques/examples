@@ -1,6 +1,6 @@
 from utils.complexe import *
 from datetime import datetime
-print("start timer...")
+print("start timer [")
 td = datetime.now()
 
 
@@ -48,4 +48,4 @@ print("{0}".format(c1))
 
 print()
 tf = datetime.now()
-print("...end timer, durée =", tf-td)
+print("] end timer, durée =", tf-td)

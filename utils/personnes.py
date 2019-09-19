@@ -1,5 +1,7 @@
 # coding: utf-8
 
+if __name__ != "__main__":
+    print("loading personnes.py", end=" ... ")
 
 def IIf(boolean, siVrai, siFaux):
     return siVrai if boolean else siFaux
@@ -187,4 +189,6 @@ class Femme(Personne):
         """getter sexe()"""
         return "Femme"
 
+if __name__ != "__main__":
+    print("ok")
 

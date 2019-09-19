@@ -111,11 +111,13 @@ lst = mesTaches()
 lst.add(MONOTACHE, somme, 7, 12)
 lst.add(MONOTACHE, multiplication, 3, 7)
 lst.add(MULTITACHE, message, "Comment allez vous ?")
-lst.add(MONOTACHE, message, "il était une fois l'èsoîse")
-
+lst.add(MONOTACHE, message, "il était une fois l'homme !")
 lst.run()
-print("Suite/Fin du code ...")
 
+print("Suite/Fin du code ...")
+print()
+# si MULTITACHE le code ne s'arrete pas et continu
+# lst1 = mesTaches(MULTITACHE)
 lst1 = mesTaches()
 lst1.add(MULTITACHE, message, "Salut les copains de la terre promise du lendemain")
 lst1.add(MULTITACHE, division, 27, 5)
