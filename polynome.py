@@ -55,8 +55,10 @@ c = a + b
 d = a - b
 
 print(a)
+
 print(b)
 print(c)
 print(d)
 
-print("a(2)=", a(2))
+print("a(2) =", a(2))
+input("")

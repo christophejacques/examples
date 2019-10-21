@@ -69,3 +69,5 @@ for g in mon_generateur(4):
     print(g, end=" ")
 
 print()
+from msvcrt import getch
+getch()

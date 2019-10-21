@@ -113,3 +113,5 @@ except:
 
 finally:
     driver.close()
+
+input("")

@@ -1,4 +1,5 @@
 import sqlite3, sys
+import msvcrt
 
 
 def fonction(*args):
@@ -172,3 +173,4 @@ with monsql(":memory:") as mabd:
             print(f" - ligne {errobj.tb_lineno} : {errlib}")
             mabd.rollback()
 
+x=msvcrt.getch()

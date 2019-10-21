@@ -1,126 +1,238 @@
+if __name__ != "__main__":
+  print("loading taches.py ... ", end="")
+
 from threading import Thread
 from time import sleep
+from msvcrt import getch
+import sys, traceback
 
+DEBUG=True
 MONOTACHE=1
 MULTITACHE=2
 
+def fprint(*args, **kwargs):
+  print(*args, flush=True, **kwargs)
+
+
+def type_tache(mode):
+  return "Mono" if mode == MONOTACHE else "Multi"
+    
 
 def somme(a, b):
-    print(f"- {a} + {b} = ", end="")
-    sleep(1)
+    fprint(f"- {a} + {b} = ", end="")
+    sleep(0.1)
     c = a + b
-    print(f"{c}", end=" - ")
-    sleep(1)
+    fprint(f"{c}")
+    sleep(0.1)
 
 
 def multiplication(a, b):
-    print(f"- {a} x {b} = ", end="")
-    sleep(1)
+    fprint(f"- {a} x {b} = ", end="")
+    sleep(0.1)
     c = a * b
-    print(f"{c}", end=" - ")
-    sleep(1)
+    fprint(f"{c}")
+    sleep(0.1)
 
 
 def division(a, b):
-    print(f"- {a} / {b} = ", end="")
-    sleep(1)
+    fprint(f"- {a} / {b} = ", end="")
+    sleep(0.1)
     c = a // b
-    print(f"{c}", end=" - ")
-    sleep(1)
+    fprint(f"{c}", end=" - ")
+    sleep(0.1)
     c = a % b
-    print(f"reste {c}", end=" - ")
-    sleep(1)
+    fprint(f"reste {c}")
+    sleep(0.1)
+
+def mon_input():
+  t = None
+  while t != b'\x1b':
+    fprint("Appuyer sur 'Echap' : ", end ="")
+    sleep(0.1)
+    t = getch()
+    fprint(f"*{t}*")
+    sleep(0.1)
+  
+def fonction_callback():
+  if DEBUG:
+    print("fonction_callback()")
 
 
 def message(texte):
+    fprint("- ", end="")
     for x in texte:
-        sleep(0.1)
-        print(x, end="")
-    print()
+        sleep(0.02)
+        fprint(x, end="")
+    fprint()
 
 
 class uneTache(Thread):
 
-    def __init__(self, mode, fonction, *args):
-        Thread.__init__(self)
-        self.mode = mode
-        self.fonction = fonction
-        self.params = args
+    def __init__(self, mode, returnfunc, fonction, *args):
+      Thread.__init__(self)
+      self.mode = mode
+      self.returnfunc = returnfunc
+      self.fonction = fonction
+      self.params = args
 
     def run(self):
-        self.fonction(*self.params)
-        self.end()
+      if DEBUG: fprint(f"  Début du {self.getName()} avec *{self.fonction.__name__}* en {type_tache(self.mode)}", end=" ")
+      self.fonction(*self.params)
+      self.end()
 
     def end(self):
+      if DEBUG:
         if self.mode == MULTITACHE:
-            print(f"Fin du {self.getName()} : *{self.fonction.__name__}*")
+          fprint(f"Fin du {self.getName()} : *{self.fonction.__name__}*")
         else:
-            print("Fini !")
+          fprint("Fini !")
+        
+      if self.returnfunc: 
+        self.returnfunc()
+
+class Processeur:
+    """Processeur()"""
+    def __init__(self):
+      self.num_groupe = -1
+      self.groupe = []
+
+      self.running = False
+        
+
+    def add_groupe(self, mode=MONOTACHE):
+      self.num_groupe += 1
+      self.num_tache = 0
+      
+      if DEBUG:
+        fprint(f"Creation groupe({self.num_groupe}) en {type_tache(mode)}")
+        
+      self.groupe.append({"num":self.num_groupe, 
+        "mode":mode,
+        "liste_taches" : []})
+        
+      return self.num_groupe
+      
+    def fonctionretour(self):
+      if DEBUG: print("return func !")
+      
+    def add_to_group(self, mode, fonction, *args):
+      self.add_tache(self.num_groupe, mode, fonction, *args)
 
 
-class mesTaches:
-
-    def __init__(self, mode=MONOTACHE):
-        self.liste = []
-        self.mode = mode
-        self.running = False
-
-    def add(self, mode, fonction, *args):
-        if self.is_running():
-            print("Traitements en cours ...")
-            return
-
-        self.liste.append(uneTache(mode, fonction, *args))
-
+    def add_tache(self, num_groupe, mode, fonction, *args):
+      if self.is_running():
+        fprint("Traitements en cours ...")
+        return
+          
+      
+      # t = uneTache(mode, self.fonctionretour, fonction, *args)
+      t = uneTache(mode, fonction_callback, fonction, *args)
+      if DEBUG:
+        fprint(f"  Ajout {t.getName()} : {fonction.__name__}{args}")
+      self.groupe[num_groupe]["liste_taches"].append(t)
+    
+    def __enter__(self):
+      return self
+      
+    def __exit__(self, *args):
+      pass
+      
     def clear(self):
-        self.liste.clear()
+      self.liste.clear()
 
     def is_running(self):
-        res = False
-        for t in self.liste:
-            res = res or t.isAlive()
+      res = False
+      for g in self.groupe:
+        for t in g["liste_taches"]:
+          res = res or t.isAlive()
 
-        return res
+      return res
+
+
+    def end(self, num_groupe):
+      if DEBUG: fprint(f"Fin Groupe({num_groupe})\n")
 
     def run(self):
-        if self.is_running():
-            print("Traitements en cours ...")
-            return
-
-        for t in self.liste:
+      if self.is_running():
+          fprint("Traitements en cours ...")
+          return
+          
+      # Gestion des groupes MONOTACHE  
+      for g in self.groupe:
+        if g["mode"] == MONOTACHE:
+          if DEBUG:
+            fprint(f"Debut groupe({g['num']})")
+            
+          for t in g["liste_taches"]:
             if t.mode == MONOTACHE:
-                print(f"Début du {t.getName()} avec *{t.fonction.__name__}* en MONO-TACHE", end=" ")
-                t.start()
-                t.join()
-
-        for t in self.liste:
+              t.start()
+              t.join()
+        
+          for t in g["liste_taches"]:
             if t.mode == MULTITACHE:
-                print(f"Début du {t.getName()} avec *{t.fonction.__name__}* en MULTI-TACHE")
-                t.start()
+              t.start()
+        
+          for t in g["liste_taches"]:
+            if t.mode == MULTITACHE:
+              t.join()          
 
-        if self.mode == MONOTACHE:
-            for t in self.liste:
-                if t.mode == MULTITACHE:
-                    t.join()
+          self.end(g["num"])
 
-        self.clear()
+      # Gestion des groupes MULTITACHE  
+      for g in self.groupe:
+        if g["mode"] == MULTITACHE:
+          if DEBUG:
+            fprint(f"Debut groupe({g['num']})")
+            
+          for t in g["liste_taches"]:
+            if t.mode == MONOTACHE:
+              t.start()
+              t.join()
 
+          for t in g["liste_taches"]:
+            if t.mode == MULTITACHE:
+              t.start()
 
-lst = mesTaches()
+      # Gestion de la fin des groupes MULTITACHE
+      for g in self.groupe:
+        if g["mode"] == MULTITACHE:
+          for t in g["liste_taches"]:
+            if t.mode == MULTITACHE:
+              t.join()
+        
+          self.end(g["num"])
 
-lst.add(MONOTACHE, somme, 7, 12)
-lst.add(MONOTACHE, multiplication, 3, 7)
-lst.add(MULTITACHE, message, "Comment allez vous ?")
-lst.add(MONOTACHE, message, "il était une fois l'homme !")
-lst.run()
+          
+if __name__ != "__main__":
+  print("ok")
 
-print("Suite/Fin du code ...")
-print()
-# si MULTITACHE le code ne s'arrete pas et continu
-# lst1 = mesTaches(MULTITACHE)
-lst1 = mesTaches()
-lst1.add(MULTITACHE, message, "Salut les copains de la terre promise du lendemain")
-lst1.add(MULTITACHE, division, 27, 5)
-lst1.run()
+else:
 
-print("Fin du code ...")
+  try:
+    p = Processeur()
+    p.add_groupe()
+    p.add_to_group(MONOTACHE, somme, 5, 2)
+    p.add_to_group(MONOTACHE, division, 13, 5)
+    p.add_to_group(MULTITACHE, message, "Premiere tache")
+    p.add_to_group(MULTITACHE, message, "Deuxieme tache")
+    p.add_to_group(MONOTACHE, mon_input)
+    
+    p.add_groupe(MULTITACHE)
+    p.add_to_group(MULTITACHE, message, "Premier groupe")
+    p.add_to_group(MULTITACHE, multiplication, 5, 2)
+    
+    p.add_groupe(MULTITACHE)
+    p.add_to_group(MULTITACHE, message, "Deuxieme groupe")
+    p.add_to_group(MULTITACHE, multiplication, 3, 7)
+    
+    fprint()
+    p.run()
+
+  except Exception as e:
+    fprint()
+    traceback.print_exc()
+    
+  else:
+    fprint("Fin du code ...")
+    
+  getch()

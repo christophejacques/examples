@@ -2,11 +2,20 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="479feb2d-ed35-4196-b7a2-c75eaa442a17" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/exemple4.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/utils/renamefile.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/example.py" beforeDir="false" afterPath="$PROJECT_DIR$/example.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/exemple2.py" beforeDir="false" afterPath="$PROJECT_DIR$/exemple2.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/utils/complexe.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils/complexe.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/utils/operation.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils/operation.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/utils/personnes.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils/personnes.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/firefox.py" beforeDir="false" afterPath="$PROJECT_DIR$/firefox.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/geckodriver.log" beforeDir="false" afterPath="$PROJECT_DIR$/geckodriver.log" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/libreoffice.py" beforeDir="false" afterPath="$PROJECT_DIR$/libreoffice.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/monjeux.py" beforeDir="false" afterPath="$PROJECT_DIR$/monjeux.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/polynome.py" beforeDir="false" afterPath="$PROJECT_DIR$/polynome.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/sqllite.py" beforeDir="false" afterPath="$PROJECT_DIR$/sqllite.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/utils/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/utils/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/utils/iterateur.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils/iterateur.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/utils/matrice.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils/matrice.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/utils/taches.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils/taches.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -20,39 +29,20 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/utils/personnes.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="214">
-              <caret line="191" lean-forward="true" selection-start-line="191" selection-end-line="193" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/utils/operation.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="214">
-              <caret line="83" lean-forward="true" selection-start-line="83" selection-end-line="83" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/utils/robot.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-1271" />
-          </provider>
-        </entry>
-      </file>
       <file pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/utils/taches.py">
+        <entry file="file://$PROJECT_DIR$/test.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="135">
-              <caret line="115" lean-forward="true" selection-start-line="115" selection-end-line="115" />
-              <folding>
-                <element signature="e#0#28#0" expanded="true" />
-              </folding>
+            <state relative-caret-position="88">
+              <caret line="4" column="22" selection-start-line="4" selection-start-column="22" selection-end-line="4" selection-end-column="22" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/utils/definition.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="22">
+              <caret line="16" column="2" lean-forward="true" selection-start-line="16" selection-start-column="2" selection-end-line="16" selection-end-column="2" />
             </state>
           </provider>
         </entry>
@@ -89,6 +79,11 @@
       <find>sleep</find>
       <find>1</find>
       <find>resized</find>
+      <find>start</find>
+      <find>encoding</find>
+      <find>encode</find>
+      <find>popenargs</find>
+      <find>Popen</find>
     </findStrings>
     <replaceStrings>
       <replace />
@@ -109,7 +104,6 @@
         <option value="$PROJECT_DIR$/utils/__init__.py" />
         <option value="$PROJECT_DIR$/utils/robot.py" />
         <option value="$PROJECT_DIR$/geckodriver.log" />
-        <option value="$PROJECT_DIR$/polynome.py" />
         <option value="$PROJECT_DIR$/utils/matrice.py" />
         <option value="$PROJECT_DIR$/iterateur.py" />
         <option value="$PROJECT_DIR$/utils/iterateur.py" />
@@ -124,12 +118,18 @@
         <option value="$PROJECT_DIR$/exemple2.py" />
         <option value="$PROJECT_DIR$/utils/operation.py" />
         <option value="$PROJECT_DIR$/utils/taches.py" />
+        <option value="$PROJECT_DIR$/polynome.py" />
+        <option value="$PROJECT_DIR$/exemple4.py" />
+        <option value="$PROJECT_DIR$/utils/definition.py" />
+        <option value="$PROJECT_DIR$/test.py" />
       </list>
     </option>
   </component>
-  <component name="ProjectFrameBounds">
-    <option name="width" value="1715" />
-    <option name="height" value="1040" />
+  <component name="ProjectFrameBounds" extendedState="6">
+    <option name="x" value="-8" />
+    <option name="y" value="-8" />
+    <option name="width" value="1460" />
+    <option name="height" value="920" />
   </component>
   <component name="ProjectLevelVcsManager" settingsEditedManually="true">
     <OptionsSetting value="false" id="Update" />
@@ -146,11 +146,6 @@
             <path>
               <item name="examples" type="b2602c69:ProjectViewProjectNode" />
               <item name="examples" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="examples" type="b2602c69:ProjectViewProjectNode" />
-              <item name="examples" type="462c0819:PsiDirectoryNode" />
-              <item name="utils" type="462c0819:PsiDirectoryNode" />
             </path>
           </expand>
           <select />
@@ -200,7 +195,7 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="Python.taches">
+  <component name="RunManager" selected="Python.test">
     <configuration default="true" type="PythonConfigurationType" factoryName="Python">
       <module name="examples" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -222,69 +217,6 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="complexe" type="PythonConfigurationType" factoryName="Python" temporary="true">
-      <module name="examples" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="C:\Program Files (x86)\Python37-32\python.exe" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/utils" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/utils/complexe.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="false" />
-      <option name="MODULE_MODE" value="false" />
-      <option name="REDIRECT_INPUT" value="false" />
-      <option name="INPUT_FILE" value="" />
-      <method v="2" />
-    </configuration>
-    <configuration name="exemple" type="PythonConfigurationType" factoryName="Python" temporary="true">
-      <module name="examples" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/example.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="false" />
-      <option name="MODULE_MODE" value="false" />
-      <option name="REDIRECT_INPUT" value="false" />
-      <option name="INPUT_FILE" value="" />
-      <method v="2" />
-    </configuration>
-    <configuration name="exemple2" type="PythonConfigurationType" factoryName="Python" temporary="true">
-      <module name="examples" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/exemple2.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="false" />
-      <option name="MODULE_MODE" value="false" />
-      <option name="REDIRECT_INPUT" value="false" />
-      <option name="INPUT_FILE" value="" />
-      <method v="2" />
-    </configuration>
     <configuration name="exemple3" type="PythonConfigurationType" factoryName="Python">
       <module name="examples" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -298,6 +230,27 @@
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/$CURRENT_FILE" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="exemple4" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <module name="examples" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="C:\Program Files (x86)\Python37-32\python.exe" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/exemple4.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -334,7 +287,7 @@
       <envs>
         <env name="PYTHONUNBUFFERED" value="1" />
       </envs>
-      <option name="SDK_HOME" value="" />
+      <option name="SDK_HOME" value="C:\Program Files (x86)\Python37-32\python.exe" />
       <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
       <option name="IS_MODULE_SDK" value="true" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
@@ -369,7 +322,7 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="taches" type="PythonConfigurationType" factoryName="Python" temporary="true">
+    <configuration name="polynome" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <module name="examples" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -377,11 +330,53 @@
         <env name="PYTHONUNBUFFERED" value="1" />
       </envs>
       <option name="SDK_HOME" value="C:\Program Files (x86)\Python37-32\python.exe" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/utils" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
       <option name="IS_MODULE_SDK" value="true" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/utils/taches.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/polynome.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="sqllite" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <module name="examples" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="C:\Program Files (x86)\Python37-32\python.exe" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/sqllite.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="test" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <module name="examples" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="C:\Program Files (x86)\Python37-32\python.exe" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/test.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -394,18 +389,18 @@
       <item itemvalue="Python.firefox" />
       <item itemvalue="Python.exemple3" />
       <item itemvalue="Python.personnes" />
-      <item itemvalue="Python.exemple" />
       <item itemvalue="Python.monjeux" />
-      <item itemvalue="Python.exemple2" />
-      <item itemvalue="Python.complexe" />
-      <item itemvalue="Python.taches" />
+      <item itemvalue="Python.polynome" />
+      <item itemvalue="Python.sqllite" />
+      <item itemvalue="Python.exemple4" />
+      <item itemvalue="Python.test" />
     </list>
     <recent_temporary>
       <list>
-        <item itemvalue="Python.taches" />
-        <item itemvalue="Python.exemple2" />
-        <item itemvalue="Python.complexe" />
-        <item itemvalue="Python.exemple" />
+        <item itemvalue="Python.test" />
+        <item itemvalue="Python.exemple4" />
+        <item itemvalue="Python.sqllite" />
+        <item itemvalue="Python.polynome" />
         <item itemvalue="Python.monjeux" />
       </list>
     </recent_temporary>
@@ -606,7 +601,14 @@
       <option name="project" value="LOCAL" />
       <updated>1567022564070</updated>
     </task>
-    <option name="localTasksCounter" value="27" />
+    <task id="LOCAL-00027" summary="Ajout d'exemples sur les fonctions des listes">
+      <created>1568926563899</created>
+      <option name="number" value="00027" />
+      <option name="presentableId" value="LOCAL-00027" />
+      <option name="project" value="LOCAL" />
+      <updated>1568926563900</updated>
+    </task>
+    <option name="localTasksCounter" value="28" />
     <servers />
   </component>
   <component name="TodoView">
@@ -619,15 +621,14 @@
     </todo-panel>
   </component>
   <component name="ToolWindowManager">
-    <frame x="0" y="0" width="1715" height="1040" extended-state="0" />
-    <editor active="true" />
+    <frame x="-8" y="-8" width="1456" height="876" extended-state="6" />
     <layout>
-      <window_info content_ui="combo" id="Project" order="0" sideWeight="0.48178807" visible="true" weight="0.13237925" />
+      <window_info content_ui="combo" id="Project" order="0" sideWeight="0.48178807" visible="true" weight="0.13467048" />
       <window_info id="Structure" order="1" sideWeight="0.5182119" side_tool="true" weight="0.137092" />
       <window_info id="Favorites" order="2" sideWeight="0.516295" side_tool="true" weight="0.137092" />
       <window_info anchor="bottom" id="Message" order="0" />
       <window_info anchor="bottom" id="Find" order="1" weight="0.32855567" />
-      <window_info active="true" anchor="bottom" id="Run" order="2" visible="true" weight="0.3814774" />
+      <window_info anchor="bottom" id="Run" order="2" weight="0.33512786" />
       <window_info anchor="bottom" id="Debug" order="3" sideWeight="0.49970326" weight="0.38037485" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
@@ -753,111 +754,19 @@
     </entry>
     <entry file="file://D:/Programmes/Python/bin/Lib/site-packages/selenium/webdriver/support/wait.py" />
     <entry file="file://D:/Programmes/Python/bin/Lib/codecs.py" />
-    <entry file="file://$PROJECT_DIR$/utils/matrice.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="168">
-          <caret line="68" column="8" selection-start-line="68" selection-start-column="8" selection-end-line="68" selection-end-column="8" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/utils/iterateur.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state>
-          <caret column="10" selection-start-column="10" selection-end-column="10" />
-        </state>
-      </provider>
-    </entry>
+    <entry file="file://$PROJECT_DIR$/utils/matrice.py" />
+    <entry file="file://$PROJECT_DIR$/utils/iterateur.py" />
     <entry file="file://$USER_HOME$/.PyCharmCE2018.3/system/python_stubs/-1670806308/_tkinter.py" />
     <entry file="file://D:/Programmes/Python/bin/Lib/tkinter/__init__.py" />
-    <entry file="file://$PROJECT_DIR$/sqllite.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="815">
-          <caret line="159" column="101" selection-start-line="159" selection-start-column="101" selection-end-line="159" selection-end-column="101" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$USER_HOME$/.PyCharmCE2018.3/system/python_stubs/-1670806308/pygame/draw.py" />
     <entry file="file://$USER_HOME$/.PyCharmCE2018.3/system/python_stubs/-1670806308/pygame/display.py" />
     <entry file="file://$USER_HOME$/.PyCharmCE2018.3/system/python_stubs/-1670806308/pygame/constants.py" />
     <entry file="file://$USER_HOME$/.PyCharmCE2018.3/system/python_stubs/-1670806308/pygame/mixer_music.py" />
-    <entry file="file://$PROJECT_DIR$/polynome.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1134">
-          <caret line="42" selection-start-line="42" selection-end-line="42" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/exemple3.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="621">
-          <caret line="23" selection-start-line="23" selection-end-line="23" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/geckodriver.log">
-      <provider selected="true" editor-type-id="text-editor" />
-    </entry>
-    <entry file="file://$PROJECT_DIR$/firefox.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="405">
-          <caret line="15" column="16" selection-start-line="15" selection-start-column="16" selection-end-line="15" selection-end-column="16" />
-          <folding>
-            <element signature="e#0#30#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/libreoffice.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="108">
-          <caret line="4" selection-start-line="4" selection-end-line="4" />
-          <folding>
-            <element signature="e#0#13#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/utils/complexe.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="54">
-          <caret line="2" lean-forward="true" selection-start-line="2" selection-end-line="2" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/exemple2.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="54">
-          <caret line="2" column="22" lean-forward="true" selection-start-line="2" selection-start-column="22" selection-end-line="2" selection-end-column="22" />
-          <folding>
-            <element signature="e#0#28#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/example.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="243">
-          <caret line="9" lean-forward="true" selection-start-line="9" selection-end-line="9" />
-          <folding>
-            <element signature="e#35#64#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/monjeux.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="162">
-          <caret line="6" column="13" selection-start-line="6" selection-start-column="4" selection-end-line="6" selection-end-column="13" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/utils/personnes.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="214">
-          <caret line="191" lean-forward="true" selection-start-line="191" selection-end-line="193" />
-        </state>
-      </provider>
-    </entry>
+    <entry file="file://$PROJECT_DIR$/geckodriver.log" />
+    <entry file="file://$PROJECT_DIR$/firefox.py" />
+    <entry file="file://$PROJECT_DIR$/libreoffice.py" />
+    <entry file="file://$PROJECT_DIR$/utils/complexe.py" />
+    <entry file="file://C:/Program Files (x86)/Python37-32/Lib/threading.py" />
     <entry file="file://$PROJECT_DIR$/utils/operation.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="214">
@@ -865,18 +774,49 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/utils/robot.py">
+    <entry file="file://$PROJECT_DIR$/utils/personnes.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-1271" />
+        <state relative-caret-position="2222">
+          <caret line="191" lean-forward="true" selection-start-line="191" selection-end-line="193" />
+        </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/utils/taches.py">
+    <entry file="file://$PROJECT_DIR$/utils/robot.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="135">
-          <caret line="115" lean-forward="true" selection-start-line="115" selection-end-line="115" />
+        <state relative-caret-position="858">
+          <caret line="39" column="8" selection-start-line="39" selection-start-column="3" selection-end-line="39" selection-end-column="8" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/utils/taches.py" />
+    <entry file="file://$PROJECT_DIR$/monjeux.py" />
+    <entry file="file://$PROJECT_DIR$/polynome.py" />
+    <entry file="file://D:/Programmes/Python/bin/Lib/subprocess.py" />
+    <entry file="file://$PROJECT_DIR$/exemple4.py" />
+    <entry file="file://$PROJECT_DIR$/exemple2.py" />
+    <entry file="file://$PROJECT_DIR$/exemple3.py" />
+    <entry file="file://$PROJECT_DIR$/sqllite.py" />
+    <entry file="file://$PROJECT_DIR$/example.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="22">
+          <caret line="11" selection-start-line="11" selection-end-line="11" />
           <folding>
-            <element signature="e#0#28#0" expanded="true" />
+            <element signature="e#35#64#0" expanded="true" />
           </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/utils/definition.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="22">
+          <caret line="16" column="2" lean-forward="true" selection-start-line="16" selection-start-column="2" selection-end-line="16" selection-end-column="2" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/test.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="88">
+          <caret line="4" column="22" selection-start-line="4" selection-start-column="22" selection-end-line="4" selection-end-column="22" />
         </state>
       </provider>
     </entry>

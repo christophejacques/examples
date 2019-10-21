@@ -75,4 +75,4 @@ except Exception as e:
 
 print(fichier)
 
-#msvcrt.getch()
+msvcrt.getch()

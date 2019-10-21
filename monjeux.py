@@ -114,8 +114,12 @@ def init_vars():
 
 pygame.init()
 
-pygame.mixer_music.load("D:\\Mes Documents\\Musique\\Youtube Compilation\\DJ RN SR MEGA DANCE Vol 17 TRN DJ.mp3")
+try:
+  pygame.mixer_music.load("D:\\Mes Documents\\Musique\\Youtube Compilation\\DJ RN SR MEGA DANCE Vol 17 TRN DJ.mp3")
 
+except:
+  print("Error loading music")
+  
 clock = pygame.time.Clock()
 pygame.time.set_timer(pygame.USEREVENT, 500)
 

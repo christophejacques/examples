@@ -81,3 +81,6 @@ print(n)
 
 print("add")
 print(m+n)
+
+from msvcrt import getch
+getch()

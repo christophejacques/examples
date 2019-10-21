@@ -4,7 +4,7 @@ from utils.operation import *
 from utils.personnes import Homme, Femme
 # from utils.robot import *
 from datetime import datetime
-
+import utils.taches
 
 debut = datetime.now()
 print()
@@ -186,8 +186,10 @@ def exemple11():
 def exemple12():
     a = 1
     b = 2
+    print("avant : ", a, b)
+    print("invertion des nombres")
     a, b = b, a
-    print(a, b)
+    print("après : ", a, b)
 
 
 def exemple13():
@@ -289,16 +291,16 @@ mail = brigitte.bernard54@noos.fr
     print("Nombres :")
     pattern = re.compile(r"\d{1,3}(_\d{3})+")
     results = pattern.finditer(chaine)
-    print(dir(pattern.findall(chaine, 0, 10)))
 
     for res in results:
         print(">", chaine[res.span(0)[0]:res.span(0)[1]])
 
 
-exemple15()
+exemple12()
 
 
 # -------------------------------------------------------------------------------------------------------------------
 print()
 fin = datetime.now()
 print("Duree = " , fin - debut)
+input("")
