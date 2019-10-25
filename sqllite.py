@@ -39,8 +39,8 @@ class monsql:
             if self.curs:
                 print("curseur ", end="")
                 self.curs.close()
-
-            print("Ok, ", end="")
+                print("Ok, ", end="")
+                
             self.conn.close()
             print("connexion Ok")
 
@@ -173,4 +173,4 @@ with monsql(":memory:") as mabd:
             print(f" - ligne {errobj.tb_lineno} : {errlib}")
             mabd.rollback()
 
-x=msvcrt.getch()
+# msvcrt.getch()

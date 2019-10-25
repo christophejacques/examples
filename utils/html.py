@@ -2,33 +2,33 @@ import urllib.request
 from msvcrt import getch
 import traceback
 from definition import printdef
-
+from urllib.parse import urlparse
 
 try:
-  url = "http://www.google.com/"
+  url = "http://www.python.org/"
   requete = urllib.request.Request(url)
-  printdef(requete)
+  #printdef(requete)
   
   response = urllib.request.urlopen(url)
-  html = response.read()
-  
   printdef(response)
+  print(dict(response.getheaders())['Content-Type'].split("; ")[1].split("=")[1])
+  print((dict(response.getheaders())['Content-Type']))
+  
+  o = urlparse('http://www.cwi.nl:80/%7Eguido/Python.html?arg1=12&arg2=abcd')
+  #printdef(o)
   
 
 except urllib.error.HTTPError as e:
   print("HTTP Error :")
   print(e.code)
-  print(e.read())
+  print(e.read()[:500])
 
 except urllib.error.URLError as e:
   print("URL Error :")
-  if hasattr(e, "code"):
-    print(e.code)
-  if hasattr(e, "reason"):
-    print(e.reason)
+  print("reason:", e.reason)
   
 except:
   print(traceback.print_exc())
   
 print("Press any key.")
-#getch()
+getch()

@@ -43,15 +43,18 @@ def printdef(variable):
         name_size = len(attribut)
         if name_size > max_name_size: max_name_size = name_size
 
-  
+
+
   max_name_size += 2
   methods = {"noArg":[], "Args":[], "Other":[]}
   method_list = []
   args_method_list = []
   other_method_list = []
+
+
   for attribut in dir(variable):
     if not attribut.startswith("__"):
-      if  ("method"   in type(getattr(variable, attribut)).__name__ or 
+      if  ("method"   in type(getattr(variable, attribut)).__name__ or
            "function" in type(getattr(variable, attribut)).__name__ ):
         try:
           resultat = f" = {getattr(variable, attribut)()}".replace("\n", ", ")

@@ -296,11 +296,11 @@ mail = brigitte.bernard54@noos.fr
         print(">", chaine[res.span(0)[0]:res.span(0)[1]])
 
 
-exemple12()
+exemple13()
 
 
 # -------------------------------------------------------------------------------------------------------------------
 print()
 fin = datetime.now()
 print("Duree = " , fin - debut)
-input("")
+#input("")

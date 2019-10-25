@@ -16,7 +16,7 @@ def fprint(*args, **kwargs):
 
 def type_tache(mode):
   return "Mono" if mode == MONOTACHE else "Multi"
-    
+
 
 def somme(a, b):
     fprint(f"- {a} + {b} = ", end="")
@@ -52,7 +52,7 @@ def mon_input():
     t = getch()
     fprint(f"*{t}*")
     sleep(0.1)
-  
+
 def fonction_callback():
   if DEBUG:
     print("fonction_callback()")
@@ -86,8 +86,8 @@ class uneTache(Thread):
           fprint(f"Fin du {self.getName()} : *{self.fonction.__name__}*")
         else:
           fprint("Fini !")
-        
-      if self.returnfunc: 
+
+      if self.returnfunc:
         self.returnfunc()
 
 class Processeur:
@@ -97,24 +97,24 @@ class Processeur:
       self.groupe = []
 
       self.running = False
-        
+
 
     def add_groupe(self, mode=MONOTACHE):
       self.num_groupe += 1
       self.num_tache = 0
-      
+
       if DEBUG:
         fprint(f"Creation groupe({self.num_groupe}) en {type_tache(mode)}")
-        
-      self.groupe.append({"num":self.num_groupe, 
+
+      self.groupe.append({"num":self.num_groupe,
         "mode":mode,
         "liste_taches" : []})
-        
+
       return self.num_groupe
-      
+
     def fonctionretour(self):
       if DEBUG: print("return func !")
-      
+
     def add_to_group(self, mode, fonction, *args):
       self.add_tache(self.num_groupe, mode, fonction, *args)
 
@@ -123,20 +123,20 @@ class Processeur:
       if self.is_running():
         fprint("Traitements en cours ...")
         return
-          
-      
+
+
       # t = uneTache(mode, self.fonctionretour, fonction, *args)
       t = uneTache(mode, fonction_callback, fonction, *args)
       if DEBUG:
         fprint(f"  Ajout {t.getName()} : {fonction.__name__}{args}")
       self.groupe[num_groupe]["liste_taches"].append(t)
-    
+
     def __enter__(self):
       return self
-      
+
     def __exit__(self, *args):
       pass
-      
+
     def clear(self):
       self.liste.clear()
 
@@ -156,34 +156,34 @@ class Processeur:
       if self.is_running():
           fprint("Traitements en cours ...")
           return
-          
-      # Gestion des groupes MONOTACHE  
+
+      # Gestion des groupes MONOTACHE
       for g in self.groupe:
         if g["mode"] == MONOTACHE:
           if DEBUG:
             fprint(f"Debut groupe({g['num']})")
-            
+
           for t in g["liste_taches"]:
             if t.mode == MONOTACHE:
               t.start()
               t.join()
-        
+
           for t in g["liste_taches"]:
             if t.mode == MULTITACHE:
               t.start()
-        
+
           for t in g["liste_taches"]:
             if t.mode == MULTITACHE:
-              t.join()          
+              t.join()
 
           self.end(g["num"])
 
-      # Gestion des groupes MULTITACHE  
+      # Gestion des groupes MULTITACHE
       for g in self.groupe:
         if g["mode"] == MULTITACHE:
           if DEBUG:
             fprint(f"Debut groupe({g['num']})")
-            
+
           for t in g["liste_taches"]:
             if t.mode == MONOTACHE:
               t.start()
@@ -199,10 +199,10 @@ class Processeur:
           for t in g["liste_taches"]:
             if t.mode == MULTITACHE:
               t.join()
-        
+
           self.end(g["num"])
 
-          
+
 if __name__ != "__main__":
   print("ok")
 
@@ -215,24 +215,24 @@ else:
     p.add_to_group(MONOTACHE, division, 13, 5)
     p.add_to_group(MULTITACHE, message, "Premiere tache")
     p.add_to_group(MULTITACHE, message, "Deuxieme tache")
-    p.add_to_group(MONOTACHE, mon_input)
-    
+    #p.add_to_group(MONOTACHE, mon_input)
+
     p.add_groupe(MULTITACHE)
     p.add_to_group(MULTITACHE, message, "Premier groupe")
     p.add_to_group(MULTITACHE, multiplication, 5, 2)
-    
+
     p.add_groupe(MULTITACHE)
     p.add_to_group(MULTITACHE, message, "Deuxieme groupe")
     p.add_to_group(MULTITACHE, multiplication, 3, 7)
-    
+
     fprint()
     p.run()
 
   except Exception as e:
     fprint()
     traceback.print_exc()
-    
+
   else:
     fprint("Fin du code ...")
-    
-  getch()
+
+  #getch()

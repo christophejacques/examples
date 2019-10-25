@@ -2,21 +2,8 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="e158e370-4d68-4a92-9856-8277c9a7a9cc" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/../exemple4.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/renamefile.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../example.py" beforeDir="false" afterPath="$PROJECT_DIR$/../example.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../exemple2.py" beforeDir="false" afterPath="$PROJECT_DIR$/../exemple2.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../firefox.py" beforeDir="false" afterPath="$PROJECT_DIR$/../firefox.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../geckodriver.log" beforeDir="false" afterPath="$PROJECT_DIR$/../geckodriver.log" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../libreoffice.py" beforeDir="false" afterPath="$PROJECT_DIR$/../libreoffice.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../monjeux.py" beforeDir="false" afterPath="$PROJECT_DIR$/../monjeux.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../polynome.py" beforeDir="false" afterPath="$PROJECT_DIR$/../polynome.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../sqllite.py" beforeDir="false" afterPath="$PROJECT_DIR$/../sqllite.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/iterateur.py" beforeDir="false" afterPath="$PROJECT_DIR$/iterateur.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/matrice.py" beforeDir="false" afterPath="$PROJECT_DIR$/matrice.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/taches.py" beforeDir="false" afterPath="$PROJECT_DIR$/taches.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/html.py" beforeDir="false" afterPath="$PROJECT_DIR$/html.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -26,28 +13,23 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/personnes.py">
-          <provider selected="true" editor-type-id="text-editor" />
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/renamefile.py">
+      <file pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/html.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="567">
-              <caret line="21" column="7" selection-start-line="21" selection-start-column="7" selection-end-line="21" selection-end-column="7" />
+            <state relative-caret-position="189">
+              <caret line="7" column="26" selection-start-line="7" selection-start-column="26" selection-end-line="7" selection-end-column="26" />
+              <folding>
+                <element signature="e#0#21#0" expanded="true" />
+              </folding>
             </state>
           </provider>
         </entry>
       </file>
-      <file pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/html.py">
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/definition.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="407">
-              <caret line="33" column="1" selection-start-line="33" selection-start-column="1" selection-end-line="33" selection-end-column="1" />
-              <folding>
-                <element signature="e#0#21#0" expanded="true" />
-              </folding>
+            <state relative-caret-position="2025">
+              <caret line="75" column="16" lean-forward="true" selection-start-line="75" selection-start-column="16" selection-end-line="75" selection-end-column="16" />
             </state>
           </provider>
         </entry>
@@ -175,6 +157,14 @@
       <option name="presentableId" value="Default" />
       <updated>1560718920175</updated>
     </task>
+    <task id="LOCAL-00001" summary="test de définition">
+      <created>1571688273483</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1571688273483</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
   </component>
   <component name="ToolWindowManager">
@@ -186,7 +176,7 @@
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
       <window_info anchor="bottom" id="Find" order="1" />
-      <window_info active="true" anchor="bottom" id="Run" order="2" visible="true" weight="0.31138393" />
+      <window_info anchor="bottom" id="Run" order="2" weight="0.31138393" />
       <window_info anchor="bottom" id="Debug" order="3" weight="0.4" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
@@ -201,6 +191,10 @@
       <window_info anchor="right" id="R Graphics" order="3" />
       <window_info anchor="right" id="R Packages" order="4" />
     </layout>
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="test de définition" />
+    <option name="LAST_COMMIT_MESSAGE" value="test de définition" />
   </component>
   <component name="editorHistoryManager">
     <entry file="file://$PROJECT_DIR$/taches.py">
@@ -219,9 +213,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/personnes.py">
-      <provider selected="true" editor-type-id="text-editor" />
-    </entry>
     <entry file="file://$PROJECT_DIR$/renamefile.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="567">
@@ -229,10 +220,20 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/personnes.py">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/definition.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="2025">
+          <caret line="75" column="16" lean-forward="true" selection-start-line="75" selection-start-column="16" selection-end-line="75" selection-end-column="16" />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/html.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="407">
-          <caret line="33" column="1" selection-start-line="33" selection-start-column="1" selection-end-line="33" selection-end-column="1" />
+        <state relative-caret-position="189">
+          <caret line="7" column="26" selection-start-line="7" selection-start-column="26" selection-end-line="7" selection-end-column="26" />
           <folding>
             <element signature="e#0#21#0" expanded="true" />
           </folding>
