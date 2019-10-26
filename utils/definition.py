@@ -1,10 +1,11 @@
 from inspect import Parameter
+from utils.colors import *
 
 
 def printdef(variable):
   # --------- --------- --------- --------- --------- --------- --------- --------- 
   print(f"def : {variable}")
-  print("Attributs :")
+  print(fcolors.VERT + "Attributs :" + fcolors.ENDC)
   print("-"*10)
 
   max_type_size = 0
@@ -24,10 +25,11 @@ def printdef(variable):
     if not attribut.startswith("__"):
       if not ("method"   in type(getattr(variable, attribut)).__name__ or 
               "function" in type(getattr(variable, attribut)).__name__ ):
-        print(f"  {attribut}{' '*100}"[:max_name_size], end="")
-        print(" as ", end="")
+        print(fcolors.BLEU + f"  {attribut}{' '*100}"[:max_name_size], end="")
+        print(fcolors.ENDC + " as " + fcolors.JAUNE, end="")
         print(f"{type(getattr(variable, attribut)).__name__}{' '*100}"[:max_type_size], end="")
         resultat = f" = {getattr(variable, attribut)}".replace("\n", ", ")
+        print(fcolors.ENDC, end="")
         if len(resultat) < 80:
           print(resultat)
         else:
@@ -75,7 +77,7 @@ def printdef(variable):
   # --------- --------- --------- --------- --------- --------- --------- --------- 
   if len(methods["noArg"]) > 0:
     print()
-    print("Methods :")
+    print(fcolors.VERT + "Methods :" + fcolors.ENDC)
     print("-"*8)
     
     for une_methode in methods["noArg"]:
@@ -86,7 +88,7 @@ def printdef(variable):
   # --------- --------- --------- --------- --------- --------- --------- --------- 
   if len(methods["Args"]) > 0:
     print()
-    print("Methods with args :")
+    print(fcolors.VERT + "Methods with args :" + fcolors.ENDC)
     print("-"*18)
     
     for une_methode in methods["Args"]:
@@ -98,7 +100,7 @@ def printdef(variable):
   # --------- --------- --------- --------- --------- --------- --------- --------- 
   if len(methods["Other"]) > 0:
     print()
-    print("Other Methods :")
+    print(fcolors.VERT + "Other Methods :" + fcolors.ENDC)
     print("-"*14)
     
     for une_methode in methods["Other"]:
