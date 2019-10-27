@@ -81,7 +81,9 @@ def printdef(variable):
     print("-"*8)
     
     for une_methode in methods["noArg"]:
+      print(fcolors.VIOLET, end="")
       print(f"  {une_methode['attr']}(){' '*100}"[:max_name_size+2], end=" ")
+      print(fcolors.ENDC, end="")
       print(f"{une_methode['valeur']}")
 
 
@@ -92,7 +94,9 @@ def printdef(variable):
     print("-"*18)
     
     for une_methode in methods["Args"]:
+      print(fcolors.VIOLET, end="")
       print(f"  {une_methode['attr']}(){' '*100}"[:max_name_size+2], end=" : ")
+      print(fcolors.ENDC, end="")
       print(inspect.getfullargspec(getattr(variable, une_methode['attr'])).annotations, end="")
       print(f"  {une_methode['err']}")
     
@@ -104,7 +108,9 @@ def printdef(variable):
     print("-"*14)
     
     for une_methode in methods["Other"]:
+      print(fcolors.VIOLET, end="")
       print(f"  {une_methode['attr']}(){' '*100}"[:max_name_size+2], end=" : ")
+      print(fcolors.ENDC, end="")
       print(f"{une_methode['err']}")
     
     
