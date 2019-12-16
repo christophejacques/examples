@@ -2,10 +2,13 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="479feb2d-ed35-4196-b7a2-c75eaa442a17" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/codeStyles/codeStyleConfig.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/utils/geometry.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/exemple4.py" beforeDir="false" afterPath="$PROJECT_DIR$/exemple4.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/polynome.py" beforeDir="false" afterPath="$PROJECT_DIR$/polynome.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/sqllite.py" beforeDir="false" afterPath="$PROJECT_DIR$/sqllite.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/test.py" beforeDir="false" afterPath="$PROJECT_DIR$/test.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/utils/definition.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils/definition.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/utils/taches.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils/taches.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -19,22 +22,28 @@
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
       <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/example.py">
+        <entry file="file://$PROJECT_DIR$/test.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state>
-              <caret line="12" column="10" selection-start-line="12" selection-start-column="10" selection-end-line="12" selection-end-column="10" />
-              <folding>
-                <element signature="e#35#64#0" expanded="true" />
-              </folding>
+            <state relative-caret-position="1848">
+              <caret line="84" selection-start-line="84" selection-end-line="84" />
             </state>
           </provider>
         </entry>
       </file>
       <file pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/test.py">
+        <entry file="file://$PROJECT_DIR$/utils/geometry.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="242">
-              <caret line="11" lean-forward="true" selection-start-line="11" selection-end-line="11" />
+            <state relative-caret-position="295">
+              <caret line="27" column="22" selection-start-line="27" selection-start-column="22" selection-end-line="27" selection-end-column="22" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/utils/taches.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="5082">
+              <caret line="234" lean-forward="true" selection-start-line="234" selection-end-line="234" />
             </state>
           </provider>
         </entry>
@@ -76,6 +85,7 @@
       <find>popenargs</find>
       <find>Popen</find>
       <find>fonction</find>
+      <find>def</find>
     </findStrings>
     <replaceStrings>
       <replace />
@@ -107,14 +117,15 @@
         <option value="$PROJECT_DIR$/utils/complexe.py" />
         <option value="$PROJECT_DIR$/exemple2.py" />
         <option value="$PROJECT_DIR$/utils/operation.py" />
-        <option value="$PROJECT_DIR$/utils/taches.py" />
         <option value="$PROJECT_DIR$/polynome.py" />
-        <option value="$PROJECT_DIR$/exemple4.py" />
         <option value="$PROJECT_DIR$/utils/html.py" />
         <option value="$PROJECT_DIR$/example.py" />
         <option value="$PROJECT_DIR$/sqllite.py" />
         <option value="$PROJECT_DIR$/utils/definition.py" />
         <option value="$PROJECT_DIR$/test.py" />
+        <option value="$PROJECT_DIR$/exemple4.py" />
+        <option value="$PROJECT_DIR$/utils/taches.py" />
+        <option value="$PROJECT_DIR$/utils/geometry.py" />
       </list>
     </option>
   </component>
@@ -133,6 +144,17 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
+      <pane id="Scope">
+        <subPane subId="Scope 'Project Files'; set:Project Files; class com.intellij.psi.search.scope.ProjectFilesScope">
+          <expand>
+            <path>
+              <item name="examples" type="3d21c010:ScopeViewTreeModel$ProjectNode" />
+              <item name="" type="442cc68d:ScopeViewTreeModel$RootNode" />
+            </path>
+          </expand>
+          <select />
+        </subPane>
+      </pane>
       <pane id="ProjectPane">
         <subPane>
           <expand>
@@ -144,17 +166,6 @@
               <item name="examples" type="b2602c69:ProjectViewProjectNode" />
               <item name="examples" type="462c0819:PsiDirectoryNode" />
               <item name="utils" type="462c0819:PsiDirectoryNode" />
-            </path>
-          </expand>
-          <select />
-        </subPane>
-      </pane>
-      <pane id="Scope">
-        <subPane subId="Scope 'Project Files'; set:Project Files; class com.intellij.psi.search.scope.ProjectFilesScope">
-          <expand>
-            <path>
-              <item name="examples" type="3d21c010:ScopeViewTreeModel$ProjectNode" />
-              <item name="" type="442cc68d:ScopeViewTreeModel$RootNode" />
             </path>
           </expand>
           <select />
@@ -193,7 +204,7 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="Python.test">
+  <component name="RunManager" selected="Python.geometry">
     <configuration default="true" type="PythonConfigurationType" factoryName="Python">
       <module name="examples" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -299,7 +310,7 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="html" type="PythonConfigurationType" factoryName="Python" temporary="true">
+    <configuration name="geometry" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <module name="examples" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -311,7 +322,7 @@
       <option name="IS_MODULE_SDK" value="true" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/utils/html.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/utils/geometry.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -341,7 +352,7 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="sqllite" type="PythonConfigurationType" factoryName="Python" temporary="true">
+    <configuration name="taches" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <module name="examples" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -349,11 +360,11 @@
         <env name="PYTHONUNBUFFERED" value="1" />
       </envs>
       <option name="SDK_HOME" value="C:\Program Files (x86)\Python37-32\python.exe" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/utils" />
       <option name="IS_MODULE_SDK" value="true" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/sqllite.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/utils/taches.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -387,19 +398,19 @@
       <item itemvalue="Python.firefox" />
       <item itemvalue="Python.exemple3" />
       <item itemvalue="Python.personnes" />
-      <item itemvalue="Python.sqllite" />
-      <item itemvalue="Python.exemple4" />
       <item itemvalue="Python.test" />
-      <item itemvalue="Python.html" />
       <item itemvalue="Python.definition" />
+      <item itemvalue="Python.geometry" />
+      <item itemvalue="Python.exemple4" />
+      <item itemvalue="Python.taches" />
     </list>
     <recent_temporary>
       <list>
+        <item itemvalue="Python.geometry" />
+        <item itemvalue="Python.taches" />
+        <item itemvalue="Python.exemple4" />
         <item itemvalue="Python.test" />
         <item itemvalue="Python.definition" />
-        <item itemvalue="Python.sqllite" />
-        <item itemvalue="Python.html" />
-        <item itemvalue="Python.exemple4" />
       </list>
     </recent_temporary>
   </component>
@@ -627,7 +638,14 @@
       <option name="project" value="LOCAL" />
       <updated>1572111003690</updated>
     </task>
-    <option name="localTasksCounter" value="31" />
+    <task id="LOCAL-00031" summary="Ajout d'exemples sur les fonctions des listes">
+      <created>1572198301549</created>
+      <option name="number" value="00031" />
+      <option name="presentableId" value="LOCAL-00031" />
+      <option name="project" value="LOCAL" />
+      <updated>1572198301549</updated>
+    </task>
+    <option name="localTasksCounter" value="32" />
     <servers />
   </component>
   <component name="TodoView">
@@ -648,8 +666,8 @@
       <window_info id="Favorites" order="2" sideWeight="0.516295" side_tool="true" weight="0.137092" />
       <window_info anchor="bottom" id="Message" order="0" />
       <window_info anchor="bottom" id="Find" order="1" weight="0.32855567" />
-      <window_info active="true" anchor="bottom" id="Run" order="2" visible="true" weight="0.42578548" />
-      <window_info anchor="bottom" id="Debug" order="3" sideWeight="0.49970326" weight="0.38037485" />
+      <window_info active="true" anchor="bottom" id="Run" order="2" visible="true" weight="0.36619717" />
+      <window_info anchor="bottom" id="Debug" order="3" sideWeight="0.49970326" weight="0.3802817" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
       <window_info anchor="bottom" id="TODO" order="6" weight="0.32855567" />
@@ -801,11 +819,9 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/utils/taches.py" />
     <entry file="file://$PROJECT_DIR$/monjeux.py" />
     <entry file="file://$PROJECT_DIR$/polynome.py" />
     <entry file="file://D:/Programmes/Python/bin/Lib/subprocess.py" />
-    <entry file="file://$PROJECT_DIR$/exemple4.py" />
     <entry file="file://$PROJECT_DIR$/exemple2.py" />
     <entry file="file://$PROJECT_DIR$/exemple3.py" />
     <entry file="file://$PROJECT_DIR$/utils/html.py" />
@@ -842,7 +858,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/example.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state>
+        <state relative-caret-position="176">
           <caret line="12" column="10" selection-start-line="12" selection-start-column="10" selection-end-line="12" selection-end-column="10" />
           <folding>
             <element signature="e#35#64#0" expanded="true" />
@@ -850,10 +866,34 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/exemple4.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="53">
+          <caret line="18" column="4" lean-forward="true" selection-start-line="18" selection-start-column="4" selection-end-line="18" selection-end-column="4" />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/test.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="242">
-          <caret line="11" lean-forward="true" selection-start-line="11" selection-end-line="11" />
+        <state relative-caret-position="1848">
+          <caret line="84" selection-start-line="84" selection-end-line="84" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/utils/taches.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="5082">
+          <caret line="234" lean-forward="true" selection-start-line="234" selection-end-line="234" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/fichier.xml">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/utils/geometry.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="295">
+          <caret line="27" column="22" selection-start-line="27" selection-start-column="22" selection-end-line="27" selection-end-column="22" />
         </state>
       </provider>
     </entry>

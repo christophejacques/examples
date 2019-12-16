@@ -90,6 +90,7 @@ class uneTache(Thread):
       if self.returnfunc:
         self.returnfunc()
 
+
 class Processeur:
     """Processeur()"""
     def __init__(self):
@@ -97,7 +98,6 @@ class Processeur:
       self.groupe = []
 
       self.running = False
-
 
     def add_groupe(self, mode=MONOTACHE):
       self.num_groupe += 1
@@ -117,7 +117,6 @@ class Processeur:
 
     def add_to_group(self, mode, fonction, *args):
       self.add_tache(self.num_groupe, mode, fonction, *args)
-
 
     def add_tache(self, num_groupe, mode, fonction, *args):
       if self.is_running():
@@ -147,7 +146,6 @@ class Processeur:
           res = res or t.isAlive()
 
       return res
-
 
     def end(self, num_groupe):
       if DEBUG: fprint(f"Fin Groupe({num_groupe})\n")
@@ -235,4 +233,4 @@ else:
   else:
     fprint("Fin du code ...")
 
-  #getch()
+  getch()

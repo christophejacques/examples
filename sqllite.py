@@ -173,4 +173,4 @@ with monsql(":memory:") as mabd:
             mabd.rollback()
 
 import msvcrt
-# msvcrt.getch()
+msvcrt.getch()

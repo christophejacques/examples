@@ -1,0 +1,17 @@
+<html>
+  <head>
+    <title>Titre</title>
+    <h1>Head h1 ligne1</h1>
+    <h1>Head h1 ligne2</h1>
+  </head>
+  <body>
+    <ligne>
+      <h1>Body Balise1 h1</h1>
+      <P>paragraphe 1</P>
+     </ligne>
+    <ligne>
+      <h2>Body Balise2 h2</h2>
+      <P>paragraphe 2</P>
+     </ligne>
+  </body>
+</html>
