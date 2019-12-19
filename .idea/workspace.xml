@@ -2,13 +2,9 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="479feb2d-ed35-4196-b7a2-c75eaa442a17" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/utils/geometry.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/exemple4.py" beforeDir="false" afterPath="$PROJECT_DIR$/exemple4.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/polynome.py" beforeDir="false" afterPath="$PROJECT_DIR$/polynome.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/sqllite.py" beforeDir="false" afterPath="$PROJECT_DIR$/sqllite.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/test.py" beforeDir="false" afterPath="$PROJECT_DIR$/test.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/utils/taches.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils/taches.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cxml.py" beforeDir="false" afterPath="$PROJECT_DIR$/cxml.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/utils/definition.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils/definition.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -21,29 +17,23 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/test.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="1848">
-              <caret line="84" selection-start-line="84" selection-end-line="84" />
-            </state>
-          </provider>
-        </entry>
-      </file>
       <file pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/utils/geometry.py">
+        <entry file="file://$PROJECT_DIR$/cxml.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="295">
-              <caret line="27" column="22" selection-start-line="27" selection-start-column="22" selection-end-line="27" selection-end-column="22" />
+            <state relative-caret-position="229">
+              <caret line="83" column="30" selection-start-line="83" selection-start-column="30" selection-end-line="83" selection-end-column="30" />
+              <folding>
+                <element signature="e#0#24#0" expanded="true" />
+              </folding>
             </state>
           </provider>
         </entry>
       </file>
       <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/utils/taches.py">
+        <entry file="file://$PROJECT_DIR$/utils/definition.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="5082">
-              <caret line="234" lean-forward="true" selection-start-line="234" selection-end-line="234" />
+            <state relative-caret-position="22">
+              <caret line="1" column="26" lean-forward="true" selection-start-line="1" selection-end-line="1" selection-end-column="26" />
             </state>
           </provider>
         </entry>
@@ -86,6 +76,7 @@
       <find>Popen</find>
       <find>fonction</find>
       <find>def</find>
+      <find>balise</find>
     </findStrings>
     <replaceStrings>
       <replace />
@@ -121,11 +112,12 @@
         <option value="$PROJECT_DIR$/utils/html.py" />
         <option value="$PROJECT_DIR$/example.py" />
         <option value="$PROJECT_DIR$/sqllite.py" />
-        <option value="$PROJECT_DIR$/utils/definition.py" />
         <option value="$PROJECT_DIR$/test.py" />
         <option value="$PROJECT_DIR$/exemple4.py" />
         <option value="$PROJECT_DIR$/utils/taches.py" />
         <option value="$PROJECT_DIR$/utils/geometry.py" />
+        <option value="$PROJECT_DIR$/utils/definition.py" />
+        <option value="$PROJECT_DIR$/cxml.py" />
       </list>
     </option>
   </component>
@@ -204,7 +196,7 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="Python.geometry">
+  <component name="RunManager" selected="Python.cxml">
     <configuration default="true" type="PythonConfigurationType" factoryName="Python">
       <module name="examples" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -226,7 +218,7 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="definition" type="PythonConfigurationType" factoryName="Python" temporary="true">
+    <configuration name="cxml" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <module name="examples" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -234,11 +226,11 @@
         <env name="PYTHONUNBUFFERED" value="1" />
       </envs>
       <option name="SDK_HOME" value="C:\Program Files (x86)\Python37-32\python.exe" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/utils" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
       <option name="IS_MODULE_SDK" value="true" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/utils/definition.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/cxml.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -399,18 +391,18 @@
       <item itemvalue="Python.exemple3" />
       <item itemvalue="Python.personnes" />
       <item itemvalue="Python.test" />
-      <item itemvalue="Python.definition" />
       <item itemvalue="Python.geometry" />
       <item itemvalue="Python.exemple4" />
       <item itemvalue="Python.taches" />
+      <item itemvalue="Python.cxml" />
     </list>
     <recent_temporary>
       <list>
+        <item itemvalue="Python.cxml" />
+        <item itemvalue="Python.test" />
         <item itemvalue="Python.geometry" />
         <item itemvalue="Python.taches" />
         <item itemvalue="Python.exemple4" />
-        <item itemvalue="Python.test" />
-        <item itemvalue="Python.definition" />
       </list>
     </recent_temporary>
   </component>
@@ -645,7 +637,21 @@
       <option name="project" value="LOCAL" />
       <updated>1572198301549</updated>
     </task>
-    <option name="localTasksCounter" value="32" />
+    <task id="LOCAL-00032" summary="Ajout d'exemples sur les fonctions des listes">
+      <created>1576538283382</created>
+      <option name="number" value="00032" />
+      <option name="presentableId" value="LOCAL-00032" />
+      <option name="project" value="LOCAL" />
+      <updated>1576538283382</updated>
+    </task>
+    <task id="LOCAL-00033" summary="Ajout d'exemples sur les fonctions des listes">
+      <created>1576538310284</created>
+      <option name="number" value="00033" />
+      <option name="presentableId" value="LOCAL-00033" />
+      <option name="project" value="LOCAL" />
+      <updated>1576538310284</updated>
+    </task>
+    <option name="localTasksCounter" value="34" />
     <servers />
   </component>
   <component name="TodoView">
@@ -666,14 +672,14 @@
       <window_info id="Favorites" order="2" sideWeight="0.516295" side_tool="true" weight="0.137092" />
       <window_info anchor="bottom" id="Message" order="0" />
       <window_info anchor="bottom" id="Find" order="1" weight="0.32855567" />
-      <window_info active="true" anchor="bottom" id="Run" order="2" visible="true" weight="0.36619717" />
+      <window_info active="true" anchor="bottom" id="Run" order="2" sideWeight="0.58956796" visible="true" weight="0.46153846" />
       <window_info anchor="bottom" id="Debug" order="3" sideWeight="0.49970326" weight="0.3802817" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
       <window_info anchor="bottom" id="TODO" order="6" weight="0.32855567" />
       <window_info anchor="bottom" id="Version Control" order="7" sideWeight="0.6529517" weight="0.3296582" />
       <window_info anchor="bottom" id="Terminal" order="8" weight="0.32855567" />
-      <window_info anchor="bottom" id="Event Log" order="9" sideWeight="0.3470483" side_tool="true" weight="0.3296582" />
+      <window_info anchor="bottom" id="Event Log" order="9" sideWeight="0.41043204" side_tool="true" weight="0.36619717" />
       <window_info anchor="bottom" id="Python Console" order="10" weight="0.35281146" />
       <window_info anchor="bottom" id="GitLabIntegration" order="11" />
       <window_info anchor="bottom" id="SVN Repositories" order="12" weight="0.32936078" />
@@ -792,8 +798,6 @@
     </entry>
     <entry file="file://D:/Programmes/Python/bin/Lib/site-packages/selenium/webdriver/support/wait.py" />
     <entry file="file://D:/Programmes/Python/bin/Lib/codecs.py" />
-    <entry file="file://$PROJECT_DIR$/utils/matrice.py" />
-    <entry file="file://$PROJECT_DIR$/utils/iterateur.py" />
     <entry file="file://$USER_HOME$/.PyCharmCE2018.3/system/python_stubs/-1670806308/_tkinter.py" />
     <entry file="file://D:/Programmes/Python/bin/Lib/tkinter/__init__.py" />
     <entry file="file://$USER_HOME$/.PyCharmCE2018.3/system/python_stubs/-1670806308/pygame/draw.py" />
@@ -803,15 +807,7 @@
     <entry file="file://$PROJECT_DIR$/geckodriver.log" />
     <entry file="file://$PROJECT_DIR$/firefox.py" />
     <entry file="file://$PROJECT_DIR$/libreoffice.py" />
-    <entry file="file://$PROJECT_DIR$/utils/complexe.py" />
     <entry file="file://C:/Program Files (x86)/Python37-32/Lib/threading.py" />
-    <entry file="file://$PROJECT_DIR$/utils/operation.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="214">
-          <caret line="83" lean-forward="true" selection-start-line="83" selection-end-line="83" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/utils/robot.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="858">
@@ -824,7 +820,6 @@
     <entry file="file://D:/Programmes/Python/bin/Lib/subprocess.py" />
     <entry file="file://$PROJECT_DIR$/exemple2.py" />
     <entry file="file://$PROJECT_DIR$/exemple3.py" />
-    <entry file="file://$PROJECT_DIR$/utils/html.py" />
     <entry file="file://$PROJECT_DIR$/utils/personnes.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="2618">
@@ -836,23 +831,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="289">
           <caret line="156" column="19" selection-start-line="156" selection-start-column="19" selection-end-line="156" selection-end-column="19" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/utils/colors.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="44">
-          <caret line="2" column="13" selection-start-line="2" selection-start-column="6" selection-end-line="2" selection-end-column="13" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/utils/definition.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="187">
-          <caret line="107" column="17" lean-forward="true" selection-start-line="107" selection-start-column="16" selection-end-line="107" selection-end-column="17" />
-          <folding>
-            <element signature="e#0#29#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -873,13 +851,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/test.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1848">
-          <caret line="84" selection-start-line="84" selection-end-line="84" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/utils/taches.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="5082">
@@ -887,13 +858,70 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/fichier.xml">
+    <entry file="file://D:/Programmes/Python/bin/Lib/xml/dom/minidom.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="160">
+          <caret line="838" column="8" selection-start-line="838" selection-start-column="8" selection-end-line="838" selection-end-column="8" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/test.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1848">
+          <caret line="84" selection-start-line="84" selection-end-line="84" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/utils/operation.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="66">
+          <caret line="3" column="46" lean-forward="true" selection-start-line="3" selection-start-column="46" selection-end-line="3" selection-end-column="46" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/utils/matrice.py">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/utils/iterateur.py">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/utils/html.py">
       <provider selected="true" editor-type-id="text-editor" />
     </entry>
     <entry file="file://$PROJECT_DIR$/utils/geometry.py">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/utils/colors.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="295">
-          <caret line="27" column="22" selection-start-line="27" selection-start-column="22" selection-end-line="27" selection-end-column="22" />
+        <state relative-caret-position="44">
+          <caret line="2" column="13" selection-start-line="2" selection-start-column="6" selection-end-line="2" selection-end-column="13" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/utils/complexe.py">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/fichier.xml">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="132">
+          <caret line="6" column="6" selection-start-line="6" selection-start-column="6" selection-end-line="6" selection-end-column="6" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/utils/definition.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="22">
+          <caret line="1" column="26" lean-forward="true" selection-start-line="1" selection-end-line="1" selection-end-column="26" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/cxml.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="229">
+          <caret line="83" column="30" selection-start-line="83" selection-start-column="30" selection-end-line="83" selection-end-column="30" />
+          <folding>
+            <element signature="e#0#24#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
