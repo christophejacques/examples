@@ -1,6 +1,7 @@
 from msvcrt import getch
 import json, os, utils.colors as colors
 
+
 def getNom(c1):
     return c1.nom
 
