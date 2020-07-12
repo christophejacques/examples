@@ -1,5 +1,14 @@
 import sqlite3, sys
+import os, traceback
+os.chdir("C:\\Users\\utilisateur\\OneDrive\\Programmation\\python\\examples")
 
+# ---------------------------------------------------------
+#
+# codage UTF-8 des instruction affichée via commande print()
+#
+import sys, codecs
+sys.stdout = codecs.getwriter("utf-8")(sys.stdout.detach())
+# ---------------------------------------------------------
 
 def fonction(*args):
     print(f"fonction(*args): avec {len(args)} arguments")
@@ -54,10 +63,12 @@ class monsql:
         print("Ok")
 
     def isconnected(self):
-        return self.conn != None
+        return self.conn is not None
 
     def existTable(self, nomTable):
-        return self.curs.execute("SELECT name FROM sqlite_master WHERE name = ?", (nomTable,)).rowcount > 0
+        res = self.curs.execute("SELECT name FROM sqlite_master WHERE name = ?", (nomTable,)).fetchone()
+        if res is None: return False
+        return  len(res) > 0
 
     def createTable(self, nomTable, listeChamps):
         print(f"Création de la table *{nomTable}*", end="")
@@ -131,12 +142,15 @@ class monsql:
         print(f" => OK (Id:{res.lastrowid:03})")
 
 
-# with monsql("basededonnees.db") as mabd:
-with monsql(":memory:") as mabd:
+with monsql("basededonnees.db") as mabd:
+#with monsql(":memory:") as mabd:
     if mabd.isconnected():
         try:
+                
             if not mabd.existTable("personnes"):
                 mabd.createTable("personnes",[("idPersonne", "integer PRIMARY KEY AUTOINCREMENT"), ("nom", "text"), ("prenom","text"), ("datedenaissance","text")])
+            else:
+                print("Table personnes existe déjà")
 
             if not mabd.existTable("metiers"):
                 mabd.createTable("metiers",[("idMetier", "integer PRIMARY KEY AUTOINCREMENT"), ("libelle","text")])
@@ -167,10 +181,8 @@ with monsql(":memory:") as mabd:
             mabd.rollback()
 
         except: # (RuntimeError, TypeError, NameError):
-            errcls, errlib, errobj = sys.exc_info()
-            print(f"{errcls}".split("'")[1] + " :")
-            print(f" - ligne {errobj.tb_lineno} : {errlib}")
+            print(traceback.print_exc())
             mabd.rollback()
 
 import msvcrt
-msvcrt.getch()
+#msvcrt.getch()

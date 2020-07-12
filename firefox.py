@@ -4,6 +4,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 import datetime
+from msvcrt import getch
 
 # ---------------------------------------------------------
 #
@@ -13,22 +14,28 @@ import sys, codecs
 sys.stdout = codecs.getwriter("utf-8")(sys.stdout.detach())
 # ---------------------------------------------------------
 
-print("loading")
+def printf(*args, **kwargs):
+    print(*args, **kwargs, flush=True)
+
+
+printf("loading Firefox webdriver : ", end="")
 
 driver = webdriver.Firefox()
+printf("Ok")
 driver.set_window_rect(1000, 1, 920, 1050)
 
+printf("loading 'http://www.python.org' : ", end="")
 driver.get("http://www.python.org")
 
 # pause implicite de 10s
 driver.implicitly_wait(10)
 
-
 assert "Python" in driver.title
+printf("Ok")
 
 elem = driver.find_element_by_name("q")
 
-print("Recherche sur : try except")
+printf("Recherche sur : try except")
 elem.clear()
 elem.send_keys("try except")
 elem.send_keys(Keys.RETURN)
@@ -69,7 +76,7 @@ def wait_for_element(source, type_element, nom_element, continu = True):
         except:
             msg = "{:%Y%m%d-%H%M%S}_wait_elt_{}-{}_n_{}.png"\
                 .format(datetime.datetime.now(), type_element, nom_element, loop_count)
-            print(msg)
+            printf(msg)
 
             loop_count += 1
             found = loop_count > 3
@@ -81,7 +88,7 @@ def wait_for_element(source, type_element, nom_element, continu = True):
 
 
 num_page = 1
-max_page = 2
+max_page = 3
 
 try:
     while num_page < max_page:
@@ -93,25 +100,26 @@ try:
         ul_elt = wait_for_element(form, "CSS_SELECTOR", "ul.list-recent-events.menu")
         titres = wait_for_element(ul_elt, "TAGs_NAME", "a")
 
-        print("nb results = {}".format(len(titres)))
+        printf("nb results = {}".format(len(titres)))
 
         for lien in titres:
-            print("- {}".format(lien.text))
+            printf("- {}".format(lien.text))
 
         num_page += 1
         suivant = wait_for_element(form, "LINK_TEXT", "Next »")
         suivant.click()
 
         if "No results found." in driver.page_source:
-            print("Aucun resultat trouvé !")
+            printf("Aucun resultat trouvé !")
             num_page = max_page
 
 
 except:
-    print("erreur detectee !")
+    printf("erreur detectee !")
     raise
 
 finally:
     driver.close()
 
-input("")
+printf("Appuyez sur une touche")
+getch()

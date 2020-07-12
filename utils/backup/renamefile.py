@@ -28,8 +28,8 @@ def msg_erreur(msg):
     print(msg)
     print()
     print(" %1 : Expression régulière de sélection des fichiers (obligatoire)")
-    print(" %2 : Expression régulière des caractères à remplacer (facultatif)")
-    print(" %3 : Expression des caractères de remplacement (facultatif)")
+    print(" %2 : Expression régulière des caractères à remplacer (obligatoire)")
+    print(" %3 : Expression des caractères de remplacement (obligatoire)")
     print(" %4 : -exec (effectue le renommage) (facultatif)")
     # getch()
     exit(1)
@@ -37,34 +37,19 @@ def msg_erreur(msg):
 
 try:
     todo = False
-    regexp_liste = ""
-    regexp_source = ""
-    regexp_dest = ""
-    
-    if nb_args == 1:
-        regexp_liste, regexp_source = (argv[0],) * 2
-        
-    elif nb_args == 2:
-        regexp_liste, regexp_source, regexp_dest = (argv[0], argv[0], argv[1]) 
-        
-    elif nb_args == 3:
-        if argv[2].lower() in ("exec", "-exec"):
-            regexp_liste, regexp_source, regexp_dest = (argv[0], argv[0], argv[1]) 
-            todo = True
-        else:
-            regexp_liste, regexp_source, regexp_dest = argv[:]
+    if nb_args not in (3, 4):
+        msg_erreur(f"Nombre de paramètres incorrects : {nb_args}")
         
     elif nb_args == 4:
         if argv[3].lower() not in ("exec", "-exec"):
             msg_erreur(f"Paramètre invalide : {argv[3]}")
-        regexp_liste, regexp_source, regexp_dest = (argv[0], argv[1], argv[2]) 
         todo = True
         
-    else:
-        msg_erreur(f"Nombre de paramètres incorrects : {nb_args}")
-        
-        
     repertoire = os.getcwd()
+
+    regexp_liste = argv[0]
+    regexp_source = argv[1]
+    regexp_dest = argv[2] 
     
     print(f"Répertoire source : {couleurRecherche}{repertoire}{fcolors.ENDC}")
     
@@ -120,17 +105,18 @@ try:
                     else:
                         fprint("\n    ")
                         
-                    if nb_args > 1:
-                        fprint("-->", new_file)
-                        if todo:
-                            try:
-                                os.rename(f, new_f)
-                                nb_changed += 1
-                                fprint(f" {fcolors.GVERT}Ok{fcolors.ENDC}")
-                                
-                            except Exception as e:
-                                print(f" {fcolors.GROUGE}(Ko)")
-                                fprint(f"{e}{fcolors.ENDC}")
+                    # new_f = re.sub(rxs, regexp_dest, f)
+                    # print("-->", new_f)
+                    fprint("-->", new_file)
+                    if todo:
+                        try:
+                            os.rename(f, new_f)
+                            nb_changed += 1
+                            fprint(f" {fcolors.GVERT}Ok{fcolors.ENDC}")
+                            
+                        except Exception as e:
+                            print(f" {fcolors.GROUGE}(Ko)")
+                            fprint(f"{e}{fcolors.ENDC}")
                 else:
                     fprint(f)
                     

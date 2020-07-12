@@ -15,7 +15,7 @@ def decorateur(fonction):
 
 class mon_iterateur:
 
-    @decorateur
+    #@decorateur
     def __init__(self, debut, fin=None):
         if type(debut) != int:
             raise TypeError("Le 1er paramêtre n'est pas de type Entier")
@@ -42,7 +42,7 @@ class mon_iterateur:
         return courant
 
 
-@decorateur
+#@decorateur
 def mon_generateur(debut, fin=None):
     if type(debut) != int:
         raise TypeError("Le 1er paramêtre n'est pas de type Entier")
@@ -69,5 +69,10 @@ for g in mon_generateur(4):
     print(g, end=" ")
 
 print()
+try:
+    pass
+except Exception as e:
+    print("Erreur:", e)
+    
 from msvcrt import getch
 getch()

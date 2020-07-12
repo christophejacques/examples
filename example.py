@@ -198,14 +198,9 @@ def exemple13():
     :return: None
     """
     for x in range(1, 10000):
-        somme = 0
-        lsDiviseursPropres = decomposeDiviseurs(x)
-
-        for y in lsDiviseursPropres:
-            somme += y
-
-        if x == somme:
-            print("%d est un nombre parfait" % x)
+        dd = decomposeDiviseurs(x)
+        if x == sum(dd):
+            print(f"{x:5} est un nombre parfait = {dd}")
 
 
 def exemple14():
@@ -239,7 +234,7 @@ def exemple14():
 
     print("Extraction d'une partir de la liste [1:4:2] : ", couleurs[1:4:2])
 
-    if True:
+    if False:
         lf = []
 
         lf.append(lambda x : 0)
@@ -248,12 +243,12 @@ def exemple14():
         lf.append(lambda x : 3 * x)
         lf.append(lambda x : 4 * x)
     else:
-        lf = [(lambda y: y * x) for x in range(5)]
+        lf = [(lambda y, x: y * x) for x in range(5)]
 
     print("Fabrication liste par fonction x*y :")
     taille = len(lf)
     for i, f in enumerate(lf):
-        print("Table des %d =" % i, [f(x) for x in range(10)])
+        print("Table des %d =" % i, [f(i, x) for x in range(10)])
 
     couleurs.clear()
     print("Suppression du contenu de la liste : ", couleurs)
@@ -296,11 +291,11 @@ mail = brigitte.bernard54@noos.fr
         print(">", chaine[res.span(0)[0]:res.span(0)[1]])
 
 
-exemple13()
+exemple15()
 
 
 # -------------------------------------------------------------------------------------------------------------------
 print()
 fin = datetime.now()
 print("Duree = " , fin - debut)
-#input("")
+input("")

@@ -1,15 +1,15 @@
 <html>
-  <head>
+  <head content="text/html" encoding="utf-8">
     <title>Titre</title>
     <h1>Head h1 ligne1</h1>
     <h1>Head h1 ligne2</h1>
   </head>
-  <body>
-    <ligne>
+  <body style="background-color:black" width="100%">
+    <ligne num="1">
       <h1>Body Balise1 h1</h1>
       <P>paragraphe 1</P>
      </ligne>
-    <ligne>
+    <ligne num="2">
       <h2>Body Balise2 h2</h2>
       <P>paragraphe 2</P>
      </ligne>

@@ -1,0 +1,225 @@
+{
+  "id": 0,
+  "nom": "Valérie",
+  "prenom": "Isabelle",
+  "age": 47,
+  "role": "Manager",
+  "collaborateurs": [
+    {
+      "id": 3,
+      "nom": "Gosselin",
+      "prenom": "Eric",
+      "age": 50,
+      "role": "Manager",
+      "manager_id": 0,
+      "collaborateurs": [
+        {
+          "id": 26,
+          "nom": "Machadier",
+          "prenom": "Brice",
+          "age": 30,
+          "role": "Personne",
+          "manager_id": 3
+        },
+        {
+          "id": 23,
+          "nom": "Billat",
+          "prenom": "Christelle",
+          "age": 30,
+          "role": "Personne",
+          "manager_id": 3
+        },
+        {
+          "id": 25,
+          "nom": "Granger",
+          "prenom": "Katia",
+          "age": 30,
+          "role": "Personne",
+          "manager_id": 3
+        },
+        {
+          "id": 24,
+          "nom": "Lau",
+          "prenom": "Carole",
+          "age": 30,
+          "role": "Personne",
+          "manager_id": 3
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "nom": "Basque",
+      "prenom": "Mikael",
+      "age": 44,
+      "role": "Manager",
+      "manager_id": 0,
+      "collaborateurs": [
+        {
+          "id": 16,
+          "nom": "",
+          "prenom": "Damien",
+          "age": 30,
+          "role": "Personne",
+          "manager_id": 2
+        },
+        {
+          "id": 20,
+          "nom": "",
+          "prenom": "Samuel",
+          "age": 30,
+          "role": "Personne",
+          "manager_id": 2
+        },
+        {
+          "id": 21,
+          "nom": "",
+          "prenom": "Eric",
+          "age": 30,
+          "role": "Personne",
+          "manager_id": 2
+        },
+        {
+          "id": 4,
+          "nom": "Audevard",
+          "prenom": "Didier",
+          "age": 47,
+          "role": "Manager",
+          "manager_id": 2,
+          "collaborateurs": [
+            {
+              "id": 9,
+              "nom": "Aubry",
+              "prenom": "Gilles",
+              "age": 50,
+              "role": "Personne",
+              "manager_id": 4
+            },
+            {
+              "id": 10,
+              "nom": "Bernada",
+              "prenom": "Corinne",
+              "age": 50,
+              "role": "Personne",
+              "manager_id": 4
+            },
+            {
+              "id": 6,
+              "nom": "Bisson",
+              "prenom": "Aurélien",
+              "age": 30,
+              "role": "Personne",
+              "manager_id": 4
+            },
+            {
+              "id": 7,
+              "nom": "Cao",
+              "prenom": "Nicolas",
+              "age": 40,
+              "role": "Personne",
+              "manager_id": 4
+            },
+            {
+              "id": 5,
+              "nom": "Jacques",
+              "prenom": "Christophe",
+              "age": 48,
+              "role": "Personne",
+              "manager_id": 4
+            },
+            {
+              "id": 8,
+              "nom": "Reix",
+              "prenom": "Pascal",
+              "age": 45,
+              "role": "Personne",
+              "manager_id": 4
+            }
+          ]
+        },
+        {
+          "id": 17,
+          "nom": "Bouyat",
+          "prenom": "Corinne",
+          "age": 30,
+          "role": "Personne",
+          "manager_id": 2
+        },
+        {
+          "id": 22,
+          "nom": "Cenatiempo",
+          "prenom": "Aline",
+          "age": 30,
+          "role": "Personne",
+          "manager_id": 2
+        },
+        {
+          "id": 19,
+          "nom": "Guillon",
+          "prenom": "Philippe",
+          "age": 30,
+          "role": "Personne",
+          "manager_id": 2
+        },
+        {
+          "id": 18,
+          "nom": "Mounier",
+          "prenom": "Sylvie",
+          "age": 30,
+          "role": "Personne",
+          "manager_id": 2
+        },
+        {
+          "id": 11,
+          "nom": "Rodriguez",
+          "prenom": "Magali",
+          "age": 44,
+          "role": "Manager",
+          "manager_id": 2,
+          "collaborateurs": [
+            {
+              "id": 12,
+              "nom": "Garcia",
+              "prenom": "Malaury",
+              "age": 30,
+              "role": "Personne",
+              "manager_id": 11
+            },
+            {
+              "id": 13,
+              "nom": "Robin",
+              "prenom": "Nicolas",
+              "age": 30,
+              "role": "Personne",
+              "manager_id": 11
+            }
+          ]
+        },
+        {
+          "id": 14,
+          "nom": "Rougerie",
+          "prenom": "Aurélie",
+          "age": 30,
+          "role": "Personne",
+          "manager_id": 2
+        },
+        {
+          "id": 15,
+          "nom": "Vernaelde",
+          "prenom": "Bruno",
+          "age": 30,
+          "role": "Personne",
+          "manager_id": 2
+        }
+      ]
+    },
+    {
+      "id": 1,
+      "nom": "Petinon",
+      "prenom": "Sophie",
+      "age": 48,
+      "role": "Personne",
+      "manager_id": 0
+    }
+  ]
+}

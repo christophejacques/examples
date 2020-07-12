@@ -17,21 +17,30 @@ class Form2D:
     
     def aire(self):
         return "a={}".format(self.index)
+        
+    def get_rayon(self):
+        return self.__rayon
 
     
 class Cercle(Form2D):
     
     def __init__(self, rayon):
-        print(f"init({rayon}) -> ", end="")
         self.rayon = rayon
+        print(f"init({self.rayon}) -> ", end="")
         Form2D.__init__(self)
-        print(f"{self.rayon}")
+        print(f"{self.rayon}", end=" : ")
 
     def get_rayon(self):
-        return self.rayon
+        print(dir(self))
+        return Form2D.get_rayon(self)
     
-    
-c = Cercle(2)
-print(c.get_rayon())
-d = Cercle(6)
-print(d.get_rayon())
+try:    
+  c = Cercle(2)
+  print(c.get_rayon())
+  d = Cercle(6)
+  print(d.get_rayon())
+
+except Exception as e:
+  print("Erreur:", e)
+  
+#input()

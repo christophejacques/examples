@@ -22,7 +22,12 @@ def makeNDarray(*args, **kvargs):
         if not type(res) == list:
             res = [res for i in range(dimension)]
         else:
-            res = [res.copy() for i in range(dimension)]
+            res1 = []
+            for _ in range(dimension):
+                res1.append(res[:])
+                
+            res = res1
+            
     return res
 
 
@@ -49,9 +54,10 @@ def exemple4():
       print(f"{a}()")
 
 
-exemple4()
+
+exemple5()
 
 if __name__ != "__main__":
     print("ok")
 
-input("")
+# input("")

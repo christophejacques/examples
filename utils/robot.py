@@ -1,5 +1,30 @@
 # from utils.operation import *
 
+def fibonnacci(n):
+    if n < 3: return 1
+    return fibonnacci(n-2) + fibonnacci(n-1)
+
+def fib(n):
+    if n < 3: return 1
+    s = 0
+    s1 = 1
+    s2 = 1
+    for _ in range(n-2):
+        s = s1 + s2
+        s1, s2 = s, s1
+    return s
+
+print("Suite de fibonnacci(x)")
+for x in range(1000, 1004):
+    print(fib(x))
+print("\n")
+
+def factoriel(x):
+    p = 1
+    for i in range(2, x+1):
+        p *= i
+    return p
+
 class Robot:
 
     def __init__(self, name, build_year, lk=0.5, lp=0.5):
@@ -37,7 +62,7 @@ fct = {
     "!": lambda x: factoriel(x)
       }
 
-if False:
+if True:
     reverseParams = lambda *v: [x for x in reversed(v)]
     reverseListe  = lambda l: l[::-1]
 
