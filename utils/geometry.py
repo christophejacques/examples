@@ -43,4 +43,4 @@ try:
 except Exception as e:
   print("Erreur:", e)
   
-#input()
+input()

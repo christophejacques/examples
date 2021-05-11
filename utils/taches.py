@@ -256,4 +256,4 @@ else:
   else:
     fprint("Fin du code ...")
 
-    #getch()
+    getch()

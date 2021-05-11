@@ -34,3 +34,5 @@ try:
     
 except StopIteration:
     print("fin d'iteration")
+
+input()

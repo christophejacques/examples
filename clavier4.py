@@ -71,7 +71,7 @@ class Keyboard:
         if self.has_special():
             chaine = "[{}] {}    ".format(self.__touche, self.__special)
         else:
-            chaine = "{}              ".format(self.__touche)
+            chaine = "{}                  ".format(self.__touche)
             
         printXY(x, y, "Key pressed is : {}".format(chaine), end="")
 
@@ -83,14 +83,14 @@ def main():
         tp.append( Patience(i) )
     x, minx = (40,) *2
     y, miny = (2, ) *2
-    maxx = 100
+    maxx = 140
     maxy = 10
     line = 4
     tick = 0
     while True:
         if Keyboard.keypressed():
             Keyboard.print(4, line)
-            printXY(4, line+1, " " * 22)
+            printXY(4, line+1, " " * 32)
             if line >= 20:
                 line = 4
             else:

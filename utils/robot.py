@@ -81,3 +81,6 @@ if True:
     print((5,6)+(7,8))
     print(sorted([5, 2, 8, 1, 9]))
     print("{0}".format([1,2,3]))
+
+from msvcrt import getch
+getch()

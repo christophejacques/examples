@@ -155,6 +155,9 @@ with monsql("basededonnees.db") as mabd:
             if not mabd.existTable("metiers"):
                 mabd.createTable("metiers",[("idMetier", "integer PRIMARY KEY AUTOINCREMENT"), ("libelle","text")])
             mabd.commit()
+            
+            mabd.deleteData("personnes")
+            mabd.commit()
 
             mabd.insertData("personnes", ("nom", "JACQUES"), ("prenom", "christophe"), ("datedenaissance", "1971-09-02"))
             mabd.insertData("personnes", ("nom", "BERNARD"), ("prenom", "brigitte"), ("datedenaissance", "1951-09-16"))

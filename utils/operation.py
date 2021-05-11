@@ -33,12 +33,13 @@ def decomposePremiers(n):
     nb = n
     res = []
     x = 2
-    while nb % x == 0:
+    while nb % 2 == 0:
         res.append(x)
-        nb //= x
+        nb //= 2
 
     x = 3
-    while x <= sqrt(nb):
+    #while x <= sqrt(nb):
+    while x*x <= nb:
         while nb % x == 0:
             res.append(x)
             nb //= x
@@ -82,9 +83,25 @@ def suppressionDoublons(liste):
 if __name__ != "__main__":
     print("ok")
 
-l = [1, 2, 2, 3]
-# print(suppressionDoublons(l) )
-# print(list(set(l)))
-# print( decomposeDiviseurs(200) )
-# print( decomposePremiers(32119) )
+import time
+debut = time.perf_counter()
 
+try:
+    l = [1, 2, 2, 3]
+    print(suppressionDoublons(l) )
+    print(list(set(l)))
+    print( decomposeDiviseurs(200) )
+    print( decomposePremiers(200) )
+    
+    #for _ in range(20):
+    #    print(_, end=" ")
+    #    decomposePremiers(32_118_000_987_321) 
+    print(decomposePremiers(32_118_000_987_3217) )
+    
+    print("\nDurée: {0:.2f}s".format( time.perf_counter()-debut))
+
+except Exception as e:
+    print(f"Erreur: {e}")
+    
+from msvcrt import getch
+getch()
