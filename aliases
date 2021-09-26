@@ -1,0 +1,6 @@
+echo -n Sourcing $SOURCE_FILE
+alias ll=ls -l
+alias cd..=cd ..
+alias la=ll -a
+
+echo OK
