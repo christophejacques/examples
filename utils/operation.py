@@ -38,7 +38,6 @@ def decomposePremiers(n):
         nb //= 2
 
     x = 3
-    #while x <= sqrt(nb):
     while x*x <= nb:
         while nb % x == 0:
             res.append(x)
@@ -54,7 +53,7 @@ def decomposePremiers(n):
         # print("%d est un nombre premier" % (n))
     else:
         return res
-        # print("%d => %s" % (n, "{0}".format(res)))
+        
 
 
 def decomposeDiviseurs(n):
@@ -80,28 +79,25 @@ def suppressionDoublons(liste):
 
     return liste
 
-if __name__ != "__main__":
-    print("ok")
+print("ok")
 
-import time
-debut = time.perf_counter()
+if __name__ == "__main__":
+    import time
+    debut = time.perf_counter()
 
-try:
-    l = [1, 2, 2, 3]
-    print(suppressionDoublons(l) )
-    print(list(set(l)))
-    print( decomposeDiviseurs(200) )
-    print( decomposePremiers(200) )
-    
-    #for _ in range(20):
-    #    print(_, end=" ")
-    #    decomposePremiers(32_118_000_987_321) 
-    print(decomposePremiers(32_118_000_987_3217) )
-    
-    print("\nDurée: {0:.2f}s".format( time.perf_counter()-debut))
+    try:
+        l = [1, 2, 2, 3]
+        print(suppressionDoublons(l) )
+        print(list(set(l)))
+        print( decomposeDiviseurs(200) )
+        print( decomposePremiers(200) )
+        
+        print(decomposePremiers(321_180_009_873_217) )
+        
+        print("\nDurée: {0:.2f}s".format( time.perf_counter()-debut))
 
-except Exception as e:
-    print(f"Erreur: {e}")
-    
-from msvcrt import getch
-getch()
+    except Exception as e:
+        print(f"Erreur: {e}")
+        
+    from msvcrt import getch
+    # getch()

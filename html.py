@@ -5,17 +5,27 @@ from utils.definition import printdef
 from urllib.parse import urlparse
 
 try:
+  
+    number = 2
+  
     url = "http://www.python.org/"
     requete = urllib.request.Request(url)
-    #printdef(requete)
+    if number & 1 == 1:
+      printdef(requete)
 
     response = urllib.request.urlopen(url)
-    printdef(response)
+    if (number & 2) == 2:
+      print("-="*80)
+      printdef(response)
     print(dict(response.getheaders())['Content-Type'].split("; ")[1].split("=")[1])
     print((dict(response.getheaders())['Content-Type']))
 
+    
+    #o = urlparse(url)
     o = urlparse('http://www.cwi.nl:80/%7Eguido/Python.html?arg1=12&arg2=abcd')
-    #printdef(o)
+    if number & 4 == 4:
+      print("-="*80)
+      printdef(o)
   
 
 except urllib.error.HTTPError as e:

@@ -115,7 +115,8 @@ def init_vars():
 pygame.init()
 
 try:
-  pygame.mixer_music.load("D:\\Mes Documents\\Musique\\Youtube Compilation\\DJ RN SR MEGA DANCE Vol 17 TRN DJ.mp3")
+  #pygame.mixer_music.load("D:\\Mes Documents\\Musique\\Youtube Compilation\\DJ RN SR MEGA DANCE Vol 17 TRN DJ.mp3")
+  print("")
 
 except:
   print("Error loading music")
@@ -155,8 +156,9 @@ nbstars_font = font.render(f"{len(etoiles.liste)} FPS", 0, white)
 
 while Application_launched:
 
-    clock.tick()
-    pygame.time.wait(10)
+    # 60 images/s
+    clock.tick(60)
+    # pygame.time.wait(10)
 
     if Application_active:
         screen.fill(black)

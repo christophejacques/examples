@@ -168,4 +168,4 @@ try:
 except Exception as e:
     print(traceback.print_exc())
 
-getch()
+#getch()

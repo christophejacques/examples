@@ -1,19 +1,21 @@
-__author__ = "JACQUES Christophe"
-
 from utils.operation import *
 from utils.personnes import Homme, Femme
 # from utils.robot import *
 from datetime import datetime
-import utils.taches
+# import utils.taches
+import re, sys, time
 
+
+__author__ = "JACQUES Christophe"
 debut = datetime.now()
-print()
+print("debut")
 
+# -------------------------------------------------------------------------------------------------------------------
 if __name__ != '__main__':
     exit()
 
-# -------------------------------------------------------------------------------------------------------------------
-def exemple1():
+
+def exemple1() -> None:
     vtuple = (1, 2, 3, 4, 5)
     vliste = [1, 2, 3, 4, 5]
     vset = {1, 2, 3, 4, 5}
@@ -27,8 +29,8 @@ def exemple1():
     print(set(vliste))
 
 
-def exemple2():
-    dico = {
+def exemple2() -> None:
+    dico : dict = {
         "tuple": (1, 2, 3, 4, 5),
         "liste": [2, 4, 6, 8],
         "set": {3, 6, 9}
@@ -114,9 +116,6 @@ def exemple6():
     print(factoriel(3))
 
 
-import sys
-
-
 def exemple7():
     print(time.time())
 
@@ -169,7 +168,7 @@ def exemple9():
 
 
 def exemple10():
-    for x in range(1, 100):
+    for x in range(1000000000000001, 1000000000000010):
 
         listeNombresPremiers = decomposePremiers(x)
         if len(listeNombresPremiers) == 1:
@@ -192,7 +191,7 @@ def exemple12():
     print("après : ", a, b)
 
 
-def exemple13():
+def exemple13() -> None:
     """
     Recherche des nombres parfait
     :return: None
@@ -232,7 +231,7 @@ def exemple14():
     couleurs.extend(l)
     print("Ajout de la liste %s : " % l, couleurs)
 
-    print("Extraction d'une partir de la liste [1:4:2] : ", couleurs[1:4:2])
+    print("Extraction d'une partie de la liste [1:4:2] : ", couleurs[1:4:2])
 
     if False:
         lf = []
@@ -246,23 +245,22 @@ def exemple14():
         lf = [(lambda y, x: y * x) for x in range(5)]
 
     print("Fabrication liste par fonction x*y :")
-    taille = len(lf)
+    # taille = len(lf)
     for i, f in enumerate(lf):
         print("Table des %d =" % i, [f(i, x) for x in range(10)])
 
     couleurs.clear()
     print("Suppression du contenu de la liste : ", couleurs)
 
-import re
 
-def exemple15():
+def exemple15() -> None:
     chaine = '''
 azerty
 AZERTY
 123_456_789
 
-02.38.62.77.06
-06.66.43.94.47
+Bur.: 02.38.62.77.06
+Por.: 06.66.43.94.47
 
 mail : cjacques@noos.fr
 mail = brigitte.bernard54@noos.fr
@@ -291,11 +289,24 @@ mail = brigitte.bernard54@noos.fr
         print(">", chaine[res.span(0)[0]:res.span(0)[1]])
 
 
-exemple15()
+def fib(n):
+    s1 = s2 =1
+    for _ in range(n-2):
+        s1, s2 = s2, s1+s2
+    return s2
+
+
+def exemple16() -> None:
+    for x in range(1, 41):
+        print(fib(x), end=", ")
+    print()
+
+
+exemple1()
 
 
 # -------------------------------------------------------------------------------------------------------------------
 print()
 fin = datetime.now()
-print("Duree = " , fin - debut)
-input("")
+print("Duree == " , fin - debut)
+# input("")

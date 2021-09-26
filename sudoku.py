@@ -4,7 +4,7 @@ from utils.colors import *
 import traceback
 updt = []
 
-DEBUG = True
+DEBUG = False
 
 def mygetch():
     if DEBUG:
@@ -592,4 +592,6 @@ if DEBUG:
     while t != b"\x1b":
         t = printdetail(t)
 else:
-    getch()
+    #getch()
+    pass
+

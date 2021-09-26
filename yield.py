@@ -1,12 +1,8 @@
-#! /d/Programmes/Python/bin/python
-
 from msvcrt import getch
-import sys
 
 def myRange(n):
     x = 0
     while x < n:
-        
         yield x, n-x
         x += 1
         
@@ -19,4 +15,4 @@ try:
 except Exception as e:
     print("Error:", e)
     
-getch()
+#getch()

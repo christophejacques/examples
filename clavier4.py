@@ -1,7 +1,7 @@
 from msvcrt import getch
 from utils.colors import printXY
 from threading import Thread
-import time
+import time, os
 import sys
 import traceback
 
@@ -77,6 +77,7 @@ class Keyboard:
 
 
 def main():
+    os.system("cls")
     Keyboard.init()
     tp = []
     for i in range(4):
@@ -90,7 +91,7 @@ def main():
     while True:
         if Keyboard.keypressed():
             Keyboard.print(4, line)
-            printXY(4, line+1, " " * 32)
+            printXY(4, line+1, " " * 40)
             if line >= 20:
                 line = 4
             else:

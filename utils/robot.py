@@ -83,4 +83,4 @@ if True:
     print("{0}".format([1,2,3]))
 
 from msvcrt import getch
-getch()
+# getch()

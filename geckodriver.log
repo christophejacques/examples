@@ -405,3 +405,109 @@ JavaScript error: resource://gre/modules/AsyncShutdown.jsm, line 554: NS_ERROR_F
 
 ###!!! [Child][MessageChannel::SendAndWait] Error: Channel error: cannot send/recv
 
+1625338963883	mozrunner::runner	INFO	Running command: "D:\\Programmes\\Firefox\\firefox.exe" "-marionette" "-foreground" "-no-remote" "-profile" "C:\\Temp\\UTILIS~1\\rust_mozprofile.1JhFc5y5TBZo"
+1625338964731	Marionette	INFO	Marionette enabled
+console.error: Policies.jsm: 
+  OfferToSaveLoginsDefault ignored because OfferToSaveLogins is present.
+JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
+console.warn: SearchSettings: "get: No settings file exists, new profile?" (new NotFoundError("Could not open the file at C:\\Temp\\Utilisateur\\rust_mozprofile.1JhFc5y5TBZo\\search.json.mozlz4", (void 0)))
+1625338967135	Marionette	INFO	Listening on port 3629
+1625338967244	Marionette	WARN	TLS certificate errors will be ignored for this session
+JavaScript error: resource://gre/actors/AutoCompleteChild.jsm, line 125: Error: Invalid autocomplete selectedIndex
+console.warn: LoginRecipes: "getRecipes: falling back to a synchronous message for:" "https://www.python.org"
+1625338971373	Marionette	INFO	Stopped listening on port 3629
+JavaScript error: resource://gre/modules/AsyncShutdown.jsm, line 575: NS_ERROR_FAILURE
+1628371301445	mozrunner::runner	INFO	Running command: "D:\\Programmes\\Firefox\\firefox.exe" "-marionette" "-foreground" "-no-remote" "-profile" "C:\\Temp\\UTILIS~1\\rust_mozprofile.m3DcWIA8UUl1"
+1628371302077	Marionette	INFO	Marionette enabled
+console.error: Policies.jsm: 
+  OfferToSaveLoginsDefault ignored because OfferToSaveLogins is present.
+JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
+console.warn: SearchSettings: "get: No settings file exists, new profile?" (new NotFoundError("Could not open the file at C:\\Temp\\Utilisateur\\rust_mozprofile.m3DcWIA8UUl1\\search.json.mozlz4", (void 0)))
+1628371304845	Marionette	INFO	Listening on port 7160
+1628371305316	Marionette	WARN	TLS certificate errors will be ignored for this session
+JavaScript error: resource:///actors/FormValidationChild.jsm, line 177: TypeError: this._element is null
+JavaScript error: resource://gre/actors/AutoCompleteChild.jsm, line 125: Error: Invalid autocomplete selectedIndex
+console.warn: LoginRecipes: "getRecipes: falling back to a synchronous message for:" "https://www.python.org"
+JavaScript error: resource:///actors/FormValidationChild.jsm, line 177: TypeError: this._element is null
+JavaScript error: resource:///actors/FormValidationChild.jsm, line 177: TypeError: this._element is null
+1628371310851	Marionette	INFO	Stopped listening on port 7160
+
+###!!! [Child][MessageChannel] Error: (msgtype=0x23002E,name=PBrowser::Msg___delete__) Channel closing: too late to send/recv, messages will be lost
+
+
+###!!! [Parent][MessageChannel] Error: (msgtype=0x390079,name=PContent::Msg_DestroyBrowsingContextGroup) Closed channel: cannot send/recv
+
+JavaScript error: resource://gre/modules/AsyncShutdown.jsm, line 575: NS_ERROR_FAILURE
+
+###!!! [Child][RunMessage] Error: Channel closing: too late to send/recv, messages will be lost
+
+1628371728093	mozrunner::runner	INFO	Running command: "D:\\Programmes\\Firefox\\firefox.exe" "-marionette" "-foreground" "-no-remote" "-profile" "C:\\Temp\\UTILIS~1\\rust_mozprofile.NiV7eJ2sVbuG"
+1628371728710	Marionette	INFO	Marionette enabled
+console.error: Policies.jsm: 
+  OfferToSaveLoginsDefault ignored because OfferToSaveLogins is present.
+JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
+console.warn: SearchSettings: "get: No settings file exists, new profile?" (new NotFoundError("Could not open the file at C:\\Temp\\Utilisateur\\rust_mozprofile.NiV7eJ2sVbuG\\search.json.mozlz4", (void 0)))
+1628371731215	Marionette	INFO	Listening on port 7318
+1628371731462	Marionette	WARN	TLS certificate errors will be ignored for this session
+JavaScript error: resource:///actors/FormValidationChild.jsm, line 177: TypeError: this._element is null
+JavaScript error: resource://gre/actors/AutoCompleteChild.jsm, line 125: Error: Invalid autocomplete selectedIndex
+console.warn: LoginRecipes: "getRecipes: falling back to a synchronous message for:" "https://www.python.org"
+JavaScript error: resource:///actors/FormValidationChild.jsm, line 177: TypeError: this._element is null
+JavaScript error: resource:///actors/FormValidationChild.jsm, line 177: TypeError: this._element is null
+JavaScript error: resource:///actors/FormValidationChild.jsm, line 177: TypeError: this._element is null
+JavaScript error: resource:///actors/FormValidationChild.jsm, line 177: TypeError: this._element is null
+1628371737700	Marionette	INFO	Stopped listening on port 7318
+JavaScript error: resource://gre/modules/AsyncShutdown.jsm, line 575: NS_ERROR_FAILURE
+1628371844139	mozrunner::runner	INFO	Running command: "D:\\Programmes\\Firefox\\firefox.exe" "-marionette" "-foreground" "-no-remote" "-profile" "C:\\Temp\\UTILIS~1\\rust_mozprofile.HuGmJycSqghq"
+1628371844825	Marionette	INFO	Marionette enabled
+console.error: Policies.jsm: 
+  OfferToSaveLoginsDefault ignored because OfferToSaveLogins is present.
+JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
+console.warn: SearchSettings: "get: No settings file exists, new profile?" (new NotFoundError("Could not open the file at C:\\Temp\\Utilisateur\\rust_mozprofile.HuGmJycSqghq\\search.json.mozlz4", (void 0)))
+1628371847319	Marionette	INFO	Listening on port 7421
+1628371847560	Marionette	WARN	TLS certificate errors will be ignored for this session
+JavaScript error: resource:///actors/FormValidationChild.jsm, line 177: TypeError: this._element is null
+JavaScript error: resource://gre/actors/AutoCompleteChild.jsm, line 125: Error: Invalid autocomplete selectedIndex
+console.warn: LoginRecipes: "getRecipes: falling back to a synchronous message for:" "https://www.python.org"
+JavaScript error: resource:///actors/FormValidationChild.jsm, line 177: TypeError: this._element is null
+JavaScript error: resource:///actors/FormValidationChild.jsm, line 177: TypeError: this._element is null
+1628371852856	Marionette	INFO	Stopped listening on port 7421
+JavaScript error: resource://gre/modules/AsyncShutdown.jsm, line 575: NS_ERROR_FAILURE
+
+###!!! [Child][RunMessage] Error: Channel closing: too late to send/recv, messages will be lost
+
+1628371899295	mozrunner::runner	INFO	Running command: "D:\\Programmes\\Firefox\\firefox.exe" "-marionette" "-foreground" "-no-remote" "-profile" "C:\\Temp\\UTILIS~1\\rust_mozprofile.MQL3CXcrVsus"
+1628371899977	Marionette	INFO	Marionette enabled
+console.error: Policies.jsm: 
+  OfferToSaveLoginsDefault ignored because OfferToSaveLogins is present.
+JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
+console.warn: SearchSettings: "get: No settings file exists, new profile?" (new NotFoundError("Could not open the file at C:\\Temp\\Utilisateur\\rust_mozprofile.MQL3CXcrVsus\\search.json.mozlz4", (void 0)))
+1628371902556	Marionette	INFO	Listening on port 7501
+1628371902661	Marionette	WARN	TLS certificate errors will be ignored for this session
+JavaScript error: resource:///actors/FormValidationChild.jsm, line 177: TypeError: this._element is null
+JavaScript error: resource://gre/actors/AutoCompleteChild.jsm, line 125: Error: Invalid autocomplete selectedIndex
+console.warn: LoginRecipes: "getRecipes: falling back to a synchronous message for:" "https://www.python.org"
+JavaScript error: resource:///actors/FormValidationChild.jsm, line 177: TypeError: this._element is null
+JavaScript error: resource:///actors/FormValidationChild.jsm, line 177: TypeError: this._element is null
+1628371906663	Marionette	INFO	Stopped listening on port 7501
+JavaScript error: resource://gre/modules/AsyncShutdown.jsm, line 575: NS_ERROR_FAILURE
+
+###!!! [Child][RunMessage] Error: Channel closing: too late to send/recv, messages will be lost
+
+1628371972097	mozrunner::runner	INFO	Running command: "D:\\Programmes\\Firefox\\firefox.exe" "-marionette" "-foreground" "-no-remote" "-profile" "C:\\Temp\\UTILIS~1\\rust_mozprofile.gaJCGWXxQlAi"
+1628371972897	Marionette	INFO	Marionette enabled
+console.error: Policies.jsm: 
+  OfferToSaveLoginsDefault ignored because OfferToSaveLogins is present.
+JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
+console.warn: SearchSettings: "get: No settings file exists, new profile?" (new NotFoundError("Could not open the file at C:\\Temp\\Utilisateur\\rust_mozprofile.gaJCGWXxQlAi\\search.json.mozlz4", (void 0)))
+1628371975704	Marionette	INFO	Listening on port 7587
+1628371975969	Marionette	WARN	TLS certificate errors will be ignored for this session
+JavaScript error: resource:///actors/FormValidationChild.jsm, line 177: TypeError: this._element is null
+JavaScript error: resource://gre/actors/AutoCompleteChild.jsm, line 125: Error: Invalid autocomplete selectedIndex
+console.warn: LoginRecipes: "getRecipes: falling back to a synchronous message for:" "https://www.python.org"
+JavaScript error: resource:///actors/FormValidationChild.jsm, line 177: TypeError: this._element is null
+1628371978549	Marionette	INFO	Stopped listening on port 7587
+JavaScript error: resource://gre/modules/AsyncShutdown.jsm, line 575: NS_ERROR_FAILURE
+
+###!!! [Child][RunMessage] Error: Channel closing: too late to send/recv, messages will be lost
+

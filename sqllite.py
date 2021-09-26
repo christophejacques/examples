@@ -1,6 +1,8 @@
 import sqlite3, sys
 import os, traceback
-os.chdir("C:\\Users\\utilisateur\\OneDrive\\Programmation\\python\\examples")
+
+repertoire = r"C:\Users\utilisateur\OneDrive\Programmation\python\examples"
+os.chdir(repertoire)
 
 # ---------------------------------------------------------
 #
@@ -70,7 +72,7 @@ class monsql:
         if res is None: return False
         return  len(res) > 0
 
-    def createTable(self, nomTable, listeChamps):
+    def createTable(self, nomTable, listeChamps, cles = ""):
         print(f"Création de la table *{nomTable}*", end="")
         tableStr = f"CREATE TABLE {nomTable} (\n"
 
@@ -78,13 +80,28 @@ class monsql:
             tableStr += f"    {nomchamp} {typeChamp},\n"
 
         nomchamp, typeChamp = listeChamps[-1]
-        tableStr += f"    {nomchamp} {typeChamp} )"
+        tableStr += f"    {nomchamp} {typeChamp}"
+        if cles:
+            tableStr += f",\n{cles[0]}"
+            for cle in cles[1:]:
+                tableStr += f",\n{cle}"
 
-        # with conn:
+        tableStr += ")"
         # print(tableStr)
         self.curs.execute(tableStr)
 
         print(" => table créée")
+
+    def setForeignKeys(self, etat):
+        ATTENDU = {
+          "ON"  : 1,
+          "OFF" : 0
+        }
+        print(f"set Foreign Keys : {etat} = ", end="")
+        self.curs.execute(f"PRAGMA foreign_keys = {etat};")
+        res = self.curs.execute("PRAGMA foreign_keys").fetchone()[0] 
+        print(res, " Ok" if res == ATTENDU[etat] else " Ko")
+        return res == ATTENDU[etat]
 
     def getDatas(self, sqlCode):
         print(f"getDatas({sqlCode}) : ", end="")
@@ -119,6 +136,7 @@ class monsql:
         nb = self.curs.execute(sqlstring, lstCondValues)
         print(f"(Id:{nb.lastrowid:03}) {nb.rowcount} enregs => OK")
 
+
     def insertData(self, nomTable, *donnees):
 
         insertColsNames = "("
@@ -138,24 +156,67 @@ class monsql:
         insertColsNames = f"INSERT INTO {nomTable} {listeColsNames} VALUES {insertColsNames}"
 
         print(insertColsNames, insertColsValues, end="")
-        res = self.curs.execute(insertColsNames, insertColsValues)
-        print(f" => OK (Id:{res.lastrowid:03})")
+        try:
+            res = self.curs.execute(insertColsNames, insertColsValues)
+            print(f" => OK (Id:{res.lastrowid:03})")
+            self._last_row_id = res.lastrowid
+
+        except Exception as e:
+            print(f" => KO", e)
+            self._last_row_id = None
+
+        return self._last_row_id
 
 
-with monsql("basededonnees.db") as mabd:
-#with monsql(":memory:") as mabd:
+    def execute(self, sqlCode):
+        print(f"execute({sqlCode}) : ", end="")
+        try:
+            self.curs.execute(sqlCode)
+            res = True
+        except:
+            res = False
+            errcls, errlib, errobj = sys.exc_info()
+            print(f"{errcls}".split("'")[1] + " :")
+            print(f" - ligne {errobj.tb_lineno} : {errlib}")
+
+        return res
+
+
+
+# with monsql("basededonnees.db") as mabd:
+with monsql(":memory:") as mabd:
     if mabd.isconnected():
         try:
-                
             if not mabd.existTable("personnes"):
-                mabd.createTable("personnes",[("idPersonne", "integer PRIMARY KEY AUTOINCREMENT"), ("nom", "text"), ("prenom","text"), ("datedenaissance","text")])
+                mabd.createTable("personnes",
+                    [("idPersonne",     "integer PRIMARY KEY AUTOINCREMENT"), 
+                     ("nom",            "text not null"), 
+                     ("prenom",         "TEXT NOT NULL"), 
+                     ("datedenaissance","text"), 
+                     ("horodatage",     "TEXT DEFAULT CURRENT_TIMESTAMP")])
             else:
                 print("Table personnes existe déjà")
 
             if not mabd.existTable("metiers"):
-                mabd.createTable("metiers",[("idMetier", "integer PRIMARY KEY AUTOINCREMENT"), ("libelle","text")])
+                mabd.createTable("metiers",
+                    [("idMetier",   "integer PRIMARY KEY AUTOINCREMENT"), 
+                     ("libelle",    "text")])
+            else:
+                print("Table metiers existe déjà")
+
+            if not mabd.existTable("ass_personne_metier"):
+                mabd.createTable("ass_personne_metier",
+                    [("idPersonne",     "integer NOT NULL"), 
+                     ("idMetier",       "integer NOT NULL")],
+                     ["PRIMARY KEY (idPersonne, idMetier)",
+                      "FOREIGN KEY (idPersonne) REFERENCES personnes(idPersonne)",
+                      "FOREIGN KEY (idMetier)   REFERENCES metiers(idMetier)"] )
+            else:
+                print("Table ass_personne_metier existe déjà")
+
             mabd.commit()
-            
+            mabd.setForeignKeys("ON")
+
             mabd.deleteData("personnes")
             mabd.commit()
 
@@ -169,6 +230,18 @@ with monsql("basededonnees.db") as mabd:
             mabd.insertData("metiers", ("libelle", "Informaticien"))
             mabd.insertData("metiers", ("libelle", "Fonctionnaire"))
 
+            personne_id = mabd.getDatas("SELECT idPersonne FROM personnes WHERE nom='JACQUES'")[0][0] 
+            metier_id = mabd.getDatas("SELECT idMetier FROM metiers WHERE libelle='Informaticien'")[0][0] 
+            mabd.insertData("ass_personne_metier", ("idPersonne", personne_id), ("idMetier", metier_id))
+
+            personne_id = mabd.getDatas("SELECT idPersonne FROM personnes WHERE nom='BERNARD'")[0][0] 
+            metier_id = mabd.getDatas("SELECT idMetier FROM metiers WHERE libelle='Fonctionnaire'")[0][0] 
+            mabd.insertData("ass_personne_metier", ("idPersonne", personne_id), ("idMetier", metier_id))
+            mabd.insertData("ass_personne_metier", ("idPersonne", personne_id), ("idMetier", metier_id))
+            mabd.insertData("ass_personne_metier", ("idPersonne", 100), ("idMetier", 100))
+            mabd.commit()
+
+
             for l in mabd.getDatas("PRAGMA table_info(personnes)"):
                 print(f"  - {l}")
             print()
@@ -178,6 +251,17 @@ with monsql("basededonnees.db") as mabd:
                 for enreg in mabd.getDatas(f"select * from {t[0]}"):
                     print(f"  - {enreg}")
                 print()
+
+            for t in mabd.getDatas("""SELECT p.idPersonne, p.nom, pm.idMetier , m.libelle
+                FROM personnes p 
+                INNER JOIN ass_personne_metier pm on (p.idPersonne = pm.idPersonne)
+                INNER JOIN metiers m on (pm.idMetier = m.idMetier)"""):
+                print(f"  - {t}")
+            print()
+
+            # mabd.execute("DROP table personnes")
+            # mabd.commit()
+
 
         except sqlite3.OperationalError as oe:
             print(f"Ko ({oe})")

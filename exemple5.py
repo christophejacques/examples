@@ -1,4 +1,4 @@
-#from msvcrt import getch
+from msvcrt import getch
 import inspect
 
 # Decorateur
@@ -41,15 +41,53 @@ class SousClasse(ClassePrincipale):
         print("sousMethode(self)")
 
 
+def format_int(entier : int) -> str:
+    lst_entier = str(entier)[::-1]
+    res = ""
+    for i, c in enumerate(lst_entier):
+        if i>0 and i % 3 == 0: res = "_" + res
+        res = c + res
+    return res
+
+
+class Fibonnacci:
+    __data = {}
+
+    @staticmethod
+    def add(number, value):
+        Fibonnacci.__data[number] = value
+
+    @staticmethod
+    def get(number):
+        return Fibonnacci.__data.get(number)
+
+
 def fib(n):
-    return 1 if n<= 2 else fib(n-1) + fib(n-2)
+    if n <= 2:
+        fib_n = Fibonnacci.get(n)
+        if not fib_n: Fibonnacci.add(n, 1)
+        return 1
+    else:
+        fib_n_1 = Fibonnacci.get(n-1)
+        if not fib_n_1: 
+            fib_n_1 = fib(n-1)
+            Fibonnacci.add(n-1, fib_n_1)
+
+        fib_n_2 = Fibonnacci.get(n-2)
+        if not fib_n_2: 
+            fib_n_2 = fib(n-2)
+            Fibonnacci.add(n-2, fib_n_2)
+
+    return fib_n_1 + fib_n_2
 
 
-print("Fibonacci : ", end="")
-for n in range(1, 5):
-    print(fib(n), end=" ")
+print("Fibonacci : ")
+print(format_int(fib(40)))
+for n in range(1, 34):
+    print(format_int(fib(n)))
 
 print()
+exit()
 
 def printdef(cls):
     

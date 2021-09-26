@@ -4,6 +4,8 @@ from datetime import datetime
 print("start timer [")
 td = datetime.now()
 
+class Debug:
+    is_active = True
 
 # definition d'un decorateur
 def fdebugger(fonction):
@@ -14,8 +16,11 @@ def fdebugger(fonction):
         print(f" = {res}")
 
         return res
-
-    return methode
+        
+    if Debug.is_active:
+        return methode
+    else:
+        return fonction
 
 
 @fdebugger
@@ -50,4 +55,4 @@ print("{0}".format(c1))
 print()
 tf = datetime.now()
 print("] end timer, durée =", tf-td)
-input("")
+#input("")

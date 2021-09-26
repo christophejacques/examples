@@ -9,7 +9,7 @@ import traceback
 # ---------------------------------------------------------
 #
 # codage UTF-8 des instruction affichée via commande print()
-#
+# 
 import sys, codecs
 sys.stdout = codecs.getwriter("utf-8")(sys.stdout.detach())
 # ---------------------------------------------------------
@@ -256,4 +256,4 @@ else:
   else:
     fprint("Fin du code ...")
 
-    getch()
+    # getch()

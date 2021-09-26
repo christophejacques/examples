@@ -1,5 +1,9 @@
 from inspect import Parameter
-from utils.colors import *
+try:
+  from colors import *
+except ModuleNotFoundError:
+  from utils.colors import *
+  
 import os
 
 if __name__ != "__main__":
@@ -96,15 +100,16 @@ def printdef(variable):
     if not attribut.startswith("__"):
       if not ("method"   in type(getattr(variable, attribut)).__name__ or 
               "function" in type(getattr(variable, attribut)).__name__ ):
-        print(fcolors.BLEU + f"  {attribut}{' '*100}"[:max_name_size], end="")
+        # print(fcolors.BLEU + f"  {attribut}{' '*100}"[:max_name_size], end="")
+        print(fcolors.CYAN + f"  {attribut}{' '*100}"[:max_name_size], end="")
         print(fcolors.ENDC + " as " + fcolors.JAUNE, end="")
         print(f"{type(getattr(variable, attribut)).__name__}{' '*100}"[:max_type_size], end="")
         resultat = f" = {getattr(variable, attribut)}".replace("\n", ", ")
         print(fcolors.ENDC, end="")
-        if len(resultat) < 80:
+        if len(resultat) < colsize - max_name_size - max_type_size - 4:
           print(resultat)
         else:
-          print(resultat[:80], "...")
+          print(resultat[:colsize - max_name_size - max_type_size - 4 - 5], "...")
 
   import inspect
   # --------- --------- --------- --------- --------- --------- --------- --------- 
@@ -130,11 +135,24 @@ def printdef(variable):
       if  ("method"   in type(getattr(variable, attribut)).__name__ or
            "function" in type(getattr(variable, attribut)).__name__ ):
         try:
-          resultat = f" = {getattr(variable, attribut)()}".replace("\n", ", ")
-          if len(resultat) < 100:
-            methods["noArg"].append({"attr":attribut, "valeur":f"{resultat}"})            
+          res = getattr(variable, attribut)()
+          is_liste = False
+          if (isinstance(res, list) or isinstance(res, set)):
+            is_liste = True
+            resultat = " = "
+            
+            for val in res:
+              if len(resultat) < 4:
+                resultat += f"{val}\n"
+              else:
+                resultat += f"{' '*30} - {val}\n"
           else:
-            methods["noArg"].append({"attr":attribut, "valeur":f"{resultat[:100]}..."})
+            resultat = f" = {res}".replace("\n", ", ")
+            
+          if is_liste or len(resultat) < colsize - max_name_size - 4:
+            methods["noArg"].append({"attr":attribut, "valeur":f"{resultat}"})
+          else:
+            methods["noArg"].append({"attr":attribut, "valeur":f"{resultat[:colsize - max_name_size - 4 - 5]}..."})
           
         except Exception as e:
           err = f"{e}".replace(f"{attribut}() ", "")
@@ -187,3 +205,8 @@ def printdef(variable):
     
   print()
 
+if __name__ == "__main__":
+  printdef(printdesc)
+  from msvcrt import getch
+  getch()
+  print("fin")

@@ -1,3 +1,5 @@
+# from msvcrt import getch
+
 if __name__ != "__main__":
     print("loading complexe.py", end=" ... ")
 
@@ -5,7 +7,7 @@ if __name__ != "__main__":
 from math import sqrt, atan2, degrees
 
 
-class Complexe():
+class Complexe:
     """class Complexe()
 
     Methodes :
@@ -71,10 +73,9 @@ class Complexe():
     def copy(self):
         return Complexe(self.reel, self.imaginaire)
 
-
     def __len__(self):
         """def __len__(self):
-    retourne la longeur du Complexe
+    retourne la longueur du Complexe
 :return:
     int(sqrt(reel² + imaginaire²))
         """
@@ -129,6 +130,6 @@ class Complexe():
         else:
             return degrees(atan2(self.imaginaire, self.reel))
 
+
 if __name__ != "__main__":
     print("ok")
-

@@ -55,9 +55,9 @@ def exemple4():
 
 
 
-exemple5()
+exemple3()
 
 if __name__ != "__main__":
     print("ok")
 
-input("")
+# input("")

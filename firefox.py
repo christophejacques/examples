@@ -23,6 +23,7 @@ printf("loading Firefox webdriver : ", end="")
 driver = webdriver.Firefox()
 printf("Ok")
 driver.set_window_rect(1000, 1, 920, 1050)
+printf("set window to 1000,1")
 
 printf("loading 'http://www.python.org' : ", end="")
 driver.get("http://www.python.org")
@@ -35,9 +36,11 @@ printf("Ok")
 
 elem = driver.find_element_by_name("q")
 
-printf("Recherche sur : try except")
+search_string = "for loop"
+printf("Recherche sur : " + search_string)
 elem.clear()
-elem.send_keys("try except")
+# elem.send_keys("try except")
+elem.send_keys(search_string)
 elem.send_keys(Keys.RETURN)
 
 
@@ -88,7 +91,7 @@ def wait_for_element(source, type_element, nom_element, continu = True):
 
 
 num_page = 1
-max_page = 3
+max_page = 2
 
 try:
     while num_page < max_page:
