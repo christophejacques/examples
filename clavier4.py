@@ -1,9 +1,10 @@
 from msvcrt import getch
 from utils.colors import printXY
 from threading import Thread
-import time, os
-import sys
+import time
+import os
 import traceback
+
 
 class Patience:
     
@@ -12,8 +13,9 @@ class Patience:
     
     def __str__(self):
         self.index += 1
-        if self.index >= 4: self.index = 0
-        return ( "|", "/", "─", "\\" )[self.index]
+        if self.index >= 4:
+            self.index = 0
+        return ("|", "/", "─", "\\")[self.index]
 
 
 class ClassProperty(property):
@@ -61,7 +63,7 @@ class Keyboard:
     def wait_key(self):
         self.__touche = getch()
         self.__special = None
-        if self.__touche in (b'\x00', b'\xe0'): # b'\xe0' pour F11, F12
+        if self.__touche in (b'\x00', b'\xe0'):  # b'\xe0' pour F11, F12
             self.__special = getch()
             
         self.__keypressed = True
@@ -81,9 +83,9 @@ def main():
     Keyboard.init()
     tp = []
     for i in range(4):
-        tp.append( Patience(i) )
-    x, minx = (40,) *2
-    y, miny = (2, ) *2
+        tp.append(Patience(i))
+    x, minx = (40,) * 2
+    y, miny = (2, ) * 2
     maxx = 140
     maxy = 10
     line = 4
@@ -97,19 +99,18 @@ def main():
             else:
                 line += 1
             
-            #k, s = Keyboard.get_key()
+            # k, s = Keyboard.get_key()
             if Keyboard.has_special():
-                if Keyboard.special == b'k': # Alt-F4
+                if Keyboard.special == b'k':  # Alt-F4
                     exit()
                     
-            elif Keyboard.key in (#b'q',      # 'q'
+            elif Keyboard.key in (  # b'q',      # 'q'
                         b'\x1b',   # Echap
                         b'\x03',   # Ctrl-c
                         b'\x17'):  # Ctrl-w
                 exit()
                 
             Keyboard.init()
-            
 
         printXY(2, 2, "Program is running ")
         for i in range(4):
@@ -121,10 +122,10 @@ def main():
             printXY(x, y, " " * 4, end="", flush=True)
             x += 1
             if x > maxx:
-                x = minx +1 
+                x = minx + 1
                 y += 1
                 if y > maxy:
-                    y= miny
+                    y = miny
                     
             printXY(x, y,  (x-minx) + (y-miny)*(maxx-minx), end="", flush=True)
         time.sleep(0.01)
@@ -134,6 +135,6 @@ if __name__ == "__main__":
     try:
         main()
         
-    except Exception as e:
+    except Exception:
         print(traceback.print_exc())
         getch()

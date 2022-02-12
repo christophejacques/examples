@@ -3,7 +3,6 @@
 if __name__ != "__main__":
     print("loading operation.py", end=" ... ")
 
-from math import sqrt
 
 def ajoute_deux(v):
     return v + 2
@@ -25,6 +24,7 @@ def factoriel2(n):
 
     return resultat
 
+
 def decomposePremiers(n):
     """Décomposition en nombres premiers"""
     if n < 2:
@@ -33,7 +33,7 @@ def decomposePremiers(n):
     nb = n
     res = []
     x = 2
-    while nb % 2 == 0:
+    while nb & 1 == 0:
         res.append(x)
         nb //= 2
 
@@ -53,7 +53,6 @@ def decomposePremiers(n):
         # print("%d est un nombre premier" % (n))
     else:
         return res
-        
 
 
 def decomposeDiviseurs(n):
@@ -67,7 +66,6 @@ def decomposeDiviseurs(n):
     return res
 
 
-
 def suppressionDoublons(liste):
     index = 0
 
@@ -79,6 +77,7 @@ def suppressionDoublons(liste):
 
     return liste
 
+
 print("ok")
 
 if __name__ == "__main__":
@@ -86,18 +85,17 @@ if __name__ == "__main__":
     debut = time.perf_counter()
 
     try:
-        l = [1, 2, 2, 3]
-        print(suppressionDoublons(l) )
-        print(list(set(l)))
-        print( decomposeDiviseurs(200) )
-        print( decomposePremiers(200) )
+        liste = [1, 2, 2, 3]
+        print(suppressionDoublons(liste) )
+        print(list(set(liste)))
+        print(decomposeDiviseurs(200))
+
+        print(decomposePremiers(200))
         
-        print(decomposePremiers(321_180_009_873_217) )
+        print(decomposePremiers(321_180_009_873_217))
         
-        print("\nDurée: {0:.2f}s".format( time.perf_counter()-debut))
+        print("\nDurée: {0:.2f}s".format(time.perf_counter()-debut))
 
     except Exception as e:
         print(f"Erreur: {e}")
         
-    from msvcrt import getch
-    # getch()

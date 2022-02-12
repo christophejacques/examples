@@ -176,7 +176,7 @@ try:
 	logger.log(LogLevel("TRACE"), "Debut")
 	if __name__ == '__main__':
 		main()
-		# a=1/0
+		a=1/0
 
 except Exception as e:
 	logger.log(LogLevel("ERROR"), f"Erreur: {e}")

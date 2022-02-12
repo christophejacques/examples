@@ -1,5 +1,6 @@
 from time import sleep
 
+
 def retry(retries=3):
     left = {'retries': retries}
 
@@ -8,14 +9,13 @@ def retry(retries=3):
             while left['retries']:
                 try:
                     return f(*args, **kwargs)
-                    
-                except Exception as ex:
-                  left['retries'] -= 1
-                  print(ex)
-                  sleep(1)
 
-            msg = "Retried {} times unsuccessfully.".format(retries)
-            #raise Exception(msg)
+                except Exception as ex:
+                    left['retries'] -= 1
+                    print(ex)
+                    sleep(1)
+
+            msg = f"Retried {retries} times unsuccessfully."
             print(msg)
 
         return inner
@@ -25,9 +25,7 @@ def retry(retries=3):
 @retry()
 def func(p1, p2):
     print(p1, p2, end=": ")
-    a=1/0
+    a = 1 / 0
 
 
 func(1, 2)
-
-

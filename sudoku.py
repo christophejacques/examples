@@ -592,6 +592,6 @@ if DEBUG:
     while t != b"\x1b":
         t = printdetail(t)
 else:
-    #getch()
+    getch()
     pass
 

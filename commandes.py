@@ -672,7 +672,7 @@ class OperatingSystem(Commande):
     
     @classmethod
     def prompt(cls) -> str:
-        sprompt = getenv("PROMPT", "CMD $P$G")
+        sprompt = getenv("PROMPT", "$P$G")
         res = sprompt.split("$")[0]
         
         for lettre in sprompt.split("$")[1:]:

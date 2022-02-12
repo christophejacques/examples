@@ -16,30 +16,28 @@ class System(Program):
     pass
     
 
-
 s = System()
 
 def dans(liste : list, *valeurs) -> bool:
   for valeur in valeurs:
     if valeur in liste:
-      print("found:", valeur)
+      print("Param trouvé:", valeur)
       return True
   return False
 
-def main() -> None:
-  if dans(("-f", "--force"), "--force", "-f"):
+def main(*params) -> None:
+  if dans(("-f", "--force"), *params):
     print("dedans")
   else:
-    print("Aucun parametre trouvé")
+    print("Aucun parametre existant:", *params)
     
-
 
 if __name__ == "__main__":
   try:
-    main()
+    main("--help", "-h")
+    main("--force", "-f")
+
   except Exception as e:
     print("Error:", e)
-
-
 
 print("Fin")

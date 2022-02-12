@@ -1,4 +1,7 @@
-from winreg import ConnectRegistry, HKEY_LOCAL_MACHINE, HKEY_CURRENT_USER, OpenKeyEx, EnumValue
+#!/usr/bin/python3
+
+from winreg import ConnectRegistry
+from winreg import HKEY_LOCAL_MACHINE, HKEY_CURRENT_USER, OpenKeyEx, EnumValue
 # from winreg import QueryValueEx,
 from os import scandir, environ
 import platform
@@ -29,12 +32,12 @@ def print_all_registry_keys(root_key, key_string):
                 i += 1
             except OSError:
                 break
-    
+
     except OSError:
         pass
     except Exception as e:
         print("Error:", e)
-    
+
     print()
 
 
@@ -53,7 +56,9 @@ def print_all_directory_files(repertoire):
 def main():
     titre = f"Applications démarrées pour : {environ['USERNAME']}"
     print_souligne("=", titre)
+
     print_all_registry_keys(HKEY_LOCAL_MACHINE, r"SOFTWARE\Microsoft\Windows\CurrentVersion\Run")
+
     print_all_registry_keys(HKEY_CURRENT_USER, r"SOFTWARE\Microsoft\Windows\CurrentVersion\Run")
     print_all_directory_files(
         "{}\\{}".format(environ.get("ProgramData", ""), r"Microsoft\Windows\Start Menu\Programs\Startup"))

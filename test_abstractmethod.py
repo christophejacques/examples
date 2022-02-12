@@ -9,7 +9,7 @@ class Operator(metaclass=ABCMeta):
 
     @abstractmethod
     def getName(self, p1):
-        print("Operator getName({})".format(p1))
+        pass
 
     def setName(self, p1):
         print("Operator setName({})".format(p1))
@@ -17,9 +17,9 @@ class Operator(metaclass=ABCMeta):
 
 class Nombres(Operator):
     
-    def __init__(self, p2):
-        Operator.__init__(self, p2)
-        print("Nombres __init__({})".format(p2))
+    # def __init__(self, p2):
+    #     Operator.__init__(self, p2)
+    #     print("Nombres __init__({})".format(p2))
     
     def getName(self, p1):
         """Doit etre redéclarée dans la classe Nombre sinon Erreur d'instanciation"""
@@ -30,7 +30,6 @@ try:
     n  = Nombres(5)
     n.setName(1)
     n.getName(1)
-
 
 except Exception as e:
     print("Error")
