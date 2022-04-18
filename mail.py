@@ -4,7 +4,7 @@ from html import unescape
 
 
 email = 'christophe.michael.jacques@gmail.com'
-password = 'pleinne2'
+password = 'password'
 max_messages = 4
 
 
