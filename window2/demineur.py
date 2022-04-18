@@ -1,6 +1,6 @@
 import pygame
 import random
-from mouse import Mouse
+
 from colors import Colors
 
 from classes import Application

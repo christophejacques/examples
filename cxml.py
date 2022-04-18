@@ -1,5 +1,5 @@
-from msvcrt import getch
-from utils.definition import printdesc
+# from msvcrt import getch
+# from utils.definition import printdesc
 from xml.dom.minidom import parse, Element
 import traceback
 from os import environ
@@ -30,7 +30,6 @@ class UnElement(Element):
                     else:
                         self.childNodes.append(un_elt)
             
-
     @property
     def firstChild(self):
         return UnElement(super().firstChild)
@@ -83,8 +82,8 @@ couleur_balise: str = fcolors.JAUNE
 
 def parcourt(balise, niveau=0):
     
-    espace: str  = "  " * niveau
-    res   : bool = False
+    espace: str = "  " * niveau
+    res: bool = False
     
     for une_balise in balise.childNodes:
         if une_balise.nodeType == une_balise.ELEMENT_NODE:
@@ -96,7 +95,8 @@ def parcourt(balise, niveau=0):
                 attrib_str = ""
             
             setColor(couleur_balise)
-            if niveau > 0: print()
+            if niveau > 0: 
+                print()
             print("{}<{}".format(espace, une_balise.tagName), end="")
             setColor(fcolors.VERT)
             print("{}".format(attrib_str), end="")
@@ -140,7 +140,7 @@ try:
     x = XML("C:/Users/{}/OneDrive/Programmation/python/examples/fichier.xml".format(username))
 
     parcourt(x)
-    #exit(0)
+    # exit(0)
 
     if True:
         print("\n")
@@ -148,24 +148,28 @@ try:
             print("{} ({}) => {}".format(html.tagName, len(html.getTagNames()), ", ".join(html.getTagNames())))
             for head in html.getElementsByTagName("head"):
                 print("  {} ({}) => {}".format(head.tagName, len(head.getTagNames()), ", ".join(head.getTagNames())))
-                if head.hasElementByTagName("h1"): print("    {}".format(head.getDataFromTextElement("h1")))
+                if head.hasElementByTagName("h1"): 
+                    print("    {}".format(head.getDataFromTextElement("h1")))
             
             for body in html.getElementsByTagName("body"):
                 print("  {} ({}) => {}".format(body.tagName, len(body.getTagNames()), ", ".join(body.getTagNames())))
                 for une_balise in body.getElementsByTagName("ligne"):
                     print("    {} ({}) => {}".format(une_balise.tagName, len(une_balise.getTagNames()),
                                                      ", ".join(une_balise.getTagNames())))
-                    if une_balise.hasElementByTagName("h1"): print("      h1:", une_balise.getDataFromTextElement("h1"))
-                    if une_balise.hasElementByTagName("h2"): print("      h2:", une_balise.getDataFromTextElement("h2"))
-                    if une_balise.hasElementByTagName("P") : print("      P :", une_balise.getDataFromTextElement("P"))
+                    if une_balise.hasElementByTagName("h1"): 
+                        print("      h1:", une_balise.getDataFromTextElement("h1"))
+                    if une_balise.hasElementByTagName("h2"): 
+                        print("      h2:", une_balise.getDataFromTextElement("h2"))
+                    if une_balise.hasElementByTagName("P") : 
+                        print("      P :", une_balise.getDataFromTextElement("P"))
     
     print()
-    printdesc(x)
+    # printdesc(x)
     y = x.firstChild
     # printdesc(y)
 
 
-except Exception as e:
+except Exception:
     print(traceback.print_exc())
 
-#getch()
+# getch()

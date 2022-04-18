@@ -26,6 +26,7 @@ def retry(retries=3):
 def func(p1, p2):
     print(p1, p2, end=": ")
     a = 1 / 0
-
+    print(a)
+    
 
 func(1, 2)

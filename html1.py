@@ -11,21 +11,20 @@ try:
     url = "http://www.python.org/"
     requete = urllib.request.Request(url)
     if number & 1 == 1:
-      printdef(requete)
+        printdef(requete)
 
     response = urllib.request.urlopen(url)
     if (number & 2) == 2:
-      print("-="*80)
-      printdef(response)
+        print("-="*80)
+        printdef(response)
     print(dict(response.getheaders())['Content-Type'].split("; ")[1].split("=")[1])
     print((dict(response.getheaders())['Content-Type']))
 
-    
-    #o = urlparse(url)
+    # o = urlparse(url)
     o = urlparse('http://www.cwi.nl:80/%7Eguido/Python.html?arg1=12&arg2=abcd')
     if number & 4 == 4:
-      print("-="*80)
-      printdef(o)
+        print("-="*80)
+        printdef(o)
   
 
 except urllib.error.HTTPError as e:
@@ -37,8 +36,8 @@ except urllib.error.URLError as e:
     print("URL Error :")
     print("reason:", e.reason)
   
-except:
+except Exception:
     print(traceback.print_exc())
   
 print("Press any key.")
-getch()
+# getch()

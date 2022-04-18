@@ -68,7 +68,7 @@ class noCommande(stripDoc):
         pass
 
 
-class exitCommande(stripDoc):
+class exitCommande(l):
     """Sortie de l'interpréteur de commandes
   [AIDE_DETAILLEE]
   EXIT / QUIT
@@ -675,7 +675,7 @@ class OperatingSystem(Commande):
         sprompt = getenv("PROMPT", "$P$G")
         res = sprompt.split("$")[0]
         
-        for lettre in sprompt.split("$")[1:]:
+        for lettre in sprompt.upper().split("$")[1:]:
             if lettre == "A":
                 res += "&"
             elif lettre == "B":
@@ -708,7 +708,7 @@ class OperatingSystem(Commande):
                 res += "10"
             elif lettre == "_":
                 res += "\n"
-            elif lettre == "":
+            elif lettre in ("", "$"):
                 res += "$"
             else:
                 res += lettre
@@ -746,7 +746,8 @@ class OperatingSystem(Commande):
 
 def execute_commande(ligne_commande):
     try:
-        commande, *args = ligne_commande.lower().split()
+        commande, *args = ligne_commande.split()
+        commande = commande.lower()
     
     except Exception:
         commande = ""

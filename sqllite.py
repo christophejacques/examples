@@ -12,6 +12,7 @@ import sys, codecs
 sys.stdout = codecs.getwriter("utf-8")(sys.stdout.detach())
 # ---------------------------------------------------------
 
+
 def fonction(*args):
     print(f"fonction(*args): avec {len(args)} arguments")
 
@@ -69,10 +70,11 @@ class monsql:
 
     def existTable(self, nomTable):
         res = self.curs.execute("SELECT name FROM sqlite_master WHERE name = ?", (nomTable,)).fetchone()
-        if res is None: return False
-        return  len(res) > 0
+        if res is None: 
+            return False
+        return len(res) > 0
 
-    def createTable(self, nomTable, listeChamps, cles = ""):
+    def createTable(self, nomTable, listeChamps, cles=""):
         print(f"Création de la table *{nomTable}*", end="")
         tableStr = f"CREATE TABLE {nomTable} (\n"
 
@@ -92,10 +94,16 @@ class monsql:
 
         print(" => table créée")
 
+    def dropTable(self, nomTable):
+        print(f"Drop de la table *{nomTable}*", end="")
+        tableStr = f"DROP TABLE {nomTable}"
+        self.curs.execute(tableStr)
+        print(" => table supprimée")
+
     def setForeignKeys(self, etat):
         ATTENDU = {
-          "ON"  : 1,
-          "OFF" : 0
+          "ON": 1,
+          "OFF": 0
         }
         print(f"set Foreign Keys : {etat} = ", end="")
         self.curs.execute(f"PRAGMA foreign_keys = {etat};")
@@ -110,7 +118,7 @@ class monsql:
             self.curs.execute(sqlCode)
             res = self.curs.fetchall()
             print(f"{len(res)} enregs")
-        except:
+        except Exception:
             errcls, errlib, errobj = sys.exc_info()
             print(f"{errcls}".split("'")[1] + " :")
             print(f" - ligne {errobj.tb_lineno} : {errlib}")
@@ -135,7 +143,6 @@ class monsql:
         print(sqlstring, lstCondValues, end=" : ")
         nb = self.curs.execute(sqlstring, lstCondValues)
         print(f"(Id:{nb.lastrowid:03}) {nb.rowcount} enregs => OK")
-
 
     def insertData(self, nomTable, *donnees):
 
@@ -162,18 +169,17 @@ class monsql:
             self._last_row_id = res.lastrowid
 
         except Exception as e:
-            print(f" => KO", e)
+            print(" => KO", e)
             self._last_row_id = None
 
         return self._last_row_id
-
 
     def execute(self, sqlCode):
         print(f"execute({sqlCode}) : ", end="")
         try:
             self.curs.execute(sqlCode)
             res = True
-        except:
+        except Exception:
             res = False
             errcls, errlib, errobj = sys.exc_info()
             print(f"{errcls}".split("'")[1] + " :")
@@ -182,37 +188,36 @@ class monsql:
         return res
 
 
-
-# with monsql("basededonnees.db") as mabd:
-with monsql(":memory:") as mabd:
+with monsql("basededonnees.db") as mabd:
+    # with monsql(":memory:") as mabd:
     if mabd.isconnected():
         try:
-            if not mabd.existTable("personnes"):
-                mabd.createTable("personnes",
-                    [("idPersonne",     "integer PRIMARY KEY AUTOINCREMENT"), 
-                     ("nom",            "text not null"), 
-                     ("prenom",         "TEXT NOT NULL"), 
-                     ("datedenaissance","text"), 
-                     ("horodatage",     "TEXT DEFAULT CURRENT_TIMESTAMP")])
-            else:
-                print("Table personnes existe déjà")
+            if mabd.existTable("personnes"):
+                mabd.dropTable("personnes")
 
-            if not mabd.existTable("metiers"):
-                mabd.createTable("metiers",
-                    [("idMetier",   "integer PRIMARY KEY AUTOINCREMENT"), 
-                     ("libelle",    "text")])
-            else:
-                print("Table metiers existe déjà")
+            mabd.createTable("personnes",
+                [("idPersonne",     "integer PRIMARY KEY AUTOINCREMENT"), 
+                 ("nom",            "text not null"), 
+                 ("prenom",         "TEXT NOT NULL"), 
+                 ("datedenaissance", "text"), 
+                 ("horodatage",     "TEXT DEFAULT CURRENT_TIMESTAMP")])
 
-            if not mabd.existTable("ass_personne_metier"):
-                mabd.createTable("ass_personne_metier",
-                    [("idPersonne",     "integer NOT NULL"), 
-                     ("idMetier",       "integer NOT NULL")],
-                     ["PRIMARY KEY (idPersonne, idMetier)",
-                      "FOREIGN KEY (idPersonne) REFERENCES personnes(idPersonne)",
-                      "FOREIGN KEY (idMetier)   REFERENCES metiers(idMetier)"] )
-            else:
-                print("Table ass_personne_metier existe déjà")
+            if mabd.existTable("metiers"):
+                mabd.dropTable("metiers")
+
+            mabd.createTable("metiers",
+                [("idMetier",   "integer PRIMARY KEY AUTOINCREMENT"), 
+                 ("libelle",    "text")])
+
+            if mabd.existTable("ass_personne_metier"):
+                mabd.dropTable("ass_personne_metier")
+
+            mabd.createTable("ass_personne_metier",
+                [("idPersonne",     "integer NOT NULL"), 
+                 ("idMetier",       "integer NOT NULL")],
+                 ["PRIMARY KEY (idPersonne, idMetier)",
+                  "FOREIGN KEY (idPersonne) REFERENCES personnes(idPersonne)",
+                  "FOREIGN KEY (idMetier)   REFERENCES metiers(idMetier)"])
 
             mabd.commit()
             mabd.setForeignKeys("ON")
@@ -241,9 +246,8 @@ with monsql(":memory:") as mabd:
             mabd.insertData("ass_personne_metier", ("idPersonne", 100), ("idMetier", 100))
             mabd.commit()
 
-
-            for l in mabd.getDatas("PRAGMA table_info(personnes)"):
-                print(f"  - {l}")
+            for lst in mabd.getDatas("PRAGMA table_info(personnes)"):
+                print(f"  - {lst}")
             print()
 
             print("Liste des tables :")
@@ -253,23 +257,22 @@ with monsql(":memory:") as mabd:
                 print()
 
             for t in mabd.getDatas("""SELECT p.idPersonne, p.nom, pm.idMetier , m.libelle
-                FROM personnes p 
-                INNER JOIN ass_personne_metier pm on (p.idPersonne = pm.idPersonne)
-                INNER JOIN metiers m on (pm.idMetier = m.idMetier)"""):
+             FROM personnes p 
+             INNER JOIN ass_personne_metier pm on (p.idPersonne = pm.idPersonne)
+             INNER JOIN metiers m on (pm.idMetier = m.idMetier)"""):
                 print(f"  - {t}")
             print()
 
             # mabd.execute("DROP table personnes")
             # mabd.commit()
 
-
         except sqlite3.OperationalError as oe:
             print(f"Ko ({oe})")
             mabd.rollback()
 
-        except: # (RuntimeError, TypeError, NameError):
+        except Exception:  # (RuntimeError, TypeError, NameError):
             print(traceback.print_exc())
             mabd.rollback()
 
-import msvcrt
-#msvcrt.getch()
+# import msvcrt
+# msvcrt.getch()

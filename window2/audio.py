@@ -8,6 +8,7 @@ class Audio:
     MAX_CHANNELS = 1024
     APPLI = {}
     DEBUG = False
+    MUTE = False
 
     @classmethod
     def init(self, debug=False):
@@ -37,6 +38,7 @@ class Audio:
             self.APPLI[application]["sound_index"] = 1
             self.APPLI[application]["SOUNDS"] = {}
             self.APPLI[application]["CHANNELS"] = {}
+            self.APPLI[application]["SNDMUTE"] = {}
             if self.DEBUG:
                 print(f"Init Audio pour ({application}) avec {max_channels} canaux")
 
@@ -118,6 +120,37 @@ class Audio:
                 self.APPLI[application]["CHANNELS"][idx].fadeout(time)
 
     @classmethod
+    def mute_all_applications(self):
+        self.MUTE = True
+        for application in self.APPLI:
+            self.mute_application(application)
+
+    @classmethod
+    def unmute_all_applications(self):
+        self.MUTE = False
+        for application in self.APPLI:
+            self.unmute_application(application)
+
+    @classmethod
+    def mute_application(self, application):
+        if application in self.APPLI:
+            if len(self.APPLI[application]["SNDMUTE"]) == 0:
+                for snd_idx in self.APPLI[application]["SOUNDS"]:
+                    snd_volume = self.APPLI[application]["SOUNDS"][snd_idx].get_volume()
+                    self.APPLI[application]["SNDMUTE"][snd_idx] = snd_volume
+                    self.APPLI[application]["SOUNDS"][snd_idx].set_volume(0)
+
+    @classmethod
+    def unmute_application(self, application):
+        if application in self.APPLI:
+            for snd_idx in self.APPLI[application]["SNDMUTE"]:
+                snd_volume = self.APPLI[application]["SOUNDS"][snd_idx].get_volume()
+                if snd_volume == 0:
+                    self.APPLI[application]["SOUNDS"][snd_idx].set_volume(
+                        self.APPLI[application]["SNDMUTE"].get(snd_idx, 1))
+            self.APPLI[application]["SNDMUTE"].clear()
+
+    @classmethod
     def sound_fadeout(self, application, idx, time):
         if application in self.APPLI:
             if idx in self.APPLI[application]["SOUNDS"]:
@@ -141,6 +174,11 @@ class Audio:
                 sound = pygame.mixer.Sound(sound_file)
                 sound.set_volume(volume)
                 self.APPLI[application]["SOUNDS"][idx] = sound
+                if self.MUTE:
+                    snd_volume = sound.get_volume()
+                    self.APPLI[application]["SNDMUTE"][idx] = snd_volume
+                    sound.set_volume(0)
+
             except Exception as e:
                 print("SoundEffect Error:", e)
                 return False
@@ -224,7 +262,7 @@ if __name__ == "__main__":
 
     app_id = Audio.new_application()
     Audio.init_application(app_id, 510)
-    assert len(Audio.APPLI[app_id]) == 4
+    assert len(Audio.APPLI[app_id]) == 5
 
     close_app_id = Audio.new_application()
     Audio.init_application(close_app_id, 510)

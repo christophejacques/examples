@@ -4,6 +4,7 @@ def type_balise(tbalise):
         
     return text_balise
 
+
 print(type_balise("h2")("test"))
 
 
@@ -35,4 +36,4 @@ try:
 except StopIteration:
     print("fin d'iteration")
 
-input()
+# input()

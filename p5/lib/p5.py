@@ -32,9 +32,11 @@ class P5:
     mouseX, mouseY = 0, 0
     pmouseX, pmouseY = 0, 0
     mouseIsPressed = 0
+    keys = {}
     keyIsPressed = False
     keyCode = 0
     frameCount = 0
+    joysticks = []
     
 
 preload = lambda: None
@@ -44,6 +46,9 @@ mousePressed = lambda: None
 mouseReleased = lambda: None
 keyPressed = lambda: None
 keyReleased = lambda: None
+JoyMotion = lambda: None
+JoyButtonReleased = lambda: None
+JoyButtonPressed = lambda: None
 
 
 def noLoop(): 

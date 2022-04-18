@@ -1,16 +1,18 @@
 import sqlite3 as sql
-from time import sleep
 from hashlib import sha512
 from random import randint
 import os
 
 TAILLE_CLE = 16
 
+
 def fprint(*args, **kwargs):
     print(*args, **kwargs, flush=True)
 
+
 def hash(*valeurs):
     return sha512(str(valeurs).encode("utf-8")).hexdigest()
+
 
 def creation_cle():
     cle = ""
@@ -30,10 +32,11 @@ def print_users(c):
         print()
         f = e.fetchone()
 
+
 def isPassword(c, username, password):
     fprint(f"Checking User {username} with password \"{password}\" = ", end="")
     res = False
-    e = c.execute("select cle, password from user where username = :username", {"username":username})
+    e = c.execute("select cle, password from user where username = :username", {"username": username})
     f = e.fetchone()
     if f:
         cle, cryptpass = f
@@ -49,7 +52,7 @@ def update_password(c, username, password):
                 date_modified   = DATETIME('now','localtime')
            WHERE username = :username"""
     cle = creation_cle()
-    e = c.execute(s, {"username":username, "cle":cle, "password":hash(cle, password)})
+    e = c.execute(s, {"username": username, "cle": cle, "password": hash(cle, password)})
     
     if e.rowcount > 0:
         fprint(f"{username} password updated to : {password}")
@@ -62,12 +65,12 @@ def update_password(c, username, password):
 def add_user(c, username, password):
     cle = creation_cle()
     try:
-        e = c.execute(f"""insert into user (username, cle, password) 
+        e = c.execute("""insert into user (username, cle, password) 
                                     values (:username, :cle, :password)""", 
-                     {"username":username, "cle":cle, "password":hash(cle, password)} )
+                     {"username": username, "cle": cle, "password": hash(cle, password)})
                      
     except Exception as err:
-        print(f"Error add_user({username}):",err)
+        print(f"Error add_user({username}):", err)
         return False
         
     if e.rowcount <= 0:
@@ -75,12 +78,13 @@ def add_user(c, username, password):
         
     return e.rowcount > 0
 
+
 def main():
     os.chdir("C:\\Users\\utilisateur\\OneDrive\\Programmation\\python\\examples")
     fprint("> cd", os.getcwd())
     
     with sql.connect("sample.db") as db:    
-        db.create_function("hash", 2, hash)
+        # db.create_function("hash", 2, hash)
         c = db.cursor()
         
         c.execute("drop table if exists user")
@@ -93,17 +97,16 @@ def main():
                         date_modified   TEXT DEFAULT CURRENT_TIMESTAMP)""")
         
         db.commit()
-        
-        
+                
         add_user(c, "admin", "admin")
         add_user(c, "christophe.jacques1", "")
         db.commit()
         
-        #print_users(c)
+        # print_users(c)
         isPassword(c, "admin", "Unknown")
         isPassword(c, "admin", "admin")
 
-        #print_users(c)
+        # print_users(c)
         isPassword(c, "christophe.jacques1", "Password")
         fprint()
         
@@ -123,5 +126,3 @@ if __name__ == "__main__":
         
     except Exception as e:
         fprint("Error:", e)
-        
- 

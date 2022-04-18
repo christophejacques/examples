@@ -1,14 +1,13 @@
 import urllib.parse
 import urllib.request as ur
-from urllib.parse import urlencode
-import ssl, socket, os
+import ssl
+import socket
 
 DEBUG = False
 ignore_certificats = False
 print("debut")
 
 # url = ur.urljoin("Http://perso.numericable.com", "cjacques/ASP/Actualisation_Financeurs.txt")
-# 
 url = ur.urljoin("Https://echange.asp-public.fr", "FdCR/4.00/Patchs/N0010.txt")
 
 
@@ -19,12 +18,12 @@ def getFile(url):
         proxy_protocols = {}
         if ur.getproxies().get("http"):
             proxy_protocols["http"] = ur.getproxies().get("http")
-        if ur.getproxies().get("http"):
+        if ur.getproxies().get("https"):
             proxy_protocols["https"] = ur.getproxies().get("https")
         proxy = ur.ProxyHandler(proxy_protocols)
         
         password_mgr = ur.HTTPPasswordMgrWithDefaultRealm()
-        password_mgr.add_password(None, url, "christophe.jacques1", "password")
+        password_mgr.add_password(None, url, ur.quote("christophe.jacques1"), ur.quote("password"))
 
         auth = ur.HTTPBasicAuthHandler(password_mgr)
         if DEBUG:
@@ -50,6 +49,7 @@ def getFile(url):
         except Exception as e:
             print("Erreur:", e)
         else:
+            # print(cert)
             print("Certification : OK")
 
         ctx = ssl.create_default_context()
@@ -69,7 +69,6 @@ def getFile(url):
     ur.install_opener(bopener)
 
     response = ur.urlopen(url, timeout=5)
-    # response = bopener.open(url)
     return response
 
 
@@ -77,7 +76,7 @@ def print_screen(page):
     for _ in range(5):
         ligne = page.readline()[:-1].decode('ansi').strip()
         if ligne:
-            print(ligne)
+            print(" ", ligne)
 
 
 def direct():
@@ -106,4 +105,4 @@ except Exception as e:
     # import traceback
     # traceback.print_exc()
 print("Fin")
-input()
+# input()

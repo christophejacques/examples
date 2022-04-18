@@ -43,6 +43,7 @@ def setup():
     fill(0, 50, 50)
     stroke(20, 200, 150)
 
+
 def draw():
     background(0)
     circle(P5.WIDTH//2, P5.HEIGHT//2, 50)

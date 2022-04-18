@@ -1,3 +1,6 @@
+from xml.dom.minidom import Element
+
+
 def exemple1():
     import subprocess as sp
     
@@ -25,9 +28,7 @@ def makeNDarray(*args, **kvargs):
             res1 = []
             for _ in range(dimension):
                 res1.append(res[:])
-                
             res = res1
-            
     return res
 
 
@@ -43,16 +44,15 @@ def exemple3():
     n[1][1][1] += 2
     print(n)
 
-from xml.dom.minidom import Element
+
 def exemple4():
-  for a in dir(Element):
-    if not callable(getattr(Element, a)) and not a.startswith("__"):
-      print(f"{a}")
+    for a in dir(Element):
+        if not callable(getattr(Element, a)) and not a.startswith("__"):
+            print(f"{a}")
 
-  for a in dir(Element):
-    if callable(getattr(Element, a)) and not a.startswith("__"):
-      print(f"{a}()")
-
+    for a in dir(Element):
+        if callable(getattr(Element, a)) and not a.startswith("__"):
+            print(f"{a}()")
 
 
 exemple3()

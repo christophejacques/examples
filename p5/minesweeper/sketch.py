@@ -8,7 +8,7 @@ from cell import Cell
 pygame.init()
 
 SYS_FONT = pygame.font.SysFont("comicsans", 30)
-TAILLE = 10
+TAILLE = 15
 
 GREY = (10, 50, 50)
 RED = (255, 0, 0)
@@ -63,7 +63,6 @@ def keyReleased():
 
 def graph_print(x, y, color):
     trect = grid[x][y].draw_text()
-    trect += (trect[-1],)
     texte_surf = SYS_FONT.render("{}".format(grid[x][y].nb_bees), False, color)
     P5.CANVAS.blit(texte_surf, trect)
 

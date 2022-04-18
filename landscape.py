@@ -42,12 +42,12 @@ class Landscape:
         self.grid = np.zeros((2 ** self.landSize + 1, 2 ** self.landSize + 1), dtype=float)
         self.tilt = 0.1                                  # tilt towards viewer; determines how much higher the far-away points (on average) are
         self.midScreen = np.array([width / 2, height / 2], dtype=float)
-        self.iceRGB = (240,240,240)
-        self.mountainRGB = (180,120,80)
-        self.landRGB = (30,220,40)
-        self.seaRGB = (60,60,255)
-        self.zoomerRGB = (128,128,128)
-        self.zoomerMidRGB = (255,255,255)
+        self.iceRGB = (240, 240, 240)
+        self.mountainRGB = (180, 120, 80)
+        self.landRGB = (30, 220, 40)
+        self.seaRGB = (60, 60, 255)
+        self.zoomerRGB = (128, 128, 128)
+        self.zoomerMidRGB = (255, 255, 255)
         self.fullScreen = False
         self.running = True
             

@@ -1,5 +1,6 @@
-from msvcrt import getch
+# from msvcrt import getch
 import inspect
+
 
 # Decorateur
 def checkParams(fonction):
@@ -10,6 +11,7 @@ def checkParams(fonction):
         return res
 
     return getParams
+
 
 def addition(a, b):
     return a + b
@@ -41,11 +43,12 @@ class SousClasse(ClassePrincipale):
         print("sousMethode(self)")
 
 
-def format_int(entier : int) -> str:
+def format_int(entier: int) -> str:
     lst_entier = str(entier)[::-1]
     res = ""
     for i, c in enumerate(lst_entier):
-        if i>0 and i % 3 == 0: res = "_" + res
+        if i > 0 and i % 3 == 0: 
+            res = "_" + res
         res = c + res
     return res
 
@@ -65,7 +68,8 @@ class Fibonnacci:
 def fib(n):
     if n <= 2:
         fib_n = Fibonnacci.get(n)
-        if not fib_n: Fibonnacci.add(n, 1)
+        if not fib_n: 
+            Fibonnacci.add(n, 1)
         return 1
     else:
         fib_n_1 = Fibonnacci.get(n-1)
@@ -87,18 +91,18 @@ for n in range(1, 34):
     print(format_int(fib(n)))
 
 print()
-exit()
+
+
 
 def printdef(cls):
     
-    for propriete in filter(lambda x:x.startswith("isf"), dir(inspect)):
+    for propriete in filter(lambda x: x.startswith("isf"), dir(inspect)):
         liste = inspect.getmembers(cls, getattr(inspect, propriete))
         
         if len(liste) > 0:
             print(f"\nEléments *{propriete}* de : ", cls.__name__)
             for m in liste:
                 print("-", f"{m[0]:25}:", type(m[1]))
-
 
 
 try:
@@ -116,4 +120,4 @@ try:
 except Exception as e:
     print(e)
 
-#getch()
+# getch()

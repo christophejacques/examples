@@ -290,7 +290,7 @@ mail = brigitte.bernard54@noos.fr
 
 
 def fib(n):
-    s1 = s2 =1
+    s1 = s2 = 1
     for _ in range(n-2):
         s1, s2 = s2, s1+s2
     return s2
@@ -308,5 +308,5 @@ exemple1()
 # -------------------------------------------------------------------------------------------------------------------
 print()
 fin = datetime.now()
-print("Duree == " , fin - debut)
+print("Duree == ", fin - debut)
 # input("")

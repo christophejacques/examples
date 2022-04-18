@@ -5,6 +5,7 @@ import json, os, utils.colors as colors
 def getNom(c1):
     return c1.nom
 
+
 class Personne:
     __nombre = 0
     
@@ -26,7 +27,7 @@ class Personne:
             
         return f'{self.id:2}, {manager_id:2}, "{self.role}", "{self.nom}", "{self.prenom}", {self.age}'
     
-    def whoami(self,level = 0, prefix = ""):
+    def whoami(self, level=0, prefix=""):
         print(level * "  ", end="")
         print(f"{prefix}{self}")
         
@@ -73,7 +74,7 @@ class Manager(Personne):
         if self.collaborateurs:
             liste = []
             for c in sorted(self.collaborateurs, key=getNom):
-                liste.append( c.to_dict() )
+                liste.append(c.to_dict())
             res["collaborateurs"] = liste
         return res
     
@@ -90,7 +91,7 @@ class Manager(Personne):
                 collab.manager = self
                 self.collaborateurs.append(collab)
     
-    def whoami(self, level = 0, prefix = ""):
+    def whoami(self, level=0, prefix=""):
         colors.setColor(colors.fcolors.GVERT)
         Personne.whoami(self, level, prefix)
         print(level * "  ", end=len(prefix) * " ")

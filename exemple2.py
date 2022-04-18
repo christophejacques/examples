@@ -4,8 +4,10 @@ from datetime import datetime
 print("start timer [")
 td = datetime.now()
 
+
 class Debug:
     is_active = True
+
 
 # definition d'un decorateur
 def fdebugger(fonction):
@@ -33,11 +35,11 @@ def soustraction(a, b):
     return a-b
 
 
-print("add(sub(10, 4), 8)=", addition(soustraction(10,4), 8))
+print("add(sub(10, 4), 8)=", addition(soustraction(10, 4), 8))
 print()
 
-c1 = Complexe(0,3)
-c2 = Complexe(3,0)
+c1 = Complexe(0, 3)
+c2 = Complexe(3, 0)
 
 print(f"{c1} - {c2} = {c1-c2}")
 
@@ -55,4 +57,4 @@ print("{0}".format(c1))
 print()
 tf = datetime.now()
 print("] end timer, durée =", tf-td)
-#input("")
+# input("")

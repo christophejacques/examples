@@ -13,7 +13,7 @@ class Colors:
     MIDDLE_RED = (128, 0, 0)
     DARK_RED = (64, 0, 0)
 
-    LIGNT_ORANGE = (255, 127, 0)
+    LIGHT_ORANGE = (255, 127, 0)
     ORANGE = (192, 96, 0)
     MIDDLE_ORANGE = (128, 64, 0)
     DARK_ORANGE = (64, 32, 0)

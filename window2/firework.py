@@ -56,7 +56,7 @@ class Firework(Application):
         self.sounds = {"LAUNCH": [], "EXPLODE": []}
         self.sound_channels = []
         self.max_channels = 32
-
+        if not self.parent: return 
         for i in range(3):
             sound = self.parent.load_sound(make_path("sounds", f"fusee{1+i}.mp3"), 0.2)
             self.sounds["LAUNCH"].append(sound)
@@ -66,7 +66,8 @@ class Firework(Application):
 
     def close(self):
         # print("Stopping sound channels.")
-        self.parent.stop_channels()
+        if self.parent:
+            self.parent.stop_channels()
 
     def set_parent(self, parent):
         self.parent = parent
@@ -85,14 +86,15 @@ class Firework(Application):
             self.particles.append(Particle(fusee.pos.x, fusee.pos.y, p.x, p.y, fusee.color, 1, fusee.nombre))
 
     def play_sound(self, type_sound, rand):
-        if len(self.sound_channels) < self.max_channels:
+        if self.parent and len(self.sound_channels) < self.max_channels:
             channel = self.parent.play_sound(self.sounds[type_sound][random.randint(0, rand)])
             if channel:
                 self.sound_channels.append(channel)
                         
     def add_fusee(self):
-        self.parent.remove_unused_channels()
-        self.play_sound("LAUNCH", 2)
+        if self.parent:
+            self.parent.remove_unused_channels()
+            self.play_sound("LAUNCH", 2)
         self.fusees.append(
             Particle(random.randint(10, self.width-10), self.height, nombre=random.randint(2, 12)))
 

@@ -23,4 +23,4 @@ class Cell:
         return Cell.width//2+(this.x)*(decal+Cell.width), Cell.width//2+this.y*(decal+Cell.width), Cell.width//2.5
 
     def draw_text(this):
-        return 4+Cell.width//4+(this.x)*(decal+Cell.width), this.y*(decal+Cell.width), Cell.width
+        return 4+Cell.width//4+(this.x)*(decal+Cell.width), this.y*(decal+Cell.width), Cell.width, Cell.width
