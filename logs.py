@@ -6,13 +6,13 @@ from tempfile import gettempdir
 
 class LogLevel:
     DATA = {
-            ""          : 0,
-            "DEBUG"     : 1,
-            "INFO"      : 2,
-            "WARNING"   : 3,
-            "ERROR"     : 4,
-            "CRITIQUE"  : 5,
-            "TRACE"     : 6
+            "": 0,
+            "DEBUG": 1,
+            "INFO": 2,
+            "WARNING": 3,
+            "ERROR": 4,
+            "CRITIQUE": 5,
+            "TRACE": 6
         } 
     MINLEVEL = 0
     TAILLE_MAX_STR = max([len(x) for x in DATA])
@@ -89,9 +89,7 @@ class Logger:
             # print(mon_format)
             self.file.write(
                 mon_format.format(datetime.now().strftime('%d/%m/%Y %H:%M:%S.%f'), 
-                str(level),  
-                addstr, 
-                msg))
+                str(level), addstr, msg))
 
     def print(self):
         for ligne in self._log:

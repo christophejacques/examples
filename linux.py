@@ -1,14 +1,18 @@
-#! /d/Programmes/Python/bin/python
+#! python3
+# d:\Programmes\Python\python
+
 
 debug = False
+
 
 def dprint(*args):
     if debug:
         print(*args)
 
+
 etat = ""
 try:
-    with open("C:/Users/utilisateur/OneDrive/Programmation/python/examples/dpkg.log") as f:
+    with open("C:/Users/utilisateur/OneDrive/Programmation/python/examples/dpkg-debug.log") as f:
         for ligne in f:
             date, heure, action, *liste_champs = ligne.split(" ")
 
@@ -55,8 +59,3 @@ try:
 except Exception as e:
     print("Error")
     print(f"{e}")
-
-from msvcrt import getch
-
-print("Press any key.")
-getch()

@@ -1,16 +1,41 @@
-#!/usr/bin/python3
+#! /usr/bin/env python3
 
 from winreg import ConnectRegistry
-from winreg import HKEY_LOCAL_MACHINE, HKEY_CURRENT_USER, OpenKeyEx, EnumValue
+from winreg import HKEY_LOCAL_MACHINE, HKEY_CURRENT_USER, OpenKeyEx, OpenKey, EnumValue, EnumKey, HKEY_USERS
 # from winreg import QueryValueEx,
 from os import scandir, environ
 import platform
 
 
+def get_keys(proot, pkey_string):
+    results = []
+    try:
+        root = ConnectRegistry(None, proot)
+        policy_key = OpenKey(root, pkey_string)
+        
+        i = 0
+        while True:
+            try:
+                cle = EnumKey(policy_key, i)
+                results.append(cle)
+                i += 1
+            except OSError:
+                break
+
+    except OSError as ose2:
+        print("OSError2:", ose2)
+        pass
+    except Exception as e:
+        print("Error:", e)
+
+    return results
+
+
 def root_string(root):
     return {
         HKEY_LOCAL_MACHINE: "HKLM\\",
-        HKEY_CURRENT_USER: "HKCU\\"
+        HKEY_CURRENT_USER: "HKCU\\",
+        HKEY_USERS: "HKU\\",
     }[root]
 
 
@@ -37,8 +62,8 @@ def print_all_registry_keys(root_key, key_string):
         pass
     except Exception as e:
         print("Error:", e)
-
-    print()
+    else:
+        print()
 
 
 def print_all_directory_files(repertoire):
@@ -53,6 +78,13 @@ def print_all_directory_files(repertoire):
     print()
 
 
+def liste_users():
+    for cle in get_keys(HKEY_USERS, ""):
+        print_all_registry_keys(HKEY_USERS, cle + r"\SOFTWARE\Microsoft\Windows\CurrentVersion\Run")
+
+    print()
+
+
 def main():
     titre = f"Applications démarrées pour : {environ['USERNAME']}"
     print_souligne("=", titre)
@@ -60,10 +92,15 @@ def main():
     print_all_registry_keys(HKEY_LOCAL_MACHINE, r"SOFTWARE\Microsoft\Windows\CurrentVersion\Run")
 
     print_all_registry_keys(HKEY_CURRENT_USER, r"SOFTWARE\Microsoft\Windows\CurrentVersion\Run")
+
     print_all_directory_files(
         "{}\\{}".format(environ.get("ProgramData", ""), r"Microsoft\Windows\Start Menu\Programs\Startup"))
     print_all_directory_files(
         "{}\\{}".format(environ.get("APPDATA", ""), r"Microsoft\Windows\Start Menu\Programs\Startup"))
+
+    titre = "Applications démarrées pour différents utilisateurs"
+    print_souligne("=", titre)
+    liste_users()
 
 
 if __name__ == "__main__":

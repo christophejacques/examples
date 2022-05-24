@@ -1,7 +1,12 @@
-from urllib.parse import unquote
-from html import unescape
+import base64
+import quopri
 
 
-print(unescape('&pound; 682m'))
+s = "=3W/iYC/JAYMxipttjBh9rk5WhrQXvHfIyTpirzDn0TI="
+print(len(s))
 
-print(unquote("un ~:%7e, espace:'%20'"))
+d = base64.b64decode(s)
+print(d)
+
+q = quopri.decodestring(s[1:-1])
+print(q)

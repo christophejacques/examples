@@ -3,7 +3,8 @@
 from xml.dom.minidom import parse, Element
 import traceback
 from os import environ
-from utils.colors import *
+from utils.colors import setColor, fcolors
+
 
 if __name__ != "__main__":
     print("loading xml")

@@ -20,7 +20,7 @@ class Landscape:
         self.screenCopy = self.screen.copy()
         pygame.display.set_caption('Landscape')
         self.font = pygame.font.SysFont('CourierNew', 14)  # initialize font and set font size 
-        self.backgroundColor = (0,0,0)
+        self.backgroundColor = (0, 0, 0)
         self.randSize = 300.0                            # randSize determines how steep or flat the landscape is (bigger = steeper) 
         self.landSize = 6                                # landSize determines grid size as 2 ** landSize + 1 in both directions 
         self.AASize = 7                                  # landSize <= AASize will use AntiAliasing. For bigger sizes, dropped for speed. 

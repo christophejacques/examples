@@ -5,10 +5,10 @@ import requests
 def load():
     print("certificats location:", certifi.where())
     try:
-        print('Contrôle de la connection à Github...')
+        print('Contrôle de la connection...')
         # test = requests.get('https://api.github.com')
         test = requests.get('https://echange.asp-public.fr')
-        print('Connection à Github OK.')
+        print('Connection OK.')
 
     except requests.exceptions.SSLError:
         print('SSL Error. Ajout des certificats custom au magasin Certifi...')

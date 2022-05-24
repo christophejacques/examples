@@ -1,7 +1,8 @@
-import msvcrt
+# import msvcrt
 import random
 
 print("loading LibreOfficeFile")
+
 
 class LibreOfficeFile:
 
@@ -18,7 +19,7 @@ class LibreOfficeFile:
             print("Aucune feuille n'est active !")
 
     def ajouter_feuille(self, nom_feuille):
-        if not nom_feuille in self.feuilles:
+        if nom_feuille not in self.feuilles:
             self.current_feuille = nom_feuille
             self.feuilles[nom_feuille] = []
             fin = 0
@@ -50,13 +51,13 @@ class LibreOfficeFile:
 
     def __exit__(self, *args):
         for i, arg in enumerate(args):
-            if arg: print(i, arg)
+            if arg: 
+                print(i, arg)
 
         self.restore_colonnes()
 
     def __repr__(self):
         return f"print : {self.feuilles}\n"
-
 
 
 try:
@@ -67,7 +68,7 @@ try:
 
         # print(fichier)
 
-        a =1/10
+        a = 1/10
 
 
 except Exception as e:
@@ -75,4 +76,4 @@ except Exception as e:
 
 print(fichier)
 
-msvcrt.getch()
+# msvcrt.getch()

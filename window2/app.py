@@ -56,8 +56,9 @@ class Icone:
             self.title_rect = self.title_rect.move(dx, dy)
             
             self.icone_surf = self.screen_surf.subsurface(self.icone_rect)
-            midx, midy = (self.icone_rect.midtop[0]+Icone.ICONE_DECAL//2, 
-              self.icone_rect.midleft[1]+Icone.ICONE_DECAL//2)
+            midx, midy = (
+                self.icone_rect.midtop[0]+Icone.ICONE_DECAL//2, 
+                self.icone_rect.midleft[1]+Icone.ICONE_DECAL//2)
             posx = (midx // (Icone.ICONE_WIDTH+Icone.ICONE_DECAL)) * (Icone.ICONE_WIDTH+Icone.ICONE_DECAL) + 10
             posy = (midy // (Icone.ICONE_HEIGHT+Icone.ICONE_DECAL)) * (Icone.ICONE_HEIGHT+Icone.ICONE_DECAL) + 10
 

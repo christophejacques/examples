@@ -86,4 +86,4 @@ class myXml():
 
 
 mon_xml = myXml(fstring)
-# print(f"\n{mon_xml}")
+print(f"\n{mon_xml}")
