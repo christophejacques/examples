@@ -11,7 +11,11 @@ import html
 # ------------------------------------------------
 ORG_EMAIL = "@gmail.com" 
 FROM_EMAIL = "christophe.michael.jacques" + ORG_EMAIL 
+<<<<<<< HEAD
 FROM_PWD = "xxxxxxxx" 
+=======
+FROM_PWD = "password" 
+>>>>>>> 154bc9e3f82f2a3a57b5fa36d70b209759ec8141
 SMTP_SERVER = "imap.gmail.com" 
 SMTP_PORT = 993
 
