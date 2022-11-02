@@ -22,23 +22,26 @@ if True:
 
 print(sys.version)
 
+
 class INIT:
     def __init__(self, arg, *args):
         print("INIT:", arg)
         ENTER.__init__(self, *args)
 
+
 class ENTER:
-    def __init__(self, arg1, arg2):
+    def __init__(self, arg1, *arg2):
         print("FUNC:", arg1)
-        PARAMS.__init__(self, arg2)
+        PARAMS.__init__(self, *arg2)
+
 
 class PARAMS:
-    def __init__(self, arg):
-        print("PARAMS:", arg)
+    def __init__(self, arg1, *args):
+        print("PARAMS:", arg1, args)
+
 
 class Test(INIT):
     pass
 
-t = Test(1,2,3)
-    
 
+t = Test(1, 2, 3)

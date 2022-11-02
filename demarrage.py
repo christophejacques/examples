@@ -108,5 +108,3 @@ if __name__ == "__main__":
         main()
     else:
         print("Ne fonctionne que sur une platefome Windows")
-
-# input()

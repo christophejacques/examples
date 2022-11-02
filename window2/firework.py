@@ -138,7 +138,7 @@ class Firework(Application):
 def run():
     pygame.init()
     running = True
-    screen = pygame.display.set_mode((1400, 400), pygame.RESIZABLE)  # pygame.FULLSCREEN)
+    screen = pygame.display.set_mode((1400, 600), pygame.RESIZABLE)  # pygame.FULLSCREEN)
     f = Firework(None, screen, ())
     while running:
         pygame.time.Clock().tick(60)

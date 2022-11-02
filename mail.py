@@ -4,7 +4,7 @@ from html import unescape
 
 
 email = 'christophe.michael.jacques@gmail.com'
-password = 'pleinne2'
+password = 'xxxxxxxx'
 max_messages = 4
 
 
@@ -24,7 +24,7 @@ def get_content(texte, balise, start=0, count=1):
     while lcount < count:
         lcount += 1
         ifrom = texte.index(f'<{balise}>', start) + len(balise) + 2
-        ito   = texte.index(f'</{balise}>', start + len(balise) )
+        ito = texte.index(f'</{balise}>', start + len(balise))
         start = ito + len(balise)
 
     return ifrom, ito, texte[ifrom:ito]

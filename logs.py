@@ -45,7 +45,7 @@ class LogLevel:
 
 LogLevel("").set_minimum()
 DEBUG = True
-COMPTEUR = []
+COMPTEUR: list = []
 logger = None
 
 

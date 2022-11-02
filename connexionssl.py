@@ -100,5 +100,5 @@ def exemple2():
             fprint("- digest : Certificat non valide !")
 
 
-# exemple1()
-exemple2()
+exemple1()
+# exemple2()

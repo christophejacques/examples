@@ -171,7 +171,7 @@ def main1():
     print("- Périmètre:", r.perimetre())
     print("- Aire:", r.aire(), "\n")
 
-    c = Cercle((0, 0, 0, 5))
+    c = Cercle((0, 0, 0, 1))
     print(c)
     print("- Périmètre:", c.perimetre())
     print("- Aire:", c.aire(), "\n")

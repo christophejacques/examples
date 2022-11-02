@@ -124,7 +124,7 @@ def main():
                     Mouse.down_position = event.pos
                     ecran.active_raccourci.move((dx, dy))
                 elif Mouse.left_button_down and \
-                    ecran.active_window.cursor_zone in ("LEFT", "RIGHT", "BOTTOM"):
+                 ecran.active_window.cursor_zone in ("LEFT", "RIGHT", "BOTTOM"):
                     if window_spoted:
                         if ecran.active_window.cursor_zone == "LEFT":
                             dx = event.pos[0]-Mouse.down_position[0]
@@ -147,7 +147,7 @@ def main():
             elif event.type == pygame.VIDEORESIZE:
                 ecran.set_zone(event.size)
             elif event.type in (pygame.WINDOWRESIZED, pygame.WINDOWSIZECHANGED, 
-                pygame.WINDOWRESTORED, pygame.WINDOWMOVED, pygame.WINDOWMAXIMIZED):
+             pygame.WINDOWRESTORED, pygame.WINDOWMOVED, pygame.WINDOWMAXIMIZED):
                 pass
             elif event.type == pygame.ACTIVEEVENT:
                 pass

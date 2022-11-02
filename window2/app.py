@@ -355,14 +355,14 @@ class OperatingSystem:
 
         desktops = pygame.display.get_desktop_sizes()
         # define display/window height based on (the first) desktop size
-        if desktops[0][1] > 1080:
+        if desktops[0][1] > 1000:
             # Full HD max resolution
             disp_size = (1600, 800)
         else:
             disp_size = desktops[0]
 
-        self.screen = pygame.display.set_mode(disp_size, pygame.FULLSCREEN, 24)
-        # self.screen = pygame.display.set_mode((1600, 800), pygame.RESIZABLE, 24)
+        # self.screen = pygame.display.set_mode(disp_size, pygame.FULLSCREEN, 24)
+        self.screen = pygame.display.set_mode(disp_size, pygame.RESIZABLE, 24)
         # self.screen = pygame.display.set_mode((1600, 800), 0, 24)
         self.width, self.height = self.screen.get_size() 
         self.liste_fenetres = []

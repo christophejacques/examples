@@ -84,7 +84,10 @@ class Application(metaclass=ABCMeta):
 
     @abstractmethod
     def update(self):
-        pass
+        if self.parent.keypressed():
+            self.touche = self.parent.get_key()
+            if self.touche == 27:
+                self.action = "QUIT"
 
     @abstractmethod
     def draw(self):
@@ -115,14 +118,14 @@ class NoApplication(Application):
         if mouseX > 200 and mouseY > 200:
             a = 1 / 0
 
+    def mouse_button_up(self, mouseX, mouseY, button):
+        self.parent.set_title(self.title + f" Mouse_button_up({button})")
+
     def get_action(self):
         return self.action
 
     def update(self):
-        if self.parent.keypressed():
-            self.touche = self.parent.get_key()
-            if self.touche == 27:
-                self.action = "QUIT"
+        super().update()
 
     def draw(self):
         pass
@@ -154,7 +157,7 @@ class SystemDateTime(SysTray):
         if self.etat > 3:
             self.etat = 1
         self.format = {
-            1: "%d/%m/%Y %H:%M:%S",
+            1: "%d/%m/%Y %H:%M:%S ",
             2: " %d/%m/%Y ",
             3: " %H:%M:%S "
         }[self.etat]

@@ -1,5 +1,6 @@
-from msvcrt import getch
-import json, os, utils.colors as colors
+# from msvcrt import getch
+import json
+import utils.colors as colors
 
 
 def getNom(c1):
@@ -56,13 +57,13 @@ class Personne:
 class Manager(Personne):
     
     def __init__(self, nom="", prenom="", age=0):
-        if type(nom) == type({}):
+        if isinstance(nom, dict):
             Personne.__init__(self)
         else:
             Personne.__init__(self, nom, prenom, age)
         self.collaborateurs = []
         
-        if type(nom) == type({}):
+        if isinstance(nom, dict):
             self.from_dict(nom)
 
     def gere(self, collaborateur):
@@ -146,7 +147,7 @@ def initialisation():
     m2.gere(Personne("machadier", "brice", 30))
 
     repertoire = "\\".join(__file__.split("\\")[:-1])
-    with open(f"{repertoire}\Ressources.json", "w", encoding="utf-8") as fRessources:
+    with open(f"{repertoire}\\Ressources.json", "w", encoding="utf-8") as fRessources:
         json.dump(m0.to_dict(), fRessources, ensure_ascii=False, indent=2)
 
 
@@ -154,7 +155,7 @@ try:
     print(f"il y a un total de {Personne.Count()} personnes.")
 
     repertoire = "\\".join(__file__.split("\\")[:-1])
-    with open(f"{repertoire}\Ressources.json", "r", encoding="utf-8") as fRessources:
+    with open(f"{repertoire}\\Ressources.json", "r", encoding="utf-8") as fRessources:
         root = json.load(fRessources)
         
     print()
@@ -166,4 +167,4 @@ try:
 except Exception as e:
     print(f"Error : {e}")
 
-#getch()
+# getch()

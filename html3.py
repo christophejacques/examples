@@ -163,6 +163,7 @@ with requests.Session() as s:
     if "json" in p1.headers['Content-Type'].lower():
         print("\napplication/json:")
         parse_json("root", p1.json(), 0, {})
+        print("fin Parse")
         # print_dico("application/json", p1.json())
     else:
         print(p1.text)

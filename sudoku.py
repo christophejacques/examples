@@ -2,20 +2,23 @@ import os
 from msvcrt import getch
 from utils.colors import *
 import traceback
-updt = []
+updt: list = []
 
 DEBUG = False
+
 
 def mygetch():
     if DEBUG:
         return getch()
     else:
-        return 0 # getch()
+        return 0  # getch()
+
 
 def initbool(table):
     table.clear()
     for x in range(9):
         table.append([False]*9)
+
 
 grid0 = [[0,0,0, 0,5,0, 0,0,9], [4,0,0, 0,0,9, 0,2,0], [7,0,0, 0,0,0, 4,0,6], 
         [0,3,0, 0,6,4, 0,0,0], [0,6,0, 8,0,0, 0,0,1], [0,0,7, 0,0,1, 5,0,0], 
@@ -29,15 +32,16 @@ grid0 = [[3,0,0, 0,7,5, 0,9,0], [0,0,0, 0,0,0, 0,0,0], [7,0,1, 0,2,4, 0,0,0],
         [0,0,0, 0,0,0, 0,0,0], [0,0,8, 0,0,9, 5,4,0], [0,0,0, 0,1,0, 8,0,9], 
         [2,0,0, 0,3,0, 1,8,0], [0,0,1, 0,6,0, 0,0,2], [0,6,8, 1,5,0, 4,0,0]]
 # difficile
-grid= [[0,6,0, 3,0,2, 1,0,0], [7,0,0, 5,0,0, 0,0,0], [0,0,0, 8,0,0, 0,2,4], 
+grid = [[0,6,0, 3,0,2, 1,0,0], [7,0,0, 5,0,0, 0,0,0], [0,0,0, 8,0,0, 0,2,4], 
         [0,0,0, 8,0,1, 0,0,0], [0,2,0, 0,0,4, 1,0,7], [9,0,0, 2,7,0, 0,0,0], 
         [0,0,0, 7,0,0, 0,0,0], [0,0,0, 8,5,0, 0,0,0], [3,0,0, 6,0,0, 0,4,9]]
-#Expert
+# Expert
 grid0 = [[3,0,5, 0,0,0, 0,9,0], [0,7,1, 3,4,0, 2,0,0], [0,0,9, 0,0,0, 0,0,0], 
         [0,3,0, 0,6,0, 0,0,0], [0,0,4, 0,0,0, 0,0,2], [0,0,0, 0,0,7, 8,5,0], 
         [0,0,0, 0,5,4, 0,0,7], [0,0,0, 0,0,0, 0,0,0], [0,8,0, 9,0,1, 4,0,0]]
 
 gridetail = [[0]*9, [0]*9, [0]*9, [0]*9, [0]*9, [0]*9, [0]*9, [0]*9, [0]*9]
+
 
 def initdetail(grille, grilledetail):
     for y in range(9):
@@ -48,10 +52,11 @@ def initdetail(grille, grilledetail):
             else:
                 grilledetail[y][x] = [val]
 
-def printdetail(param = 0):
+
+def printdetail(param=0):
     try:
         chiffre = int(param)
-    except:
+    except Exception:
         chiffre = 0
         
     for y in range(9):
@@ -83,34 +88,36 @@ def printdetail(param = 0):
             printXY( 66, 31+ligne, "│")
             printXY(132, 31+ligne, "│")
 
-    
-
     return mygetch()
+
        
 def lprint(*args, **kw):
     pass
-    #print(*args, **kw)
+    # print(*args, **kw)
+
 
 def is_sudoku_resolved(grille):
     res = True
     n = 0
-    while n<8 and res:
+    while n < 8 and res:
         n += 1
         res = is_box_ok(grille, n)
     
     return res
+
 
 def is_box_ok(grille, n):
     test = [1,2,3,4,5,6,7,8,9]
     for x in range(9):
         try:
             index = test.index(grille[n][x])
-        except:
+        except Exception:
             return False
             
         test.pop(index)
         
     return len(test) == 0
+
 
 def purificationBy2Vert(grille):
     dico = {}
@@ -135,22 +142,22 @@ def purificationBy2Vert(grille):
     for box in dico:
         for val in dico[box]:
             if len(dico[box][val]) == 2:
-                if dicop.get(box) == None:
+                if dicop.get(box) is None:
                     dicop[box] = {}
                 dicop[box][val] = dico[box][val]
     
     # suppression des couples non en double
     ddico = {}
     for i in range(3):
-        for box in range(i%3, 9, 3):
-            if dicop.get(box) != None:
+        for box in range(i % 3, 9, 3):
+            if dicop.get(box) is not None:
                 for val in dicop[box]:
                     colonnes = dicop[box][val]
-                    for oldbox in range(i%3, 9, 3):
+                    for oldbox in range(i % 3, 9, 3):
                         if box != oldbox:
-                            if dicop.get(oldbox) != None:
+                            if dicop.get(oldbox) is not None:
                                 if dicop[oldbox].get(val) == colonnes:
-                                    if ddico.get(oldbox) == None:
+                                    if ddico.get(oldbox) is None:
                                         ddico[oldbox] = {}
                                     ddico[oldbox][val] = colonnes
         
@@ -348,8 +355,7 @@ def find_next_unique(grille):
                             if oldpos != pos:
                                 recherche = gridetail[box][oldpos]
                                 trouve = trouve or (val in recherche)
-                                
-                    
+
                     if not trouve:
                         grille[box][pos] = val
                         gridetail[box][pos] = [val]
@@ -480,7 +486,6 @@ def show(grille, x, y):
                         print(end="═╦═") 
                     else:
                         print(end="═┼═") 
-                
         
         # ligne de données
         ligne += 1

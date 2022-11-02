@@ -33,8 +33,13 @@ def print_users(c):
         f = e.fetchone()
 
 
+def table_exist(c, table_name: str) -> bool:
+    c.execute("SELECT name FROM sqlite_master WHERE type='table' and name=:tablename;", {"tablename": table_name})
+    return len(c.fetchall()) > 0
+
+
 def isPassword(c, username, password):
-    fprint(f"Checking User {username} with password \"{password}\" = ", end="")
+    fprint(f"Checking connection : {username} / {password} => ", end="")
     res = False
     e = c.execute("select cle, password from user where username = :username", {"username": username})
     f = e.fetchone()
@@ -65,9 +70,11 @@ def update_password(c, username, password):
 def add_user(c, username, password):
     cle = creation_cle()
     try:
-        e = c.execute("""insert into user (username, cle, password) 
-                                    values (:username, :cle, :password)""", 
-                     {"username": username, "cle": cle, "password": hash(cle, password)})
+        e = c.execute("""insert into user (username,   cle,  password) 
+                                   values (:username, :cle, :password)""", 
+                     {"username": username, 
+                      "cle": cle, 
+                      "password": hash(cle, password)})
                      
     except Exception as err:
         print(f"Error add_user({username}):", err)
@@ -75,15 +82,18 @@ def add_user(c, username, password):
         
     if e.rowcount <= 0:
         print(f"Erreur de creation du user {username}")
+    else:
+        print(f'Creation du user : {username} / "{password}"')
         
     return e.rowcount > 0
 
 
 def main():
-    os.chdir("C:\\Users\\utilisateur\\OneDrive\\Programmation\\python\\examples")
+    os.chdir(r"C:\Users\utilisateur\OneDrive\Programmation\python\examples")
     fprint("> cd", os.getcwd())
     
-    with sql.connect("sample.db") as db:    
+    # with sql.connect(":memory:") as db:    
+    with sql.connect("sample.db") as db:
         # db.create_function("hash", 2, hash)
         c = db.cursor()
         
@@ -97,10 +107,17 @@ def main():
                         date_modified   TEXT DEFAULT CURRENT_TIMESTAMP)""")
         
         db.commit()
-                
+
+        if not table_exist(c, "user"):
+            print("La table user n'existe pas")
+            return
+
+        print("La table user existe")
+        print()
         add_user(c, "admin", "admin")
         add_user(c, "christophe.jacques1", "")
         db.commit()
+        print()
         
         # print_users(c)
         isPassword(c, "admin", "Unknown")
@@ -116,9 +133,9 @@ def main():
         isPassword(c, "christophe.jacques1", "Password")
         fprint()
         
-        print_users(c)
+        # print_users(c)
         c.close()
-        
+
 
 if __name__ == "__main__":
     try:

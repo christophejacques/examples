@@ -30,7 +30,7 @@ def exemple1() -> None:
 
 
 def exemple2() -> None:
-    dico : dict = {
+    dico: dict = {
         "tuple": (1, 2, 3, 4, 5),
         "liste": [2, 4, 6, 8],
         "set": {3, 6, 9}

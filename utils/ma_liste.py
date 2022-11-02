@@ -11,8 +11,7 @@ class ma_liste:
         if index > self.idx_max:
             raise IndexError(f"Index {index} out of range")
         return self.liste[index]
-        
-        
+                
     def __setitem__(self, index, valeur):
         if index > self.idx_max:
             raise IndexError(f"Index {index} out of range")
@@ -57,7 +56,7 @@ class ma_liste:
         return self.idx_max+1
         
     def extend(self, autre_liste):
-        if type(autre_liste) == type([]):
+        if isinstance(autre_liste, list):
             self.liste.extend(autre_liste)
             self.idx_max += len(autre_liste)
         else:
@@ -87,34 +86,33 @@ class ma_liste:
         
 
 try:
-    l = ma_liste()
-    for i in l: print(i, end=", ")
+    liste = ma_liste()
+    for i in liste: 
+        print(i, end=", ")
     print()
-    l.append("un")
-    l.append("deux")
-    l.append("trois")
-    l.append("quatre")
-    print(l.index("deux"))
+    liste.append("un")
+    liste.append("deux")
+    liste.append("trois")
+    liste.append("quatre")
+    print(liste.index("deux"))
     
-    print(l)
-    l[0] = "zero"
-    print(l)
-    for i in l: print(i, end=", ")
+    print(liste)
+    liste[0] = "zero"
+    print(liste)
+    for i in liste: 
+        print(i, end=", ")
     print()
-    del l[1]
-    print(l)
+    del liste[1]
+    print(liste)
     
     print("\nclear")
-    l.clear()
-    print(l)
+    liste.clear()
+    print(liste)
     
-    l.extend([9,5,1])
-    print(l)
-    print("Remove :", l.pop())
-    print(l)
+    liste.extend([9, 5, 1])
+    print(liste)
+    print("Remove :", liste.pop())
+    print(liste)
     
 except Exception as e:
     print("Error:", e)
-    
-from msvcrt import getch
-# getch()

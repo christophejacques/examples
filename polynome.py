@@ -3,7 +3,7 @@ import itertools
 
 
 def nz(val, sinone):
-    return sinone if val == None else val
+    return sinone if val is None else val
 
 
 class Polynome:

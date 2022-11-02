@@ -1,5 +1,8 @@
-import sqlite3, sys
-import os, traceback
+import sqlite3
+import sys
+import os
+import traceback
+import codecs
 
 repertoire = r"C:\Users\utilisateur\OneDrive\Programmation\python\examples"
 os.chdir(repertoire)
@@ -8,7 +11,6 @@ os.chdir(repertoire)
 #
 # codage UTF-8 des instruction affichée via commande print()
 #
-import sys, codecs
 sys.stdout = codecs.getwriter("utf-8")(sys.stdout.detach())
 # ---------------------------------------------------------
 
@@ -73,6 +75,11 @@ class monsql:
         if res is None: 
             return False
         return len(res) > 0
+
+    def create_or_replace_table(self, nomTable: str, listeChamps: tuple, cles: str = ""):
+        if mabd.existTable(nomTable):
+            mabd.dropTable(nomTable)
+        self.createTable(nomTable, listeChamps, cles)
 
     def createTable(self, nomTable, listeChamps, cles=""):
         print(f"Création de la table *{nomTable}*", end="")
@@ -188,31 +195,22 @@ class monsql:
         return res
 
 
+# with monsql(":memory:") as mabd:
 with monsql("basededonnees.db") as mabd:
-    # with monsql(":memory:") as mabd:
     if mabd.isconnected():
         try:
-            if mabd.existTable("personnes"):
-                mabd.dropTable("personnes")
-
-            mabd.createTable("personnes",
+            mabd.create_or_replace_table("personnes", 
                 [("idPersonne",     "integer PRIMARY KEY AUTOINCREMENT"), 
                  ("nom",            "text not null"), 
                  ("prenom",         "TEXT NOT NULL"), 
                  ("datedenaissance", "text"), 
                  ("horodatage",     "TEXT DEFAULT CURRENT_TIMESTAMP")])
 
-            if mabd.existTable("metiers"):
-                mabd.dropTable("metiers")
-
-            mabd.createTable("metiers",
+            mabd.create_or_replace_table("metiers",
                 [("idMetier",   "integer PRIMARY KEY AUTOINCREMENT"), 
                  ("libelle",    "text")])
 
-            if mabd.existTable("ass_personne_metier"):
-                mabd.dropTable("ass_personne_metier")
-
-            mabd.createTable("ass_personne_metier",
+            mabd.create_or_replace_table("ass_personne_metier",
                 [("idPersonne",     "integer NOT NULL"), 
                  ("idMetier",       "integer NOT NULL")],
                  ["PRIMARY KEY (idPersonne, idMetier)",
@@ -271,8 +269,5 @@ with monsql("basededonnees.db") as mabd:
             mabd.rollback()
 
         except Exception:  # (RuntimeError, TypeError, NameError):
-            print(traceback.print_exc())
+            traceback.print_exc()
             mabd.rollback()
-
-# import msvcrt
-# msvcrt.getch()

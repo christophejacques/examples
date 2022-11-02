@@ -7,7 +7,7 @@ def getScreenSize():
     global nb_colonnes
     try:
         nb_colonnes = shutil.get_terminal_size().columns
-        print(nb_colonnes)
+        # print(nb_colonnes)
     except OSError:
         nb_colonnes = 200
 

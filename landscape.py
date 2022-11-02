@@ -2,7 +2,7 @@
 import pygame
 import numpy as np
 import random
-from os import chdir
+# from os import chdir
 
 
 class Landscape:
@@ -37,7 +37,7 @@ class Landscape:
         self.zAdd = np.zeros((1, 2 ** 10 + 1))
         self.zoomPosition = (0, 0)
         self.zoomLevel = 0
-        self.zoomerPoints = np.zeros((2,2,2), dtype=int)
+        self.zoomerPoints = np.zeros((2, 2, 2), dtype=int)
         self.mousePosition = (0, 0)
         self.grid = np.zeros((2 ** self.landSize + 1, 2 ** self.landSize + 1), dtype=float)
         self.tilt = 0.1                                  # tilt towards viewer; determines how much higher the far-away points (on average) are
@@ -68,18 +68,18 @@ class Landscape:
                 if event.type == pygame.QUIT:
                     self.running = False
                 elif event.type == pygame.KEYDOWN:
-                        if event.key == pygame.K_ESCAPE:
-                            self.running = False
-                        if event.key == pygame.K_f:
-                            self.toggleFullScreen()
-                        if event.key == pygame.K_RIGHT and self.landSize < 10:
-                            self.increaseLandSize()
-                        if event.key == pygame.K_LEFT and self.landSize > 3:
-                            self.decreaseLandSize()
-                        if event.key == pygame.K_UP and self.randSize < 1200:
-                            self.increaseRandSize()
-                        if event.key == pygame.K_DOWN and self.randSize > 70:
-                            self.decreaseRandSize()
+                    if event.key == pygame.K_ESCAPE:
+                        self.running = False
+                    if event.key == pygame.K_f:
+                        self.toggleFullScreen()
+                    if event.key == pygame.K_RIGHT and self.landSize < 10:
+                        self.increaseLandSize()
+                    if event.key == pygame.K_LEFT and self.landSize > 3:
+                        self.decreaseLandSize()
+                    if event.key == pygame.K_UP and self.randSize < 1200:
+                        self.increaseRandSize()
+                    if event.key == pygame.K_DOWN and self.randSize > 70:
+                        self.decreaseRandSize()
                 elif event.type == pygame.MOUSEMOTION:
                     self.mousePosition = pygame.mouse.get_pos()
                     self.drawZoomer()
@@ -110,13 +110,13 @@ class Landscape:
         self.mountainHeight = (2 ** self.zoomLevel) * self.randSize / 2 
         self.landHeight = (2 ** self.zoomLevel) * self.randSize / 4
         self.seaHeight = 0 
-        self.seaColorMult = 1.0 / (64) # * (2 ** self.zoomLevel))
+        self.seaColorMult = 1.0 / (64)  # * (2 ** self.zoomLevel))
         # zAdd is the vector (size: grid width) with increasing width of polygons (starting with smaller, far away).
         self.zAdd = np.linspace(self.zBack, self.zFront, num=self.gridSize + 1, endpoint=True)
         # yAdd is the vector (size: grid width) with increasing (0 is at the top) "basic height" for each row of polygons.
         self.yAdd = (self.yHeight * self.zAdd) - self.yHeight * (self.zAdd[0] + self.zAdd[self.gridSize]) / 2 + self.midScreen[1] * 1.3
                
-    def generateGrid(self, last_iter_only = 0):
+    def generateGrid(self, last_iter_only=0):
         """
         Generates a new landscape grid by creating a random altitude map.
         Uses a simple fractal method called mid-point replacement.
@@ -272,8 +272,8 @@ class Landscape:
         zoomLeftX = max(0, min(midGrid, (self.mousePosition[0] - self.midScreen[0]) / self.zAdd[zoomTopZ + int(midGrid / 2)] + int(midGrid / 2)))
         self.zoomPosition = (zoomLeftX, zoomTopZ)
         
-        zoomX = np.array([zoomLeftX, zoomLeftX + midGrid], dtype = int)
-        zoomZ = np.zeros((2,2), dtype = int)
+        zoomX = np.array([zoomLeftX, zoomLeftX + midGrid], dtype=int)
+        zoomZ = np.zeros((2, 2), dtype=int)
         zoomZ[0, 0] = zoomTopZ                  # beginning of top Z
         zoomZ[0, 1] = zoomTopZ + midGrid        # end of top Z = beginning of bottom Z
         zoomZ[1, 0] = zoomTopZ + midGrid        # beginning of bottom Z
@@ -302,16 +302,16 @@ class Landscape:
 
         # draws a zoomer point
         # first remove previous zoomer point by copying landscape image under it from screenCopy
-        if self.zoomerPoints[x,z,0] > 0 and self.zoomerPoints[x,z,1] > 0:
-            rect = pygame.Rect(self.zoomerPoints[x,z,0] - 3, self.zoomerPoints[x,z,1] - 3, 7, 7)
+        if self.zoomerPoints[x, z, 0] > 0 and self.zoomerPoints[x, z, 1] > 0:
+            rect = pygame.Rect(self.zoomerPoints[x, z, 0] - 3, self.zoomerPoints[x, z, 1] - 3, 7, 7)
             self.screen.blit(self.screenCopy, rect, rect)
         # then add the new zoomer point
         if x0 > 0 and y0 > 0:
-            self.screen.fill(self.zoomerRGB, rect = [(x0 - 3, y0 - 3), (7, 7)])
-            self.screen.fill(self.zoomerMidRGB, rect = [(x0 - 1, y0 - 1), (3, 3)])
+            self.screen.fill(self.zoomerRGB, rect=[(x0 - 3, y0 - 3), (7, 7)])
+            self.screen.fill(self.zoomerMidRGB, rect=[(x0 - 1, y0 - 1), (3, 3)])
         # and store its coordinates
-        self.zoomerPoints[x,z,0] = x0
-        self.zoomerPoints[x,z,1] = y0  
+        self.zoomerPoints[x, z, 0] = x0
+        self.zoomerPoints[x, z, 1] = y0  
         
     def drawPolygon(self, screen, color, node_list):
 
@@ -369,8 +369,8 @@ class Landscape:
         self.zoomPosition = (int(2 * self.zoomPosition[0]), int(2 * self.zoomPosition[1]))
         gSize = int(self.gridSize / 2)
         # use current grid as a basis for a new, more accurate grid. "Expand" from top left quartile. 
-        self.grid = np.hstack((self.grid, self.grid[:, 0:gSize])) # double size horizontally
-        self.grid = np.vstack((self.grid, self.grid[0:gSize, :])) # double size vertically
+        self.grid = np.hstack((self.grid, self.grid[:, 0:gSize]))  # double size horizontally
+        self.grid = np.vstack((self.grid, self.grid[0:gSize, :]))  # double size vertically
         for z in range(gSize, 0, -1):
             self.grid[0:gSize + 1, z * 2] = self.grid[0:gSize + 1, z]
         for x in range(gSize, 0, -1):
@@ -391,8 +391,8 @@ class Landscape:
             self.grid[:, z] = self.grid[:, z * 2]
         for x in range(1, gSize):
             self.grid[x, 0:gSize] = self.grid[x * 2, 0:gSize]
-        self.grid = np.split(np.split(self.grid, [gSize, gSize * 2 - 1], axis = 0)[0], [gSize, gSize * 2 - 1], axis = 1)[0] # use the upper left quartile of grid as the new grid
-        self.colorScale *= 2 # adjust colorScale accordingly
+        self.grid = np.split(np.split(self.grid, [gSize, gSize * 2 - 1], axis=0)[0], [gSize, gSize * 2 - 1], axis=1)[0]  # use the upper left quartile of grid as the new grid
+        self.colorScale *= 2  # adjust colorScale accordingly
         self.drawGrid()
                       
     def increaseRandSize(self):
@@ -425,7 +425,7 @@ class Landscape:
         while self.screen.get_locked():
             self.screen.unlock()
 
-        #self.screen.fill(self.backgroundColor, rect = [(10, 10), (200, 120)])   # clear info area
+        # self.screen.fill(self.backgroundColor, rect = [(10, 10), (200, 120)])   # clear info area
         self.plotInfoBlit(10,  10, "land size   " + (" " * 10 + "2^" + str(int(self.landSize)))[-10:])
         self.plotInfoBlit(10,  25, "grid size   " + (" " * 10 + str(int(self.gridSize + 1)) + "x" + str(int(self.gridSize + 1)))[-10:])
         self.plotInfoBlit(10,  40, "grid points " + (" " * 10 + str(int((self.gridSize) + 1) ** 2))[-10:])
@@ -446,7 +446,7 @@ class Landscape:
         while self.screen.get_locked():
             self.screen.unlock()
 
-        self.screen.fill(self.backgroundColor, rect = [(400, 10), (200, 120)])   # clear info area
+        self.screen.fill(self.backgroundColor, rect=[(400, 10), (200, 120)])   # clear info area
         self.plotInfoBlit(400,  10, "cursor left/right:  decrease/increase land size")
         self.plotInfoBlit(400,  25, "cursor down/up:     decrease/increase steepness")
         self.plotInfoBlit(400,  40, "left mouse button:  new landscape")
@@ -459,7 +459,7 @@ class Landscape:
 
     def plotInfoBlit(self, x, y, msg):
         
-        f_screen = self.font.render(msg, False, [255,255,255])
+        f_screen = self.font.render(msg, False, [255, 255, 255])
         self.screen.blit(f_screen, (x, y))
     
     def clearEvents(self):
@@ -469,18 +469,18 @@ class Landscape:
             if event.type == pygame.QUIT:
                 self.running = False
             elif event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_ESCAPE:
-                        self.running = False
+                if event.key == pygame.K_ESCAPE:
+                    self.running = False
         
     def toggleFullScreen(self):
         
         # switch between a windowed display and full screen
-        if self.fullScreen == True:
+        if self.fullScreen is True:
             self.fullScreen = False
-            self.screen = pygame.display.set_mode((self.width,self.height))
+            self.screen = pygame.display.set_mode((self.width, self.height))
         else:
             self.fullScreen = True
-            self.screen = pygame.display.set_mode((self.width,self.height), pygame.FULLSCREEN | pygame.DOUBLEBUF | pygame.HWSURFACE)
+            self.screen = pygame.display.set_mode((self.width, self.height), pygame.FULLSCREEN | pygame.DOUBLEBUF | pygame.HWSURFACE)
         self.screenCopy = self.screen.copy()
         # redraw.
         self.drawGrid()
@@ -503,7 +503,7 @@ if __name__ == '__main__':
     pygame.display.init()
     # pick disp0lay mode from list or set a specific resolution
     disp_modes = pygame.display.list_modes(0, pygame.FULLSCREEN | pygame.DOUBLEBUF | pygame.HWSURFACE)
-    disp_size = disp_modes[9] # selecting display size from available list. Assuming the 9th element is nice...
+    disp_size = disp_modes[9]  # selecting display size from available list. Assuming the 9th element is nice...
     # disp_size = (1920, 1080) # to force display size
     pygame.font.init()
         

@@ -61,6 +61,9 @@ class stripDoc:
             if not self.doc_detaillee:
                 self.doc_detaillee = self.doc_synthese
 
+    def __init_subclass__(self, *args, **kwargs):
+        print("Init subclass stripDoc", self.__name__)
+
 
 class noCommande(stripDoc):
     
@@ -68,7 +71,7 @@ class noCommande(stripDoc):
         pass
 
 
-class exitCommande(l):
+class exitCommande(stripDoc):
     """Sortie de l'interpréteur de commandes
   [AIDE_DETAILLEE]
   EXIT / QUIT
@@ -104,7 +107,7 @@ class catCommande(stripDoc):
 
 class clsCommande(stripDoc):
     """Efface l'écran
-    Reinitialise la position du curseur
+  Reinitialise la position du curseur
   [AIDE_DETAILLEE]
   CLS
   
@@ -277,6 +280,24 @@ class rdCommande(stripDoc):
     def run(self):
         rep = " ".join(self.arguments)
         print(f"Suppression du répertoire {rep!r}")
+        if not VarGlobales.sourcing:
+            print()
+
+
+class promptCommande(stripDoc):
+    """Affiche le codage de l'affichage à gauche 
+  du curseur dans l'invite de commande
+  [AIDE_DETAILLEE]
+  Affiche le codage de l'affichage à gauche 
+  du curseur dans l'invite de commande
+  La valeur par défaut est : $P$G"""
+
+    def run(self):
+        if self.arguments:
+            print("La commande prompt n'accepte aucun argument.")
+        else:
+            print(getenv("PROMPT", "$P$G"))
+
         if not VarGlobales.sourcing:
             print()
 
@@ -552,20 +573,20 @@ class echoCommande(stripDoc):
     def run(self):
         retour_ligne = True
         chaine = ""
-        
-        for arg in self.arguments:
-            if arg == "-n":
-                retour_ligne = False
-                continue
+        if self.arguments:
+            for arg in self.arguments:
+                if arg == "-n":
+                    retour_ligne = False
+                    continue
+                
+                chaine += "{} ".format(arg)
             
-            chaine += "{} ".format(arg)
-        
-        print(echoCommande.decode_var(chaine), end=" ")
-        
-        if retour_ligne:
-            print()
-        if not VarGlobales.sourcing:
-            print()
+            print(echoCommande.decode_var(chaine), end=" ")
+            
+            if retour_ligne:
+                print()
+            if not VarGlobales.sourcing:
+                print()
 
 
 class aliasCommande(stripDoc):
@@ -650,6 +671,7 @@ class OperatingSystem(Commande):
         'ls': dirCommande,
         'md': mdCommande,
         'mkdir': mdCommande,
+        'prompt': promptCommande,
         'popd': popdCommande,
         'pushd': pushdCommande,
         'pwd': pwdCommande,
@@ -665,8 +687,8 @@ class OperatingSystem(Commande):
     }
     
     ALIAS = {}
-    HISTORIQUE = []
-    HISTPATH = []
+    HISTORIQUE: list[str] = []
+    HISTPATH: list[str] = []
     History = False
     Running = True
     
@@ -733,7 +755,7 @@ class OperatingSystem(Commande):
         
         return est_alias
     
-    def is_runnable(self):
+    def is_runnable(self) -> bool:
         return self.is_alias() or self.is_commande()
     
     def run(self) -> None:
@@ -744,7 +766,7 @@ class OperatingSystem(Commande):
             print(f"{self.commande!r} n'est pas une commande valide.\n")
 
 
-def execute_commande(ligne_commande):
+def execute_commande(ligne_commande) -> None:
     try:
         commande, *args = ligne_commande.split()
         commande = commande.lower()
@@ -760,7 +782,7 @@ def execute_commande(ligne_commande):
         historyCommande.add(cde)
 
 
-def main():
+def main() -> None:
     try:
         VarGlobales.current_directory = getcwd()
         

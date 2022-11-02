@@ -1,4 +1,3 @@
-from msvcrt import getch
 
 def myRange(n):
     x = 0
@@ -15,4 +14,4 @@ try:
 except Exception as e:
     print("Error:", e)
     
-#getch()
+# getch()
