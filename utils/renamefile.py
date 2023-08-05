@@ -15,8 +15,9 @@ longeurMaxFichier = (colsize -5) // 2
 
 argv = sys.argv.copy()[1:]
 
-#argv = ("10", " \(1080.*(\..*)", "\\1", )
+# argv = ("10", " \(1080.*(\..*)", "\\1", )
 nb_args = len(argv)
+
 
 def fprint(*args, **kw):
     print(*args, end="")
@@ -62,7 +63,6 @@ try:
         
     else:
         msg_erreur(f"Nombre de paramètres incorrects : {nb_args}")
-        
         
     repertoire = os.getcwd()
     
@@ -150,7 +150,5 @@ try:
         print(f"sur {nb_files} fichier filtré")
      
 
-except Exception as e:
-    print("\n", traceback.print_exc())
-
-#getch()
+except Exception:
+    traceback.print_exc()

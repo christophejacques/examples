@@ -8,8 +8,20 @@ import datetime
 # from abc import abstractmethod
 
 
+class Screen:
+    CONTENT: list[str] = []
+
+    @classmethod
+    def clear(self):
+        self.CONTENT = []
+
+    @classmethod
+    def print(self, content: str):
+        self.CONTENT.append(content)
+
+
 class CONSTANTE:
-    HOME_DIR = getenv("HOMEDRIVE") + getenv("HOMEPATH")  # C:\\Users\\utilisateur"
+    HOME_DIR = f'{getenv("HOMEDRIVE")}{getenv("HOMEPATH")}'  # C:\\Users\\utilisateur"
 
 
 class VarGlobales:
@@ -30,6 +42,9 @@ class Commande(Parametres):
     def __init__(self, commande, args: list = []):
         Parametres.__init__(self, args)
         self.commande = commande
+
+    def run(self, *args):
+        ...
 
 
 class stripDoc:
@@ -124,8 +139,9 @@ class historyCommande(stripDoc):
   HISTORY
   
   Affiche la liste des dernières commandes exécutées précédées par un numéro d'ordre"""
-    
-    def load(self):
+
+    @classmethod
+    def load(cls):
         try:
             for ligne in open(os.path.join(CONSTANTE.HOME_DIR, "history"), 'r'):
                 OperatingSystem.HISTORIQUE.append(ligne)
@@ -138,7 +154,8 @@ class historyCommande(stripDoc):
         
         return True
     
-    def save(self):
+    @classmethod
+    def save(cls):
         try:
             with open(os.path.join(CONSTANTE.HOME_DIR, "history"), 'w') as f:
                 f.writelines(OperatingSystem.HISTORIQUE)
@@ -653,7 +670,7 @@ class unaliasCommande(stripDoc):
 
 
 class OperatingSystem(Commande):
-    COMMANDES = {
+    COMMANDES: dict[str, object | Commande] = {
         '': noCommande,
         '.': sourceCommande,
         'alias': aliasCommande,
@@ -686,7 +703,7 @@ class OperatingSystem(Commande):
         'unalias': unaliasCommande,
     }
     
-    ALIAS = {}
+    ALIAS: dict = {}
     HISTORIQUE: list[str] = []
     HISTPATH: list[str] = []
     History = False
@@ -790,7 +807,8 @@ def main() -> None:
         execute_commande(ligne_commande)
     
     except Exception:
-        print("Main error:", traceback.print_exc())
+        print("Main error:", end="")
+        traceback.print_exc()
         quit()
 
 
@@ -799,12 +817,12 @@ if __name__ == "__main__":
         clsCommande().run()
         OperatingSystem.History = False
         execute_commande("source aliases")
-        historyCommande().load()
+        historyCommande.load()
         OperatingSystem.History = True
         while OperatingSystem.Running:
             main()
         
-        historyCommande().save()
+        historyCommande.save()
     
     except Exception:
         print("Error:", traceback.format_exc())

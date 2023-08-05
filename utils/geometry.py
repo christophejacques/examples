@@ -33,14 +33,13 @@ class Cercle(Form2D):
     def get_rayon(self):
         print(dir(self))
         return Form2D.get_rayon(self)
-    
+
+
 try:    
-  c = Cercle(2)
-  print(c.get_rayon())
-  d = Cercle(6)
-  print(d.get_rayon())
+    c = Cercle(2)
+    print(c.get_rayon())
+    d = Cercle(6)
+    print(d.get_rayon())
 
 except Exception as e:
-  print("Erreur:", e)
-  
-input()
+    print("Erreur:", e)

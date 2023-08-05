@@ -45,7 +45,7 @@ class Ball:
             # print(res, brick.rect, self.pos, self.vel, end=", ")
             cotes.extend(res)
 
-            print(brick.type_brick)
+            # print(brick.type_brick)
             if brick.type_brick == 1:
                 bricks.remove(brick)
             else:

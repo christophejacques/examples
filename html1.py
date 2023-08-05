@@ -1,11 +1,9 @@
 import urllib.request
-from msvcrt import getch
 import traceback
 from utils.definition import printdef
 from urllib.parse import urlparse
 
 try:
-  
     number = 2
   
     url = "http://www.python.org/"
@@ -15,7 +13,7 @@ try:
 
     response = urllib.request.urlopen(url)
     if (number & 2) == 2:
-        print("-="*80)
+        print("-="*80, "\n")
         printdef(response)
     print(dict(response.getheaders())['Content-Type'].split("; ")[1].split("=")[1])
     print((dict(response.getheaders())['Content-Type']))
@@ -37,7 +35,6 @@ except urllib.error.URLError as e:
     print("reason:", e.reason)
   
 except Exception:
-    print(traceback.print_exc())
+    traceback.print_exc()
   
 print("Press any key.")
-# getch()

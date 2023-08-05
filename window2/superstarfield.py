@@ -119,7 +119,7 @@ class SuperStarfield(Application):
 def run():
     pygame.init()
     running = True
-    screen = pygame.display.set_mode((800, 400), pygame.RESIZABLE, 32)  # pygame.FULLSCREEN)
+    screen = pygame.display.set_mode((1800, 800), pygame.RESIZABLE, 32)  # pygame.FULLSCREEN)
     # my_screen = screen.subsurface(pygame.Rect(100, 50, 600, 300))
 
     w, h = screen.get_size()

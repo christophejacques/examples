@@ -4,11 +4,11 @@ if __name__ != "__main__":
     print("loading operation.py", end=" ... ")
 
 
-def ajoute_deux(v):
+def ajoute_deux(v: int) -> int:
     return v + 2
 
 
-def factoriel(n):
+def factoriel(n: int) -> int:
     """def factoriel recursif"""
     if n < 2:
         return 1
@@ -16,7 +16,7 @@ def factoriel(n):
         return n * factoriel(n-1)
 
 
-def factoriel2(n):
+def factoriel2(n: int) -> int:
     """def factoriel incremental"""
     resultat = 1
     for i in range(2, n+1):
@@ -25,7 +25,7 @@ def factoriel2(n):
     return resultat
 
 
-def decomposePremiers(n):
+def decomposePremiers(n: int) -> list[int]:
     """Décomposition en nombres premiers"""
     if n < 2:
         return [n]
@@ -55,7 +55,7 @@ def decomposePremiers(n):
         return res
 
 
-def decomposeDiviseurs(n):
+def decomposeDiviseurs(n: int) -> list[int]:
     """Décomposition en nombres divisant"""
 
     res = []
@@ -66,7 +66,7 @@ def decomposeDiviseurs(n):
     return res
 
 
-def suppressionDoublons(liste):
+def suppressionDoublons(liste: list) -> list:
     index = 0
 
     while len(liste) > index+1:
@@ -78,15 +78,13 @@ def suppressionDoublons(liste):
     return liste
 
 
-print("ok")
-
 if __name__ == "__main__":
     import time
     debut = time.perf_counter()
 
     try:
         liste = [1, 2, 2, 3]
-        print(suppressionDoublons(liste) )
+        print(suppressionDoublons(liste))
         print(list(set(liste)))
         print(decomposeDiviseurs(200))
 

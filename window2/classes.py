@@ -141,7 +141,8 @@ class SystemDateTime(SysTray):
         self.couleur = (100, 100, 100)
         self.posx = x
         self.width = screen.get_size()[0]
-        self.SYS_FONT = pygame.font.SysFont("comicsans", 12)
+        # self.SYS_FONT = pygame.font.SysFont("comicsans", 12)
+        self.SYS_FONT = pygame.font.SysFont("courier", 16)
         self.systray_width = self.SYS_FONT.render(" 99/99/9999 99:99:99 ", False, (255, 255, 255)).get_size()[0]
         self.etat = 1
         self.format = "%d/%m/%Y %H:%M:%S"

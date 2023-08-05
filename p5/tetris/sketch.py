@@ -22,290 +22,6 @@ class Board:
     BOTTOM = 0
 
 
-class Game:
-    NB_MAX_PLAYERS = 5
-    running = False
-    statut = "WAITING_PLAYERS"
-    lines_finished = {}
-    total_lignes = 0
-    level = 0
-
-    def __init__(self, nb_players):
-        self.nb_players = 0
-        self.num_player = 0
-        self.players = []
-        for num_player in range(nb_players):
-            self.create_player()
-        self.resize()
-
-    def resize(self):
-        resizeCanvas(self.nb_players * 1450//4, 530)
-        Board.BOTTOM = P5.HEIGHT - 50
-
-    def init(self):
-        Game.running = True
-        Game.statut = "RUNNING"
-        Game.level = 0
-        Game.total_lignes = 0
-        for player in self.players:
-            player.init()
-
-    def remove_player(self):
-        if self.num_player > 1:
-            self.players.pop()
-            self.num_player -= 1
-            self.nb_players -= 1
-            Player.ID -= 1
-            self.resize()
-
-    def add_player(self):
-        if self.nb_players < Game.NB_MAX_PLAYERS:
-            self.create_player()
-            self.resize()
-            Game.statut = "WAITING_PLAYERS"
-
-    def create_player(self):
-        if self.nb_players < Game.NB_MAX_PLAYERS:
-            player = Player(self.num_player * (Board.COLS+6)*VAR.size + VAR.size)
-            player.set_joys()
-            player.set_keys(
-                *{ 
-                    0: (pygame.K_q, pygame.K_d, pygame.K_z, pygame.K_s),
-                    1: (pygame.K_j, pygame.K_l, pygame.K_i, pygame.K_k),
-                    2: (pygame.K_LEFT, pygame.K_RIGHT, pygame.K_UP, pygame.K_DOWN),
-                    3: (pygame.K_KP_4, pygame.K_KP_6, pygame.K_KP_8, pygame.K_KP_5),
-                    4: (pygame.K_a, pygame.K_a, pygame.K_a, pygame.K_a)
-
-                }[self.num_player])
-
-            self.players.append(player)
-            self.nb_players += 1
-            self.num_player += 1
-
-    def all_players_ready(self):
-        for player in self.players:
-            if not player.pret:
-                return False
-        return True
-
-    def ask_player_keys(self, key):
-        idx = function_keys_list.index(key)
-        if idx < self.nb_players:
-            Game.statut = "WAITING_PLAYERS"
-            game.players[idx].ask_keys()
-
-    def joy_button_up(self, button):
-        # En attente des joueurs
-        if Game.statut in ("WAITING_PLAYERS", "FINISHED"):
-            for index in range(self.nb_players):
-                if self.players[index].waiting_keys:
-                    self.players[index].set_joy(button)
-                    return
-                else:
-                    {
-                        self.players[index].joys["LEFT"]:   self.players[index].ready,
-                        self.players[index].joys["RIGHT"]:  self.players[index].ready,
-                        self.players[index].joys["UP"]:     self.players[index].ready,
-                        self.players[index].joys["DOWN"]:   self.players[index].ready,
-                    }.get(button, nada)()
-
-        # En jeu
-        elif Game.statut == "RUNNING":
-            for index in range(self.nb_players):
-                if not self.players[index].rempli:
-                    {
-                        self.players[index].joys["LEFT"]:   self.players[index].move_left,
-                        self.players[index].joys["RIGHT"]:  self.players[index].move_right,
-                        self.players[index].joys["UP"]:     self.players[index].rotate_right,
-                        self.players[index].joys["DOWN"]:   self.players[index].accelerate,
-                    }.get(button, nada)()
-
-    def highest_player_by_score(self, other):
-        highest_score = -1
-        highest_player = []
-        for player in self.players:
-            if player != other and not player.rempli:
-                if player.score == highest_score:
-                    highest_player.append(player)
-                elif player.score > highest_score:
-                    highest_score = player.score
-                    highest_player = [player]
-
-        if highest_player:
-            return random.choice(highest_player)
-        else:
-            return None
-
-    def get_lines(self, other):
-        total = 0
-        for player in self.players:
-            if player != other:
-                total += Game.lines_finished.get(player, 0)
-        return total
-
-    def pause(self):
-        if Game.statut != "PAUSED":
-            Game.statut = "PAUSED"
-        else:
-            Game.statut = "RUNNING"
-
-    def update(self):
-        # print(Game.statut, end=" : ")
-        # for player in self.players:
-        #     print(player.pret, end=", ")
-        # print()
-        if Game.statut == "PAUSED":
-            return
-
-        if Game.statut == "WAITING_PLAYERS":
-            nb_pret = 0
-            for player in self.players:
-                nb_pret += 1 if player.pret else 0
-
-            waiting_players = len(self.players) != nb_pret
-            if not waiting_players:
-                Game.statut = "READY"
-                Game.decompte = 5
-                P5.frameCount = 1
-
-        elif Game.statut == "READY":
-            if Game.decompte > 0:
-                if P5.frameCount % 60 == 0:
-                    Game.decompte -= 1
-            else:
-                Game.statut == "RUNNING"
-                self.init()
-
-        elif Game.running and Game.statut == "RUNNING":
-            for player in self.players:
-                player.update()
-
-            if Game.lines_finished:
-                for player in self.players:
-                    if Game.lines_finished.get(player):
-                        nb_lignes = Game.lines_finished.get(player)
-                        # print(nb_lignes, "ligne(s) finie par Joueur", player.ID, end=". ")
-                        highest_player = self.highest_player_by_score(player)
-                        # print("Ajout", nb_lignes, "ligne(s) au Joueur", highest_player.ID)
-                        if highest_player:
-                            for ligne in range(nb_lignes):
-                                highest_player.add_ligne()
-                        del Game.lines_finished[player]
-
-                Game.lines_finished.clear()
-
-            if Game.total_lignes % 11 == 0:
-                Game.level += 1
-                Game.total_lignes += 1
-
-            nb_active_players = 0
-            for player in self.players:
-                nb_active_players += 0 if player.rempli else 1
-
-            Game.running = nb_active_players > 1 or \
-                (self.num_player == 1 and nb_active_players == 1)
-            if not Game.running:
-                Game.statut = "FINISHED"
-
-    def draw(self):
-        background(0)
-        fill(80, 120, 80)
-        stroke(255)
-        rect(0, Board.BOTTOM+VAR.size, P5.WIDTH, 10)
-
-        for player in self.players:
-            player.draw()
-
-
-def get_largeur(piece):
-    for i in reversed(range(4)):
-        somme = 0
-        for j in range(4):
-            somme += piece[j][i] 
-        if somme > 0:
-            return i
-
-
-class Piece:
-
-    def __init__(self, xpos):
-        self.LEFT = xpos
-        self.rotation = 0
-        self.x = Board.COLS//2-2
-        self.y = Board.ROWS-4
-        self.next = []
-        liste = []
-        liste.append([[1, 1, 1, 0], [0, 1, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]])
-        liste.append([[1, 1, 0, 0], [1, 1, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]])
-        liste.append([[1, 1, 1, 0], [0, 0, 1, 0], [0, 0, 0, 0], [0, 0, 0, 0]])
-        liste.append([[1, 1, 1, 0], [1, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]])
-        liste.append([[1, 1, 0, 0], [0, 1, 1, 0], [0, 0, 0, 0], [0, 0, 0, 0]])
-        liste.append([[0, 1, 1, 0], [1, 1, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]])
-        liste.append([[1, 1, 1, 1], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]])
-        self.liste = liste
-        self.init()
-
-    def init(self):
-        self.bloc = random.choice(self.liste)
-
-    def move_left(self):
-        self.x -= 1
-
-    def move_right(self):
-        self.x += 1
-
-    def move_down(self):
-        self.y -= 1
-
-    def rotate_right(self):
-        new = [[0 for _ in range(4)] for _ in range(4)]
-        for i in range(4):
-            for j in range(4):
-                new[i][j] += self.bloc[j][3-i]
-        self.next = new
-        self.to_bottom()
-
-    def rotate_left(self):
-        new = [[0 for _ in range(4)] for _ in range(4)]
-        for i in range(4):
-            for j in range(4):
-                new[i][j] += self.bloc[3-j][i]
-        self.next = new
-        # self.to_bottom()
-        self.to_left()
-
-    def to_bottom(self):
-        while sum(self.next[0]) == 0:
-            for j in range(3):
-                self.next[j] = self.next[j+1]
-            self.next[3] = [0 for _ in range(4)]
-
-    def to_left(self):
-        while self.next[0][0]+self.next[1][0]+self.next[2][0]+self.next[3][0] == 0:
-            for j in range(4):
-                for i in range(3):
-                    self.next[j][i] = self.next[j][i+1]
-            for j in range(4):
-                self.next[j][3] = 0
-
-    def validate(self):
-        self.bloc = self.next
-
-    def update(self):
-        self.y -= 1
-
-    def draw(self, x=None, y=None):
-        if x is None and y is None:
-            x = self.x*VAR.size
-            y = self.y*VAR.size
-        stroke(60, 10, 10)
-        fill(150)
-        for j, row in enumerate((self.bloc)):
-            for i, cell in enumerate(row):
-                if cell:
-                    rect(x+self.LEFT + i*VAR.size, Board.BOTTOM - y - j*VAR.size, VAR.size, VAR.size)
-
-
 class Player:
     ID = 0
 
@@ -592,6 +308,290 @@ class Player:
             text(texte, self.LEFT + (1+Board.COLS//5)*VAR.size, 2*Board.ROWS//5*VAR.size)
             
 
+class Game:
+    NB_MAX_PLAYERS: int = 5
+    running: bool = False
+    statut = "WAITING_PLAYERS"
+    lines_finished: dict[Player, int] = {}
+    total_lignes: int = 0
+    level: int = 0
+
+    def __init__(self, nb_players):
+        self.nb_players: int = 0
+        self.num_player: int = 0
+        self.players: list[Player] = []
+        for num_player in range(nb_players):
+            self.create_player()
+        self.resize()
+
+    def resize(self):
+        resizeCanvas(self.nb_players * 1450//4, 530)
+        Board.BOTTOM = P5.HEIGHT - 50
+
+    def init(self):
+        Game.running = True
+        Game.statut = "RUNNING"
+        Game.level = 0
+        Game.total_lignes = 0
+        for player in self.players:
+            player.init()
+
+    def remove_player(self):
+        if self.num_player > 1:
+            self.players.pop()
+            self.num_player -= 1
+            self.nb_players -= 1
+            Player.ID -= 1
+            self.resize()
+
+    def add_player(self):
+        if self.nb_players < Game.NB_MAX_PLAYERS:
+            self.create_player()
+            self.resize()
+            Game.statut = "WAITING_PLAYERS"
+
+    def create_player(self):
+        if self.nb_players < Game.NB_MAX_PLAYERS:
+            player = Player(self.num_player * (Board.COLS+6)*VAR.size + VAR.size)
+            player.set_joys()
+            player.set_keys(
+                *{ 
+                    0: (pygame.K_q, pygame.K_d, pygame.K_z, pygame.K_s),
+                    1: (pygame.K_j, pygame.K_l, pygame.K_i, pygame.K_k),
+                    2: (pygame.K_LEFT, pygame.K_RIGHT, pygame.K_UP, pygame.K_DOWN),
+                    3: (pygame.K_KP_4, pygame.K_KP_6, pygame.K_KP_8, pygame.K_KP_5),
+                    4: (pygame.K_a, pygame.K_a, pygame.K_a, pygame.K_a)
+
+                }[self.num_player])
+
+            self.players.append(player)
+            self.nb_players += 1
+            self.num_player += 1
+
+    def all_players_ready(self):
+        for player in self.players:
+            if not player.pret:
+                return False
+        return True
+
+    def ask_player_keys(self, key):
+        idx = function_keys_list.index(key)
+        if idx < self.nb_players:
+            Game.statut = "WAITING_PLAYERS"
+            game.players[idx].ask_keys()
+
+    def joy_button_up(self, button):
+        # En attente des joueurs
+        if Game.statut in ("WAITING_PLAYERS", "FINISHED"):
+            for index in range(self.nb_players):
+                if self.players[index].waiting_keys:
+                    self.players[index].set_joy(button)
+                    return
+                else:
+                    {
+                        self.players[index].joys["LEFT"]:   self.players[index].ready,
+                        self.players[index].joys["RIGHT"]:  self.players[index].ready,
+                        self.players[index].joys["UP"]:     self.players[index].ready,
+                        self.players[index].joys["DOWN"]:   self.players[index].ready,
+                    }.get(button, nada)()
+
+        # En jeu
+        elif Game.statut == "RUNNING":
+            for index in range(self.nb_players):
+                if not self.players[index].rempli:
+                    {
+                        self.players[index].joys["LEFT"]:   self.players[index].move_left,
+                        self.players[index].joys["RIGHT"]:  self.players[index].move_right,
+                        self.players[index].joys["UP"]:     self.players[index].rotate_right,
+                        self.players[index].joys["DOWN"]:   self.players[index].accelerate,
+                    }.get(button, nada)()
+
+    def highest_player_by_score(self, other):
+        highest_score = -1
+        highest_player = []
+        for player in self.players:
+            if player != other and not player.rempli:
+                if player.score == highest_score:
+                    highest_player.append(player)
+                elif player.score > highest_score:
+                    highest_score = player.score
+                    highest_player = [player]
+
+        if highest_player:
+            return random.choice(highest_player)
+        else:
+            return None
+
+    def get_lines(self, other):
+        total = 0
+        for player in self.players:
+            if player != other:
+                total += Game.lines_finished.get(player, 0)
+        return total
+
+    def pause(self):
+        if Game.statut != "PAUSED":
+            Game.statut = "PAUSED"
+        else:
+            Game.statut = "RUNNING"
+
+    def update(self):
+        # print(Game.statut, end=" : ")
+        # for player in self.players:
+        #     print(player.pret, end=", ")
+        # print()
+        if Game.statut == "PAUSED":
+            return
+
+        if Game.statut == "WAITING_PLAYERS":
+            nb_pret = 0
+            for player in self.players:
+                nb_pret += 1 if player.pret else 0
+
+            waiting_players = len(self.players) != nb_pret
+            if not waiting_players:
+                Game.statut = "READY"
+                Game.decompte = 5
+                P5.frameCount = 1
+
+        elif Game.statut == "READY":
+            if Game.decompte > 0:
+                if P5.frameCount % 60 == 0:
+                    Game.decompte -= 1
+            else:
+                Game.statut == "RUNNING"
+                self.init()
+
+        elif Game.running and Game.statut == "RUNNING":
+            for player in self.players:
+                player.update()
+
+            if Game.lines_finished:
+                for player in self.players:
+                    if Game.lines_finished.get(player):
+                        nb_lignes = Game.lines_finished.get(player)
+                        # print(nb_lignes, "ligne(s) finie par Joueur", player.ID, end=". ")
+                        highest_player = self.highest_player_by_score(player)
+                        # print("Ajout", nb_lignes, "ligne(s) au Joueur", highest_player.ID)
+                        if highest_player:
+                            for ligne in range(nb_lignes):
+                                highest_player.add_ligne()
+                        del Game.lines_finished[player]
+
+                Game.lines_finished.clear()
+
+            if Game.total_lignes % 11 == 0:
+                Game.level += 1
+                Game.total_lignes += 1
+
+            nb_active_players = 0
+            for player in self.players:
+                nb_active_players += 0 if player.rempli else 1
+
+            Game.running = nb_active_players > 1 or \
+                (self.num_player == 1 and nb_active_players == 1)
+            if not Game.running:
+                Game.statut = "FINISHED"
+
+    def draw(self):
+        background(0)
+        fill(80, 120, 80)
+        stroke(255)
+        rect(0, Board.BOTTOM+VAR.size, P5.WIDTH, 10)
+
+        for player in self.players:
+            player.draw()
+
+
+def get_largeur(piece):
+    for i in reversed(range(4)):
+        somme = 0
+        for j in range(4):
+            somme += piece[j][i] 
+        if somme > 0:
+            return i
+
+
+class Piece:
+
+    def __init__(self, xpos):
+        self.LEFT = xpos
+        self.rotation = 0
+        self.x = Board.COLS//2-2
+        self.y = Board.ROWS-4
+        self.next = []
+        liste = []
+        liste.append([[1, 1, 1, 0], [0, 1, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]])
+        liste.append([[1, 1, 0, 0], [1, 1, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]])
+        liste.append([[1, 1, 1, 0], [0, 0, 1, 0], [0, 0, 0, 0], [0, 0, 0, 0]])
+        liste.append([[1, 1, 1, 0], [1, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]])
+        liste.append([[1, 1, 0, 0], [0, 1, 1, 0], [0, 0, 0, 0], [0, 0, 0, 0]])
+        liste.append([[0, 1, 1, 0], [1, 1, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]])
+        liste.append([[1, 1, 1, 1], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]])
+        self.liste = liste
+        self.init()
+
+    def init(self):
+        self.bloc = random.choice(self.liste)
+
+    def move_left(self):
+        self.x -= 1
+
+    def move_right(self):
+        self.x += 1
+
+    def move_down(self):
+        self.y -= 1
+
+    def rotate_right(self):
+        new = [[0 for _ in range(4)] for _ in range(4)]
+        for i in range(4):
+            for j in range(4):
+                new[i][j] += self.bloc[j][3-i]
+        self.next = new
+        self.to_bottom()
+
+    def rotate_left(self):
+        new = [[0 for _ in range(4)] for _ in range(4)]
+        for i in range(4):
+            for j in range(4):
+                new[i][j] += self.bloc[3-j][i]
+        self.next = new
+        # self.to_bottom()
+        self.to_left()
+
+    def to_bottom(self):
+        while sum(self.next[0]) == 0:
+            for j in range(3):
+                self.next[j] = self.next[j+1]
+            self.next[3] = [0 for _ in range(4)]
+
+    def to_left(self):
+        while self.next[0][0]+self.next[1][0]+self.next[2][0]+self.next[3][0] == 0:
+            for j in range(4):
+                for i in range(3):
+                    self.next[j][i] = self.next[j][i+1]
+            for j in range(4):
+                self.next[j][3] = 0
+
+    def validate(self):
+        self.bloc = self.next
+
+    def update(self):
+        self.y -= 1
+
+    def draw(self, x=None, y=None):
+        if x is None and y is None:
+            x = self.x*VAR.size
+            y = self.y*VAR.size
+        stroke(60, 10, 10)
+        fill(150)
+        for j, row in enumerate((self.bloc)):
+            for i, cell in enumerate(row):
+                if cell:
+                    rect(x+self.LEFT + i*VAR.size, Board.BOTTOM - y - j*VAR.size, VAR.size, VAR.size)
+
+
 def preload():
     frameRate(60)
 
@@ -600,8 +600,8 @@ def nada():
     pass
 
 
-mon_joy = {}
-mon_hat = [0, 0]
+mon_joy: dict = {}
+mon_hat: list[int] = [0, 0]
 
 
 def JoyMotion():
@@ -743,7 +743,7 @@ def keyPressed():
         print("Statut inconnu:", Game.statut)
 
 
-game = Game(2)
+game: Game = Game(2)
 
 
 def setup():

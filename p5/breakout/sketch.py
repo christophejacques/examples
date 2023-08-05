@@ -1,3 +1,4 @@
+#! c:\bat\python.bat -3.11
 import settings
 from __init__ import createCanvas
 from __init__ import *

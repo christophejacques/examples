@@ -3,23 +3,23 @@ import settings
 import time
 from player import Player
 from ball import Ball
-from brick import Brick, TypeBrick
+from brick import Brick
 
 
 class Game:
 
     def __init__(self):
-        self.bricks = []
-        self.level = 0
+        self.bricks: list[Brick] = []
+        self.level: int = 0
 
-        self.time = time.time()
-        self.dt = 0
-        self.player = Player()
+        self.time: float = time.time()
+        self.dt: float = 0
+        self.player: Player = Player()
 
         self.load_next_level()
 
     def load_next_level(self):
-        self.balls = [Ball(*self.player.rect.topleft) for _ in range(1)]
+        self.balls: list[Ball] = [Ball(*self.player.rect.topleft) for _ in range(1)]
 
         self.level += 1
         self.bricks.clear()

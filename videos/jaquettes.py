@@ -2,6 +2,7 @@ import re
 import os
 import sys
 import urllib.request as ur
+
 from requests import Session, codes
 from html.parser import HTMLParser
 
@@ -24,7 +25,7 @@ Directories = [
     r"D:\Mes Documents\dwhelper",
     r"E:\Videos\Japan\Yui Hatano",
     r"E:\Videos\Japan\SDDE",
-    r"E:\Videos\Japan\Toru Ozawa",
+    r"E:\Videos\Japan",
     ]
 
 KS_DIRECTORY = Directories[6]
@@ -73,32 +74,35 @@ def string_format(chaine, **kwargs) -> str:
         return chaine
 
 
-def search_url_then_image(img_name):
+def search_url_then_image(img_name) -> str:
     # KV-213 ou KV-217
     URL: str = "https://jav.guru/?s=" + img_name.upper()
     with Session() as s:
         p1 = s.get(URL, timeout=(4, 10), headers=MY_HEADER)
         if p1.status_code != CODE_OK: 
-            return
+            return ""
 
         if "text/html" in p1.headers.get("Content-Type"):
             html_parser = MyHTMLParser("a", "href", ["html", "body", "div", "div", "div", "main", "div", "div", "div", "div"])
             html_parser.feed(p1.text)
             if html_parser.full_filename is None: 
-                return
+                return ""
 
             URL = html_parser.full_filename
             p2 = s.get(URL, timeout=(4, 10), headers=MY_HEADER)
             if p2.status_code != CODE_OK or "text/html" not in p1.headers.get("Content-Type"):
-                return
+                return ""
 
             html_parser = MyHTMLParser(
                 "img", "src", ["html", "body", "div", "div", "div", "main", "article", "div", "div", "div", "div", "div"])
             html_parser.feed(p2.text)
             return html_parser.full_filename
 
+    return ""
 
-def get_image_from_path(p_img_name):
+
+def get_image_from_path(p_img_name) -> str:
+
     sites: list = [
         ("https://maxjav.com/?s={img_name:upper}", 
             ["html", "body", "div", "div", "div", "div", "p"]),
@@ -107,12 +111,17 @@ def get_image_from_path(p_img_name):
     ]
 
     while sites:
-        print(".", end="")
+        print(".", end="", flush=True)
         source, chemin = sites.pop(0)
         # print(source, chemin)
         with Session() as s:
             URL = string_format(source, img_name=p_img_name)
-            p1 = s.get(URL, timeout=(4, 10), headers=MY_HEADER)
+            try:
+                p1 = s.get(URL, timeout=(4, 10), headers=MY_HEADER)
+            except Exception as e:
+                continue
+                print(e)
+            
             if p1.status_code != CODE_OK: 
                 continue
 
@@ -122,9 +131,11 @@ def get_image_from_path(p_img_name):
                 if html_parser.full_filename:
                     return html_parser.full_filename
 
+    return ""
 
-def get_image_from_meta_property(p_img_name):
-    sites: list = [
+
+def get_image_from_meta_property(p_img_name) -> str:
+    sites: list[str] = [
         "https://www2.javhdporn.net/video/{img_name}/",
         "https://3xplanet.net/{img_name}/",
         "https://yavtube.com/movie/{img_name:upper}"
@@ -132,7 +143,7 @@ def get_image_from_meta_property(p_img_name):
     found = False
 
     while sites and not found:
-        print(".", end="")
+        print(".", end="", flush=True)
         URL: str = string_format(sites.pop(0), img_name=p_img_name)
         with Session() as s:
             p1 = s.get(URL, timeout=(4, 10), headers=MY_HEADER)
@@ -158,9 +169,11 @@ def get_image_from_meta_property(p_img_name):
                             continue
                         return site
 
+    return ""
+
 
 def download_image(directory: str, img_name: str):
-    print("Downloading", img_name, end=" ")
+    print("Downloading", img_name, end=" ", flush=True)
     downloaded = False
     site_added = 0
     sites = [
@@ -268,12 +281,4 @@ if sys.argv[1:]:
     download_jaquettes(directory)
 
 else:
-    download_jaquettes(KS_DIRECTORY)
-    exit()
-
-    directories: list = []
-    for lettre in range(26):
-        directories.append(f"E:\\Videos\\Japan\\{chr(65+lettre)}")
-
-    for directory in directories:
-        download_jaquettes(directory)
+    download_jaquettes(".")

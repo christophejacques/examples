@@ -1,11 +1,14 @@
 # from utils.operation import *
 
 def fibonnacci(n):
-    if n < 3: return 1
+    if n < 3: 
+        return 1
     return fibonnacci(n-2) + fibonnacci(n-1)
 
+
 def fib(n):
-    if n < 3: return 1
+    if n < 3: 
+        return 1
     s = 0
     s1 = 1
     s2 = 1
@@ -14,16 +17,19 @@ def fib(n):
         s1, s2 = s, s1
     return s
 
+
 print("Suite de fibonnacci(x)")
 for x in range(1000, 1004):
     print(fib(x))
 print("\n")
+
 
 def factoriel(x):
     p = 1
     for i in range(2, x+1):
         p *= i
     return p
+
 
 class Robot:
 
@@ -66,7 +72,6 @@ if True:
     reverseParams = lambda *v: [x for x in reversed(v)]
     reverseListe  = lambda l: l[::-1]
 
-
     print(fct["+"](5, 9))
     print(fct["-"](5, 9))
     print(fct["*"](5, 9))
@@ -77,10 +82,7 @@ if True:
     print(reverseListe([1, 2, 3, 4]))
     print(reverseListe((5, 6, 7, 8)))
 
-    print([1,2]+[3,4])
-    print((5,6)+(7,8))
+    print([1, 2]+[3, 4])
+    print((5, 6)+(7, 8))
     print(sorted([5, 2, 8, 1, 9]))
-    print("{0}".format([1,2,3]))
-
-from msvcrt import getch
-# getch()
+    print("{0}".format([1, 2, 3]))

@@ -1,5 +1,3 @@
-#modif git
-
 # definition d'un decorateur
 def decorateur(fonction):
 
@@ -15,15 +13,15 @@ def decorateur(fonction):
 
 class mon_iterateur:
 
-    #@decorateur
+    @decorateur
     def __init__(self, debut, fin=None):
         if type(debut) != int:
             raise TypeError("Le 1er paramêtre n'est pas de type Entier")
 
-        if fin != None and type(fin) != int:
+        if fin is not None and type(fin) != int:
             raise TypeError("Le 2ème paramêtre n'est pas de type Entier")
 
-        if fin == None:
+        if fin is None:
             self.debut = 1
             self.fin = debut
         else:
@@ -42,15 +40,15 @@ class mon_iterateur:
         return courant
 
 
-#@decorateur
+@decorateur
 def mon_generateur(debut, fin=None):
     if type(debut) != int:
         raise TypeError("Le 1er paramêtre n'est pas de type Entier")
 
-    if fin != None and type(fin) != int:
+    if fin is not None and type(fin) != int:
         raise TypeError("Le 2ème paramêtre n'est pas de type Entier")
 
-    if fin == None:
+    if fin is None:
         fin = debut
         debut = 1
 
@@ -73,6 +71,3 @@ try:
     pass
 except Exception as e:
     print("Erreur:", e)
-    
-from msvcrt import getch
-getch()

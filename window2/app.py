@@ -17,8 +17,9 @@ def get_pygame_const_name(index):
 
 pygame.init()
 
-# SYS_FONT = pygame.font.SysFont(pygame.font.get_default_font(), 26)
-SYS_FONT = pygame.font.SysFont("comicsans", 12)
+# SYS_FONT = pygame.font.SysFont(pygame.font.get_default_font(), 16)
+# SYS_FONT = pygame.font.SysFont("comicsans", 12)
+SYS_FONT = pygame.font.SysFont("courier", 12)
 
 
 class Icone:
@@ -149,7 +150,7 @@ class Window:
         self.window_draw = self.window.clip((x+self.border_size, y+self.ICONE_HEIGHT), (w-2*self.border_size, h-self.ICONE_HEIGHT-self.border_size))
         self.top_rect = self.window.clip((x, y), (w, self.ICONE_HEIGHT))
         self.icone_rect = self.top_rect.clip((x+self.border_size, y), (self.ICONE_WIDTH, self.ICONE_HEIGHT))
-        self.title_rect = self.top_rect.clip((x+self.ICONE_WIDTH+self.border_size, y), (w-4*self.ICONE_WIDTH-2*self.border_size, self.ICONE_HEIGHT))
+        self.title_rect = self.top_rect.clip((x+self.ICONE_WIDTH+self.border_size, 3+y), (w-4*self.ICONE_WIDTH-2*self.border_size, self.ICONE_HEIGHT))
         self.min_rect = self.top_rect.clip((x+w-3*self.ICONE_WIDTH-self.border_size, y), (self.ICONE_WIDTH, self.ICONE_HEIGHT))
         self.max_rect = self.top_rect.clip((x+w-2*self.ICONE_WIDTH-self.border_size, y), (self.ICONE_WIDTH, self.ICONE_HEIGHT))
         self.close_rect = self.top_rect.clip((x+w-self.ICONE_WIDTH-self.border_size, y), (self.ICONE_WIDTH, self.ICONE_HEIGHT))
@@ -355,16 +356,6 @@ class OperatingSystem:
 
         desktops = pygame.display.get_desktop_sizes()
         # define display/window height based on (the first) desktop size
-        if desktops[0][1] > 1000:
-            # Full HD max resolution
-            disp_size = (1600, 800)
-        else:
-            disp_size = desktops[0]
-
-        # self.screen = pygame.display.set_mode(disp_size, pygame.FULLSCREEN, 24)
-        self.screen = pygame.display.set_mode(disp_size, pygame.RESIZABLE, 24)
-        # self.screen = pygame.display.set_mode((1600, 800), 0, 24)
-        self.width, self.height = self.screen.get_size() 
         self.liste_fenetres = []
         self.liste_icones = []
         self.liste_systray = []
@@ -374,6 +365,18 @@ class OperatingSystem:
         self.liste_taches = []
         self.clock = pygame.time.Clock()
         self.tick = 0
+
+        if desktops[0][1] > 1000:
+            # Full HD max resolution
+            disp_size = (1600, 800)
+        else:
+            disp_size = desktops[0]
+        # self.screen = pygame.display.set_mode(disp_size, pygame.FULLSCREEN, 24)
+        self.screen = pygame.display.set_mode(disp_size, pygame.RESIZABLE, 24)
+        self.set_size()
+
+    def set_size(self):
+        self.width, self.height = self.screen.get_size() 
         self.last_position = (10, 10)
         self.screen_surf = self.screen.subsurface(0, 0, self.width, self.height-self.TASK_BAR_HEIGHT)
         self.barre_taches_rect = pygame.Rect(0, self.height-self.TASK_BAR_HEIGHT, self.width, self.TASK_BAR_HEIGHT)
@@ -388,6 +391,9 @@ class OperatingSystem:
         except Exception as e:
             print("Error loading background:", e)
             self.background = None
+
+    def close_all_icones(self):
+        self.liste_icones.clear()
 
     def create_icone(self, title, couleur, app, *args):
         trouve = False
@@ -411,6 +417,9 @@ class OperatingSystem:
         for une_classe in get_all_classes("Application"):
             libelle, color, *args = une_classe.DEFAULT_CONFIG
             self.create_icone(libelle, color, une_classe, *args)
+
+    def close_all_systray_apps(self):
+        self.liste_systray.clear()
 
     def get_systray_apps(self):
         total = 0
@@ -558,6 +567,7 @@ class OperatingSystem:
                 for code_application, donnees in contenu.items():
                     if donnees.get("position"):
                         self.saved_icones_position[code_application] = donnees["position"]
+
         except Exception as e:
             print("load_icones Error:", e)
 
@@ -749,18 +759,22 @@ class OperatingSystem:
             fen_active = self.get_active_window()
             if fen_active:
                 fen_active.window_surf.set_alpha(255)
+                # Click sur partie haute de la fenetre
                 if fen_active.top_rect.collidepoint(Mouse.get_saved_pos()) and (
                    fen_active.top_rect.collidepoint(mouse_position)):
+                    # Click sur btn Fermer
                     if fen_active.close_rect.collidepoint(Mouse.get_saved_pos()) and (
                        fen_active.close_rect.collidepoint(mouse_position)):
                         self.close(fen_active)
                         window_spotted = True
+                    # Click sur btn Minimiser
                     elif fen_active.min_rect.collidepoint(Mouse.get_saved_pos()) and (
                          fen_active.min_rect.collidepoint(mouse_position)):
                         fen_active.minimize()
                         self.activate_last_window()
                         window_spotted = True
                     elif "RESIZABLE" in fen_active.properties:
+                        # Click sur btn Maximiser
                         if (fen_active.max_rect.collidepoint(Mouse.get_saved_pos())) and (
                             fen_active.max_rect.collidepoint(mouse_position)):
                             window_spotted = True
@@ -768,14 +782,15 @@ class OperatingSystem:
                                 fen_active.restaure()
                             else:
                                 fen_active.maximize()
-
+                        # Dbl Click
                         elif Mouse.has_double_clicked() and Mouse.get_saved_pos() == mouse_position:
                             window_spotted = True
                             if fen_active.last_statut() == "MAXIMIZED":
                                 fen_active.restaure()
                             else:
                                 fen_active.maximize()
-
+                                
+                # Click a l'interieur de la fenetre
                 elif fen_active.window_draw.collidepoint(Mouse.get_saved_pos()) and (
                      fen_active.window_draw.collidepoint(mouse_position)):
                     window_spotted = True
@@ -1000,6 +1015,14 @@ def run():
 
             elif event.type in (pygame.AUDIO_S16, pygame.WINDOWENTER, pygame.ACTIVEEVENT):
                 my_os.mouse_enter_leave()
+
+            elif event.type in (pygame.WINDOWMAXIMIZED, pygame.WINDOWRESTORED):
+                my_os.close_all()
+                my_os.close_all_icones()
+                my_os.close_all_systray_apps()
+                my_os.set_size()
+                my_os.get_applications()
+                my_os.get_systray_apps()
 
             elif event.type == pygame.QUIT:
                 my_os.running = False

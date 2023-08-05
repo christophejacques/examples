@@ -103,7 +103,7 @@ def main():
         screen = pygame.display.set_mode((1920, 1080), flags=pygame.NOFRAME)
     else:
         screen = pygame.display.set_mode(window_size, flags=pygame.RESIZABLE)
-    print(help(screen.fill))
+    # print(help(screen.fill))
 
     s = StarField(100)
     s.set_screen(screen)

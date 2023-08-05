@@ -55,10 +55,18 @@ def scandir(repertoire) -> None:
 for repertoire in repertoires:
     scandir(repertoire)
 
+nb_doublons: int = 0
 for cle in sorted(files):
     if len(files[cle]) <= 1:
         continue
+    nb_doublons += 1
     for size, file in files[cle]:
-        print(f"{human_readable_size(size):>10} -", file[:130])
+        try:
+            print(f"{human_readable_size(size):>10} -", file[:130])
+        except UnicodeEncodeError:
+            print(file[:file.rindex("\\")], "..")
+            # print("UnicodeEncodeError")
+        except Exception as error:
+            print(error)
 
-print("fini")
+print(f"\n{nb_doublons} doublons trouves.")

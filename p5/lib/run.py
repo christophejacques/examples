@@ -23,11 +23,11 @@ def main(not_main):
     if not_main:
         preload()
         setup()
+        P5.keys = pygame.key.get_pressed()
     else:
         pygame.init()
         pygame.display.set_mode((1200, 600), 0)
 
-    P5.keys = pygame.key.get_pressed()
     running = True
     while running:
         if not not_main:
