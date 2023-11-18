@@ -82,7 +82,7 @@ def search_url_then_image(img_name) -> str:
         if p1.status_code != CODE_OK: 
             return ""
 
-        if "text/html" in p1.headers.get("Content-Type"):
+        if "text/html" in p1.headers.get("Content-Type", ""):
             html_parser = MyHTMLParser("a", "href", ["html", "body", "div", "div", "div", "main", "div", "div", "div", "div"])
             html_parser.feed(p1.text)
             if html_parser.full_filename is None: 
@@ -90,7 +90,7 @@ def search_url_then_image(img_name) -> str:
 
             URL = html_parser.full_filename
             p2 = s.get(URL, timeout=(4, 10), headers=MY_HEADER)
-            if p2.status_code != CODE_OK or "text/html" not in p1.headers.get("Content-Type"):
+            if p2.status_code != CODE_OK or "text/html" not in p1.headers.get("Content-Type", ""):
                 return ""
 
             html_parser = MyHTMLParser(
@@ -108,6 +108,8 @@ def get_image_from_path(p_img_name) -> str:
             ["html", "body", "div", "div", "div", "div", "p"]),
         ("https://www.javpornstreaming.com/japanese_videos/{img_name:lower}",  # SDDE-110
             ["html", "body", "div", "div", "div", "div"]),
+        ("https://watchjavonline.com/{img_name:lower}",   # SDDE-206
+            ["html", "body", "div", "div", "div", "div", "div", "div", "article", "div", "div", "div", "div"])
     ]
 
     while sites:
@@ -125,7 +127,7 @@ def get_image_from_path(p_img_name) -> str:
             if p1.status_code != CODE_OK: 
                 continue
 
-            if "text/html" in p1.headers.get("Content-Type"):
+            if "text/html" in p1.headers.get("Content-Type", ""):
                 html_parser = MyHTMLParser("img", "src", chemin)
                 html_parser.feed(p1.text)
                 if html_parser.full_filename:
