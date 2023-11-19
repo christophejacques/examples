@@ -1,7 +1,9 @@
-from msvcrt import getch
-from colors import fcolors
-import sys, os, re
+import sys
+import os
+import re
 import traceback
+
+from colors import fcolors
 
 couleurRecherche = fcolors.GVERT
 couleurRegexp = fcolors.GJAUNE
@@ -11,7 +13,7 @@ couleurErreur = fcolors.GROUGE
 # détermination du nombre de colonnes du terminal
 _, colstr = os.popen('mode con | findstr Colonne', 'r').read().split()
 colsize = int(colstr)
-longeurMaxFichier = (colsize -5) // 2
+longeurMaxFichier = (colsize - 5) // 2
 
 argv = sys.argv.copy()[1:]
 
