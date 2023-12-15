@@ -32,7 +32,7 @@ KS_DIRECTORY = Directories[6]
 
 
 class MyHTMLParser(HTMLParser):
-    def __init__(self, balise, attribut, chemin):
+    def __init__(self, balise, attribut, chemin, checkattrs: dict = {}):
         super().__init__()
         self.BALISE = balise
         self.ATTRIBUT = attribut
