@@ -25,10 +25,10 @@ class Commandes:
             print("params:", params)
 
     def help(self):
-        yield("Liste des commandes :")
+        yield "Liste des commandes :"
         for variable in self.noms:
             if self.noms[variable]["client"]:
-                yield("- " + ", ".join(self.noms[variable]["alias"]))
+                yield ("- " + ", ".join(self.noms[variable]["alias"]))
 
     def get_commande(self, cmd):
         for variable in self.noms:
@@ -64,8 +64,8 @@ increased as per convenience.
 """
 server.listen(100)
 
-list_of_clients = []
-nom_clients = {}
+list_of_clients: list = []
+nom_clients: dict = {}
 
 
 def client_thread(conn, addr):

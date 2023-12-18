@@ -121,8 +121,10 @@ class Paquet:
 
 def main():
     objet = {'entier': 5,
-        'string': "val'orisé",
-        'cde': "!USER vénère",
+        'float': 3.74,
+        'string': "val'orisé".encode("utf-8").decode("ansi"),
+        'cde': "!USER vénère".encode("utf-8").decode("ansi"),
+        'liste': [1, 2, 3, True, "Texte"],
         'bool': True}
 
     p = Paquet()

@@ -440,9 +440,9 @@ class CommandLine:
 for index in range(1, 8):
     match index:
         case 1:
-            CommandLine("cat < /bat/song.xml | grep -i container | wc -l ").run().to_screen()
+            CommandLine("cat < api_siret.py | grep -i import | wc -l ").run().to_screen()
         case 2:
-            CommandLine("cat -o -i /bat/ip.bat /bat/ips.bat | grep on").run().to_screen()
+            CommandLine("cat -o -i api_siret.py test.py | grep import").run().to_screen()
         case 3:
             CommandLine("(echo Hello World || echo End this)").run().to_screen()
         case 4:
