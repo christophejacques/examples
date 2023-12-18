@@ -1,5 +1,3 @@
-#! /usr/bin/env python3
-
 from winreg import ConnectRegistry
 from winreg import HKEY_LOCAL_MACHINE, HKEY_CURRENT_USER, OpenKeyEx, OpenKey, EnumValue, EnumKey, HKEY_USERS
 # from winreg import QueryValueEx,
@@ -87,9 +85,11 @@ def liste_users():
 
 def main():
     titre = f"Applications démarrées pour : {environ['USERNAME']}"
-    print_souligne("=", titre)
+    print_souligne("=", titre.encode("utf-8").decode("ansi"))
 
     print_all_registry_keys(HKEY_LOCAL_MACHINE, r"SOFTWARE\Microsoft\Windows\CurrentVersion\Run")
+
+    print_all_registry_keys(HKEY_LOCAL_MACHINE, r"SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Run")
 
     print_all_registry_keys(HKEY_CURRENT_USER, r"SOFTWARE\Microsoft\Windows\CurrentVersion\Run")
 
