@@ -1,13 +1,13 @@
 from inspect import Parameter
 try:
-  from colors import *
+    from colors import *
 except ModuleNotFoundError:
-  from utils.colors import *
+    from utils.colors import *
   
 import os
 
 if __name__ != "__main__":
-  print("loading definition.py")
+    print("loading definition.py")
 
 _, colstr = os.popen('mode con | findstr Colonne', 'r').read().split()
 colsize = int(colstr)
@@ -15,66 +15,63 @@ print("nombre de colonnes : {}".format(colsize))
 
 
 def print2screen(type_attributs, liste_attributs):
-  setColor(fcolors.VERT)
-  print("{}:".format(type_attributs))
-  setColor(fcolors.BLANC)
+    setColor(fcolors.VERT)
+    print("{}:".format(type_attributs))
+    setColor(fcolors.BLANC)
 
-  ligne_str = ""
+    ligne_str = ""
 
-  for a in liste_attributs:
-    if len("  {}{}".format(ligne_str, a)) < colsize:
-      if ligne_str:
-        ligne_str += ", {}".format(a)
-      else:
-        ligne_str = "  {}".format(a)
-        
-    else:
-      print(ligne_str)
-      ligne_str = ""
+    for a in liste_attributs:
+        if len("  {}{}".format(ligne_str, a)) < colsize:
+            if ligne_str:
+                ligne_str += ", {}".format(a)
+            else:
+                ligne_str = "  {}".format(a)
+            
+        else:
+            print(ligne_str)
+            ligne_str = ""
 
-  if ligne_str: print(ligne_str)
+    if ligne_str: print(ligne_str)
   
 
 def printdesc(variable):
 
-  setColor(fcolors.JAUNE)
-  print("class:=", variable.__class__.__name__, ", desc:=", variable)
-  try:
-    lst_garbage = []
-    lst_fonctions = []
-    lst_constantes = []
-    lst_variables = []
+    setColor(fcolors.JAUNE)
+    print("class:=", variable.__class__.__name__, ", desc:=", variable)
+    try:
+        lst_garbage = []
+        lst_fonctions = []
+        lst_constantes = []
+        lst_variables = []
 
-    ligne_str = ""
-    for a in dir(variable):
-      try:
-        if a.startswith("_"):
-          pass
-        
-        else:
-          if callable(getattr(variable, a)):
-            lst_fonctions.append(a)
-          else:
-            if a[0] in "AZERTYUIOPQSDFGHJKLMWXCVBN":
-              lst_constantes.append(a)
-            else:
-              lst_variables.append(a)
-              
-      
-      except Exception as e:
-        # print("error sur attribut : {}, {}".format(a, e))
-        lst_garbage.append(a)
+        ligne_str = ""
+        for a in dir(variable):
+            try:
+                if a.startswith("_"):
+                    pass
+                
+                else:
+                    if callable(getattr(variable, a)):
+                        lst_fonctions.append(a)
+                    else:
+                        if a[0] in "AZERTYUIOPQSDFGHJKLMWXCVBN":
+                            lst_constantes.append(a)
+                        else:
+                            lst_variables.append(a)
+                      
+            except Exception as e:
+                # print("error sur attribut : {}, {}".format(a, e))
+                lst_garbage.append(a)
 
-    
-    print2screen("Fonctions", lst_fonctions)
-    print2screen("Constantes", lst_constantes)
-    print2screen("Variables", lst_variables)
-    print2screen("Erreurs", lst_garbage)
-    print()
-    
+        print2screen("Fonctions", lst_fonctions)
+        print2screen("Constantes", lst_constantes)
+        print2screen("Variables", lst_variables)
+        print2screen("Erreurs", lst_garbage)
+        print()
 
-  except Exception as e:
-    print(traceback.print_exc())
+    except Exception as e:
+        print(traceback.print_exc())
 
 
 def printdef(variable):

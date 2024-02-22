@@ -21,5 +21,5 @@ with Session() as s:
             ligne += ", " + "Dock:" + str(station["availableDockCount"]).rjust(2)
             ligne += ", " + "Classic:" + str(station["availableClassicBikeCount"]).rjust(2)
             ligne += ", " + "Electric:" + str(station["availableElectricBikeCount"]).rjust(2)
-            ligne += (" " + station["station"]["status"]) if station["station"]["status"] != "IN_SERVICE" else ""
+            ligne += (" " + station["station"]["status"]) if station["station"]["status"] != "IN_SERVICE" else " (AVAIL)"
             print(ligne)

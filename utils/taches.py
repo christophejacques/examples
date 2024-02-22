@@ -99,14 +99,14 @@ class uneTache(Thread):
       self.params = args
 
     def run(self):
-      if DEBUG: fprint(f"  Début du {self.getName()} en {type_tache(self.mode)} avec *{self.fonction.__name__}*", end=" ")
+      if DEBUG: fprint(f"  Début du {self.name} en {type_tache(self.mode)} avec *{self.fonction.__name__}*", end=" ")
       self.fonction(*self.params)
       self.end()
 
     def end(self):
       if DEBUG:
         if self.mode == MULTITACHE:
-          fprint(f"  Fin du {self.getName()} : *{self.fonction.__name__}* ", end="")
+          fprint(f"  Fin du {self.name} : *{self.fonction.__name__}* ", end="")
         else:
           fprint("  Fini ! ", end="")
 
@@ -148,7 +148,7 @@ class Processeur:
       t = uneTache(mode, fonctionretour(self.num_groupe, fonction), fonction, *args)
       # t = uneTache(mode, fonction_callback, fonction, *args)
       if DEBUG:
-        fprint(f"  Ajout {t.getName()}  en {type_tache(mode)} : {fonction.__name__}{args}")
+        fprint(f"  Ajout {t.name}  en {type_tache(mode)} : {fonction.__name__}{args}")
       self.groupes[num_groupe]["liste_taches"].append(t)
       self.nb_taches += 1
 

@@ -56,7 +56,8 @@ class Firework(Application):
         self.sounds = {"LAUNCH": [], "EXPLODE": []}
         self.sound_channels = []
         self.max_channels = 32
-        if not self.parent: return 
+        if not self.parent: 
+            return 
         for i in range(3):
             sound = self.parent.load_sound(make_path("sounds", f"fusee{1+i}.mp3"), 0.2)
             self.sounds["LAUNCH"].append(sound)
