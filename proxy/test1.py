@@ -40,7 +40,7 @@ proxies = {
     "https": "newproxy.asp-public.fr:8080",
 }
 print("debut")
-auth = HTTPProxyDigestAuth("christophe.jacques1", "pleinne1")
+auth = HTTPProxyDigestAuth("christophe.jacques1", "password")
 
 # HTTP
 r = requests.get("http://www.google.co.jp/", proxies=proxies, auth=auth)
