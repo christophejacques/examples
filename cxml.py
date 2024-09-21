@@ -138,7 +138,7 @@ class XML(UnElement):
 
 try:
     username = environ["USERNAME"]
-    x = XML("C:/Users/{}/OneDrive/Programmation/python/examples/fichier.xml".format(username))
+    x = XML("D:/Programmation/python/examples/fichier.xml".format(username))
 
     parcourt(x)
     # exit(0)
