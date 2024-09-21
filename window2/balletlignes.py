@@ -39,11 +39,12 @@ class BalletLignes(Application):
     DEFAULT_CONFIG = ("BalletLignes 500", Colors.MIDDLE_RED, 500)
 
     def __init__(self, parent, screen, args):
-        self.lignes = []
+        self.lignes = list()
         self.resize(screen)
         self.nombre = args[0]
         self.parent = parent
-        self.title = self.parent.title
+        if self.parent:
+            self.title = self.parent.title
         self.action = ""
 
     def set_parent(self, parent):
@@ -59,14 +60,15 @@ class BalletLignes(Application):
         return self.action
 
     def update(self):
-        if self.parent.keypressed():
+        if self.parent and self.parent.keypressed():
             self.touche = self.parent.get_key()
             if self.touche == 27:
                 self.action = "QUIT"
 
         if len(self.lignes) < self.nombre:
             self.lignes.append(Ligne(self.width, self.height))
-            self.parent.set_title(self.title + f" ({len(self.lignes)})")
+            if self.parent:
+                self.parent.set_title(self.title + f" ({len(self.lignes)})")
 
         for ligne in self.lignes:
             ligne.update()
@@ -74,8 +76,9 @@ class BalletLignes(Application):
     def draw(self):
         self.screen.fill(Colors.BLACK)
         for ligne in self.lignes:
-            pygame.draw.line(self.screen, ligne.couleur, *ligne.coords)
+            self.parent.tools.line(ligne.couleur, *ligne.coords)
 
 
 if __name__ == '__main__':
-    print("Compilation : Ok")
+    from exec import run
+    run(BalletLignes)

@@ -378,7 +378,7 @@ class Game:
         idx = function_keys_list.index(key)
         if idx < self.nb_players:
             Game.statut = "WAITING_PLAYERS"
-            game.players[idx].ask_keys()
+            VAR.game.players[idx].ask_keys()
 
     def joy_button_up(self, button):
         # En attente des joueurs
@@ -625,7 +625,7 @@ def JoyMotion():
             mon_hat[1] = y
 
         if button:
-            game.joy_button_up(button)
+            Game.joy_button_up(button)
 
 
 def JoyButtonPressed():
@@ -649,93 +649,93 @@ def JoyButtonReleased():
     for button in to_del:
         mon_joy[joy].remove(button)
 
-        game.joy_button_up(button)
+        VAR.game.joy_button_up(button)
 
 
 def keyPressed():
     # En attente des joueurs
     if Game.statut == "WAITING_PLAYERS":
-        for index in range(game.nb_players):
-            if game.players[index].waiting_keys:
-                game.players[index].set_key(P5.keyCode)
+        for index in range(VAR.game.nb_players):
+            if VAR.game.players[index].waiting_keys:
+                VAR.game.players[index].set_key(P5.keyCode)
                 return
             else:
                 {
-                    game.players[index].keys["LEFT"]:   game.players[index].ready,
-                    game.players[index].keys["RIGHT"]:  game.players[index].ready,
-                    game.players[index].keys["UP"]:     game.players[index].ready,
-                    game.players[index].keys["DOWN"]:   game.players[index].ready,
+                    VAR.game.players[index].keys["LEFT"]:   VAR.game.players[index].ready,
+                    VAR.game.players[index].keys["RIGHT"]:  VAR.game.players[index].ready,
+                    VAR.game.players[index].keys["UP"]:     VAR.game.players[index].ready,
+                    VAR.game.players[index].keys["DOWN"]:   VAR.game.players[index].ready,
                 }.get(P5.keyCode, nada)()
 
         if P5.keyCode in function_keys_list:
-            game.ask_player_keys(P5.keyCode)
+            VAR.game.ask_player_keys(P5.keyCode)
         else:
             {
-                pygame.K_KP_PLUS:   game.add_player,
-                pygame.K_KP_MINUS:  game.remove_player,
+                pygame.K_KP_PLUS:   VAR.game.add_player,
+                pygame.K_KP_MINUS:  VAR.game.remove_player,
             }.get(P5.keyCode, nada)()
             
     # Pret ou Fini
     elif Game.statut in ("READY", "FINISHED"):
         if Game.statut == "FINISHED":
             # FINISHED
-            for index in range(game.nb_players):
-                if game.players[index].waiting_keys:
-                    game.players[index].set_key(P5.keyCode)
+            for index in range(VAR.game.nb_players):
+                if VAR.game.players[index].waiting_keys:
+                    VAR.game.players[index].set_key(P5.keyCode)
                     return
 
             if P5.keyCode in function_keys_list:
-                game.ask_player_keys(P5.keyCode)
-            elif game.all_players_ready():
+                VAR.game.ask_player_keys(P5.keyCode)
+            elif VAR.game.all_players_ready():
                 {
-                    pygame.K_KP_PLUS:   game.add_player,
-                    pygame.K_KP_MINUS:  game.remove_player,
-                    pygame.K_RETURN:    game.init,
-                    pygame.K_SPACE:     game.init,
+                    pygame.K_KP_PLUS:   VAR.game.add_player,
+                    pygame.K_KP_MINUS:  VAR.game.remove_player,
+                    pygame.K_RETURN:    VAR.game.init,
+                    pygame.K_SPACE:     VAR.game.init,
                 }.get(P5.keyCode, nada)()
             else:
-                for index in range(game.nb_players):
+                for index in range(VAR.game.nb_players):
                     {
-                        game.players[index].keys["LEFT"]:   game.players[index].ready,
-                        game.players[index].keys["RIGHT"]:  game.players[index].ready,
-                        game.players[index].keys["UP"]:     game.players[index].ready,
-                        game.players[index].keys["DOWN"]:   game.players[index].ready,
+                        VAR.game.players[index].keys["LEFT"]:   VAR.game.players[index].ready,
+                        VAR.game.players[index].keys["RIGHT"]:  VAR.game.players[index].ready,
+                        VAR.game.players[index].keys["UP"]:     VAR.game.players[index].ready,
+                        VAR.game.players[index].keys["DOWN"]:   VAR.game.players[index].ready,
                     }.get(P5.keyCode, nada)()
 
                 {
-                    pygame.K_KP_PLUS:   game.add_player,
-                    pygame.K_KP_MINUS:  game.remove_player,
+                    pygame.K_KP_PLUS:   VAR.game.add_player,
+                    pygame.K_KP_MINUS:  VAR.game.remove_player,
                 }.get(P5.keyCode, nada)()
 
         else:
             # READY
             {
-                pygame.K_KP_PLUS:   game.add_player,
-                pygame.K_KP_MINUS:  game.remove_player,
-                pygame.K_RETURN:    game.init,
-                pygame.K_SPACE:     game.init,
+                pygame.K_KP_PLUS:   VAR.game.add_player,
+                pygame.K_KP_MINUS:  VAR.game.remove_player,
+                pygame.K_RETURN:    VAR.game.init,
+                pygame.K_SPACE:     VAR.game.init,
             }.get(P5.keyCode, nada)()
 
     # Jeu en cours
     elif Game.running and Game.statut == "RUNNING":
-        for index in range(game.nb_players):
-            if not game.players[index].rempli:
+        for index in range(VAR.game.nb_players):
+            if not VAR.game.players[index].rempli:
                 {
-                    game.players[index].keys["LEFT"]:   game.players[index].move_left,
-                    game.players[index].keys["RIGHT"]:  game.players[index].move_right,
-                    game.players[index].keys["UP"]:     game.players[index].rotate_right,
-                    game.players[index].keys["DOWN"]:   game.players[index].accelerate,
+                    VAR.game.players[index].keys["LEFT"]:   VAR.game.players[index].move_left,
+                    VAR.game.players[index].keys["RIGHT"]:  VAR.game.players[index].move_right,
+                    VAR.game.players[index].keys["UP"]:     VAR.game.players[index].rotate_right,
+                    VAR.game.players[index].keys["DOWN"]:   VAR.game.players[index].accelerate,
                 }.get(P5.keyCode, nada)()
 
         {
-            pygame.K_SPACE:     game.pause,
+            pygame.K_SPACE:     VAR.game.pause,
         }.get(P5.keyCode, nada)()
 
     # Pause
     elif Game.statut == "PAUSED":
         {
-            pygame.K_RETURN:    game.pause,
-            pygame.K_SPACE:     game.pause,
+            pygame.K_RETURN:    VAR.game.pause,
+            pygame.K_SPACE:     VAR.game.pause,
         }.get(P5.keyCode, nada)()
 
     # check Erreur
@@ -743,14 +743,12 @@ def keyPressed():
         print("Statut inconnu:", Game.statut)
 
 
-game: Game = Game(2)
-
-
 def setup():
-    createCanvas(game.nb_players * 1450//4, 530)
+    VAR.game = Game(2)
+    createCanvas(VAR.game.nb_players * 1450//4, 530)
     pygame.display.set_caption("Tetris multiplayer")
 
 
 def draw():
-    game.update()
-    game.draw()
+    VAR.game.update()
+    VAR.game.draw()

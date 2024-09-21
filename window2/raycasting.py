@@ -1,4 +1,3 @@
-import pygame
 import math
 import random
 from classes import Application
@@ -266,9 +265,9 @@ class RayCasting(Application):
         # return  # pour deboguage
         if self.parent and self.parent.keypressed():
             self.touche = self.parent.get_key()
-            if self.touche == pygame.K_ESCAPE:
+            if self.touche == self.parent.keys.K_ESCAPE:
                 self.action = "QUIT"
-            elif self.touche == pygame.K_SPACE:
+            elif self.touche == self.parent.keys.K_SPACE:
                 self.set_zone(self.size)
 
     def draw(self):
@@ -277,39 +276,16 @@ class RayCasting(Application):
             for rayon in source.rayons:
                 couleur = source.color
                 if rayon.longueur:
-                    pygame.draw.line(self.screen, couleur, source.to_point(), rayon.to_dest())
+                    self.parent.tools.line(couleur, source.to_point(), rayon.to_dest())
 
         for wall in self.walls:
-            pygame.draw.line(self.screen, (10, 200, 30), *wall.to_line())
+            self.parent.tools.line( (10, 200, 30), *wall.to_line())
 
         for cercle in self.cercles:
-            pygame.draw.circle(self.screen, self.color, *cercle.to_dest())
-            pygame.draw.circle(self.screen, (10, 200, 30), *cercle.to_dest(), 1)
+            self.parent.tools.circle(self.color, *cercle.to_dest())
+            self.parent.tools.circle((10, 200, 30), *cercle.to_dest(), 1)
 
 
-if __name__ == "__main__":
-    screen = pygame.display.set_mode((1000, 500))
-
-    r = RayCasting(None, screen, (3, 10,))
-    running = True
-    while running:
-        pygame.time.Clock().tick(60)
-        r.update()
-        r.draw()
-        pygame.display.update()
-
-        for event in pygame.event.get():
-            if event.type == pygame.KMOD_LGUI:
-                pass
-            if event.type == pygame.QUIT:
-                running = False
-            elif event.type == pygame.KEYUP:
-                key = event.key
-                if key == pygame.K_ESCAPE:
-                    running = False
-                elif key == pygame.K_SPACE:
-                    r.set_zone(r.size)
-            else:
-                pass
-
-    pygame.quit()
+if __name__ == '__main__':
+    from exec import run
+    run(RayCasting)

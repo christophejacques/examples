@@ -76,22 +76,22 @@ def print_screen(page):
     for _ in range(5):
         ligne = page.readline()[:-1].decode('ansi').strip()
         if ligne:
-            print(" ", ligne)
+            print(" ", ligne, flush=True)
 
 
 def direct():
     print(url)
-    print("Direct access :")
+    print("Direct access :", flush=True)
     try:
         page = ur.urlopen(url, timeout=5)
         print_screen(page)
     except Exception as e:
-        print("Error:", e)
+        print("Error:", e, flush=True)
 
 
 def main():
     print()
-    print("Proxy + certificats :")
+    print("Proxy + certificats :", flush=True)
     page = getFile(url)
     print_screen(page)
 

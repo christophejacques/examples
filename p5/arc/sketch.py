@@ -1,10 +1,11 @@
-#! c:\bat\python.bat -3.11
+
 import math
 from __init__ import createCanvas, circle, stroke, fill, point
 from __init__ import strokeWeight, StaticVector, Vector, line
 from __init__ import noFill, background
 from __init__ import *
 
+angle: float
 
 def poubelle():
     s = StaticVector()
@@ -14,6 +15,8 @@ def poubelle():
 
 
 def setup() -> None:
+    global angle
+
     createCanvas(800, 600)
     fill(0, 50, 50)
     noFill()
@@ -37,11 +40,12 @@ def setup() -> None:
 
 
 def draw() -> None:
-    return
+    global angle
     background(0)
     cx, cy = 400, 300
     rayon = 200
-    angle = math.pi/4
+    # angle = math.pi/4
+    angle += 0.01
 
     for y in range(cy-rayon, cy):
         # angle = math.asin((cy-y)/rayon)

@@ -4,11 +4,11 @@ from time import sleep
 
 
 class Audio:
-    AppliID = 0
-    MAX_CHANNELS = 1024
-    APPLI = {}
-    DEBUG = False
-    MUTE = False
+    AppliID: int = 0
+    MAX_CHANNELS: int = 1024
+    APPLI: dict = {}
+    DEBUG: bool = False
+    MUTE: bool = False
 
     @classmethod
     def init(self, debug=False):

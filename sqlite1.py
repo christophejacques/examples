@@ -1,9 +1,9 @@
 import sqlite3 as sql
-from hashlib import sha512
+from hashlib import sha512, sha1
 from random import randint
 import os
 
-TAILLE_CLE = 16
+TAILLE_CLE = 64
 
 
 def fprint(*args, **kwargs):
@@ -14,12 +14,16 @@ def hash(*valeurs):
     return sha512(str(valeurs).encode("utf-8")).hexdigest()
 
 
+def hash1(*valeurs):
+    return sha1(str(valeurs).encode("utf-8")).hexdigest()
+
+
 def creation_cle():
     cle = ""
     for _ in range(TAILLE_CLE):
         cle += chr(randint(33, 122))
         
-    return cle
+    return hash1(cle)
 
 
 def print_users(c):
@@ -89,7 +93,7 @@ def add_user(c, username, password):
 
 
 def main():
-    os.chdir(r"C:\Users\utilisateur\OneDrive\Programmation\python\examples")
+    os.chdir(r"D:\Programmation\python\examples")
     fprint("> cd", os.getcwd())
     
     # with sql.connect(":memory:") as db:    

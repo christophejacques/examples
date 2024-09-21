@@ -1,4 +1,3 @@
-#! C:/Bat/python.bat -3.10
 import sys
 import os
 
@@ -40,5 +39,5 @@ print("Current diretory:", os.getcwd())
 print("Version de Python:", sys.version)
 
 print("\nRecherche des modules :")
-for chemin in sys.path:
+for chemin in filter(lambda x: not x.endswith(".zip"), sys.path):
     getdirs(chemin)

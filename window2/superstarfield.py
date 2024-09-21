@@ -1,4 +1,3 @@
-import pygame
 import numpy as np
 
 from classes import Application
@@ -39,7 +38,7 @@ class SuperStarfield(Application):
         # adjust Z coordinates as more stars needed at distance for a balanced view
         self.stars[:, 2] = (self.stars[:, 2] ** 0.5) * (self.z_range[1] - self.z_range[0]) + self.z_range[0]
         self.star_move = np.array([0.0, 0.0, -0.5])
-        self.prev_time = pygame.time.get_ticks()
+        self.prev_time = self.parent.tools.get_ticks()
 
     def set_parent(self, parent):
         self.parent = parent
@@ -51,11 +50,11 @@ class SuperStarfield(Application):
         if self.parent:
             if self.parent.keypressed():
                 self.touche = self.parent.get_key()
-                if self.touche == pygame.K_ESCAPE:
+                if self.touche == self.parent.keys.K_ESCAPE:
                     self.action = "QUIT"
 
         # clear screen for a new frame
-        self.time = pygame.time.get_ticks()
+        self.time = self.parent.tools.get_ticks()
         # self.screen.fill(self.background_color)
         self.move_stars(self.time, self.prev_time)
 
@@ -92,7 +91,7 @@ class SuperStarfield(Application):
         self.screen.fill(self.background_color)
         while self.screen.get_locked():
             self.screen.unlock()
-        rgb_array = pygame.surfarray.pixels3d(self.screen)
+        rgb_array = self.parent.tools.pixels3d()
         # print(self.time)
 
         # define color as a function of distance
@@ -116,52 +115,6 @@ class SuperStarfield(Application):
         self.prev_time = self.time + 0
 
 
-def run():
-    pygame.init()
-    running = True
-    screen = pygame.display.set_mode((1800, 800), pygame.RESIZABLE, 32)  # pygame.FULLSCREEN)
-    # my_screen = screen.subsurface(pygame.Rect(100, 50, 600, 300))
-
-    w, h = screen.get_size()
-    window_surf = pygame.Surface((w-100, h-100), 0, 32)
-
-    w, h = window_surf.get_size()
-    my_screen = screen.subsurface(pygame.Rect(50, 50, w, h))
-
-    f = SuperStarfield(None, my_screen, ())
-    while running:
-        pygame.time.Clock().tick(60)
-        f.update()
-        f.draw()
-        pygame.display.update()
-        for event in pygame.event.get():
-            if event.type == pygame.KMOD_LGUI:
-                pass
-
-            elif event.type == pygame.MOUSEBUTTONDOWN:
-                pass
-
-            elif event.type == pygame.MOUSEBUTTONUP:
-                pass
-
-            elif event.type == pygame.KEYUP:
-                if event.key == pygame.K_ESCAPE:
-                    f.close()
-                    running = False
-
-            elif event.type == pygame.AUDIO_S16:
-                pass
-
-            elif event.type == pygame.QUIT:
-                running = False
-
-            elif event.type == pygame.VIDEORESIZE:
-                f.resize(screen)
-
-    pygame.quit()
-
-
 if __name__ == '__main__':
-    print("Compilation : Ok")
-    run()
-    print("Fin")
+    from exec import run
+    run(SuperStarfield)

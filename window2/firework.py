@@ -1,4 +1,3 @@
-import pygame
 import random
 import math
 
@@ -27,7 +26,7 @@ class Particle:
         self.vel.add(self.acc)
         self.pos.add(self.vel)
 
-    def alpha_color(self,):
+    def alpha_color(self):
         pct = self.life / self.max_life
         return [int(x*pct) for x in self.color]
 
@@ -40,9 +39,10 @@ class Firework(Application):
     VEL_MAX = 0
 
     DEFAULT_CONFIG = ("Feu d'artifice", Colors.MIDDLE_BLUE)
-    WINDOW_PROPERTIES = ["SOUND(12)", "RESIZABLE"]
+    WINDOW_PROPERTIES = ["SOUND(60)", "RESIZABLE"]
 
     def __init__(self, parent, screen, args):
+        print(f"{parent=}, {screen=}")
         self.set_parent(parent)
         self.resize(screen)
         self.nombre = self.screen.get_size()[0]//300 
@@ -58,6 +58,7 @@ class Firework(Application):
         self.max_channels = 32
         if not self.parent: 
             return 
+
         for i in range(3):
             sound = self.parent.load_sound(make_path("sounds", f"fusee{1+i}.mp3"), 0.2)
             self.sounds["LAUNCH"].append(sound)
@@ -76,7 +77,7 @@ class Firework(Application):
     def resize(self, screen):
         self.screen = screen
         self.width, self.height = self.screen.get_size()
-        Firework.VEL_MAX = int(0.3*math.sqrt(self.height*4/5))
+        Firework.VEL_MAX = int(0.35*math.sqrt(self.height*4/5))
 
     def get_action(self):
         return self.action
@@ -102,13 +103,13 @@ class Firework(Application):
     def update(self):
         if self.parent and self.parent.keypressed():
             self.touche = self.parent.get_key()
-            if self.touche == pygame.K_ESCAPE:
+            if self.touche == self.parent.keys.K_ESCAPE:
                 self.action = "QUIT"
 
-            elif self.touche == pygame.K_KP_PLUS:
+            elif self.touche == self.parent.keys.K_KP_PLUS:
                 self.nombre += 1
                 self.parent.set_title(f"Feu d'artifice ({self.nombre} fusées)")
-            elif self.touche == pygame.K_KP_MINUS:
+            elif self.touche == self.parent.keys.K_KP_MINUS:
                 if self.nombre > 1:
                     self.nombre -= 1
                     self.parent.set_title(f"Feu d'artifice ({self.nombre} fusées)")
@@ -131,52 +132,11 @@ class Firework(Application):
     def draw(self):
         self.screen.fill(Colors.BLACK)
         for f in self.fusees:
-            pygame.draw.circle(self.screen, f.color, f.to_draw(), f.nombre)
+            self.parent.tools.circle(f.color, f.to_draw(), f.nombre)
         for p in self.particles:
-            pygame.draw.circle(self.screen, p.alpha_color(), p.to_draw(), 2)
-
-
-def run():
-    pygame.init()
-    running = True
-    screen = pygame.display.set_mode((1400, 600), pygame.RESIZABLE)  # pygame.FULLSCREEN)
-    f = Firework(None, screen, ())
-    while running:
-        pygame.time.Clock().tick(60)
-        f.update()
-        f.draw()
-        pygame.display.update()
-        for event in pygame.event.get():
-            if event.type == pygame.KMOD_LGUI:
-                pass
-
-            elif event.type == pygame.MOUSEBUTTONDOWN:
-                pass
-
-            elif event.type == pygame.MOUSEBUTTONUP:
-                pass
-
-            elif event.type == pygame.KEYUP:
-                if event.key == pygame.K_ESCAPE:
-                    f.close()
-                    running = False
-                elif event.key == pygame.K_SPACE:
-                    f.add_fusee()
-
-            elif event.type == pygame.AUDIO_S16:
-                pass
-
-            elif event.type == pygame.QUIT:
-                running = False
-
-            elif event.type == pygame.VIDEORESIZE:
-                # print(event.type)
-                f.resize(screen)
-
-    pygame.quit()
+            self.parent.tools.circle(p.alpha_color(), p.to_draw(), 2)
 
 
 if __name__ == '__main__':
-    print("Compilation : Ok")
-    run()
-    print("Fin")
+    from exec import run
+    run(Firework)

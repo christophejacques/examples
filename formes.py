@@ -1,6 +1,14 @@
 import math
 from abc import ABCMeta, abstractmethod
 
+# ---------------------------------------------------------
+#
+# codage UTF-8 des instruction affichée via commande print()
+#
+import sys, codecs
+sys.stdout = codecs.getwriter("utf-8")(sys.stdout.detach())
+# ---------------------------------------------------------
+
 
 class CoordonneesError(Exception):
     pass

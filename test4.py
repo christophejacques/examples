@@ -161,16 +161,21 @@ class CommandLine:
         return previous_sortie
 
 
-match 2:
-    case 1:
-        cl = CommandLine("cat < /bat/song.xml | grep -i container | wc -l ")
-        cl.run().to_screen()
+commandes: list = list()
 
-    case 2:
-        CommandLine("cat -o -i /bat/ip.bat  /bat/ip.bat | grep on").run().to_screen()
-        # CommandLine("cat -o -i /bat/song.xml").run().to_screen()
+commandes.append("cat < c:/bat/song.xml")
+commandes.append("cat < c:/bat/song.xml | grep -i container | wc -l ")
+commandes.append("cat c:/bat/ip.bat")
+commandes.append("cat -o -i c:/bat/ip.bat  c:/bat/ip.bat | grep on")
+commandes.append("echo Hello World | grep -i Hello")
+commandes.append("wc -l > /dev/null && echo Fini")
 
-    case 3:
-        CommandLine("echo Hello World | grep -i Hello").run().to_screen()
-    case 4:
-        CommandLine("wc -l > /dev/null && echo Fini").run().to_screen()
+# 
+# ToDo : gestion du "&&"
+# 
+# commandes.append("echo Un && echo Deux")
+        
+for ligne_de_commande in commandes:
+    print("/home/utilisateur $", ligne_de_commande)
+    CommandLine(ligne_de_commande).run().to_screen()
+    print()

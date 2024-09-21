@@ -1,4 +1,3 @@
-import pygame
 import random
 from classes import Application
 from colors import Colors
@@ -13,8 +12,10 @@ class TicTacToe(Application):
 
     def __init__(self, parent, screen, args):
         self.set_parent(parent)
+        print(f"{parent=}", flush=True)
         self.resize(screen)
-        self.FONT = pygame.font.SysFont("comicsans", 100)
+        self.FONT = self.parent.tools.font("comicsans", 100)
+
         self.nombre = self.screen.get_size()[0]//200 
         self.action = ""
         self.grid = []
@@ -24,7 +25,8 @@ class TicTacToe(Application):
     def post_init(self):
         w, h = self.screen.get_size()
         longueur = self.MIN_SIZE[0]
-        self.parent.resize("BOTTOM RIGHT", -(w-longueur), -(h-longueur))
+        if self.parent:
+            self.parent.resize("BOTTOM RIGHT", -(w-longueur), -(h-longueur))
 
     def initialisation(self):
         self.grid.clear()
@@ -146,11 +148,11 @@ class TicTacToe(Application):
     def update(self):
         if self.parent and self.parent.keypressed():
             self.touche = self.parent.get_key()
-            if self.touche == pygame.K_ESCAPE:
+            if self.touche == self.parent.keys.K_ESCAPE:
                 self.action = "QUIT"
-            elif self.touche == pygame.K_SPACE:
+            elif self.touche == self.parent.keys.K_SPACE:
                 self.initialisation()
-            elif self.touche in (pygame.K_KP_ENTER, pygame.K_RETURN):
+            elif self.touche in (self.parent.keys.K_KP_ENTER, self.parent.keys.K_RETURN):
                 if self.isResolved(self.grid, "X") + self.isResolved(self.grid, "O") + self.isTie(self.grid):
                     self.initialisation()
                 else:
@@ -160,11 +162,11 @@ class TicTacToe(Application):
     def draw(self):
         self.screen.fill(Colors.BLACK)
 
-        pygame.draw.line(self.screen, Colors.WHITE, (self.width // 3, 0), (self.width // 3, self.height), 2)
-        pygame.draw.line(self.screen, Colors.WHITE, (2*self.width // 3, 0), (2*self.width // 3, self.height), 2)
-        pygame.draw.line(self.screen, Colors.WHITE, (0, self.height // 3), (self.width, self.height // 3), 2)
-        pygame.draw.line(self.screen, Colors.WHITE, (0, 2*self.height // 3), (self.width, 2*self.height // 3), 2)
-        pygame.draw.rect(self.screen, Colors.WHITE, (0, 0, self.width-1, self.height-1), 2)
+        self.parent.tools.line(Colors.WHITE, (self.width // 3, 0), (self.width // 3, self.height), 2)
+        self.parent.tools.line(Colors.WHITE, (2*self.width // 3, 0), (2*self.width // 3, self.height), 2)
+        self.parent.tools.line(Colors.WHITE, (0, self.height // 3), (self.width, self.height // 3), 2)
+        self.parent.tools.line(Colors.WHITE, (0, 2*self.height // 3), (self.width, 2*self.height // 3), 2)
+        self.parent.tools.rect(Colors.WHITE, (0, 0, self.width-1, self.height-1), 2)
 
         sol = self.isResolved(self.grid, "X") + self.isResolved(self.grid, "O") + "  "
         sol = sol if sol.strip() != "" else self.isTie(self.grid) + "  "
@@ -191,43 +193,6 @@ class TicTacToe(Application):
                 self.screen.blit(texte_surf, (self.decalx-w//2+i*self.dx, self.decaly+self.dy*j-h//2)) 
 
 
-def run():
-    pygame.init()
-    running = True
-    screen = pygame.display.set_mode((1600, 600), pygame.RESIZABLE)
-    f = TicTacToe(None, screen, ())
-    while running:
-        pygame.time.Clock().tick(60)
-        f.update()
-        f.draw()
-        pygame.display.update()
-        for event in pygame.event.get():
-            if event.type == pygame.KMOD_LGUI:
-                pass
-
-            elif event.type == pygame.MOUSEBUTTONDOWN:
-                pass
-
-            elif event.type == pygame.MOUSEBUTTONUP:
-                pass
-
-            elif event.type == pygame.KEYUP:
-                running = not event.key == pygame.K_ESCAPE
-
-            elif event.type == pygame.AUDIO_S16:
-                pass
-
-            elif event.type == pygame.QUIT:
-                running = False
-
-            elif event.type == pygame.VIDEORESIZE:
-                # print(event.type)
-                f.resize(screen)
-
-    pygame.quit()
-
-
 if __name__ == '__main__':
-    print("Compilation : Ok")
-    run()
-    print("Fin")
+    from exec import run
+    run(TicTacToe)

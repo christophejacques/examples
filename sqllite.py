@@ -2,16 +2,16 @@ import sqlite3
 import sys
 import os
 import traceback
-import codecs
+# import codecs
 
-repertoire = r"C:\Users\utilisateur\OneDrive\Programmation\python\examples"
+repertoire = r"D:\Programmation\python\examples"
 os.chdir(repertoire)
 
 # ---------------------------------------------------------
 #
 # codage UTF-8 des instruction affichée via commande print()
 #
-sys.stdout = codecs.getwriter("utf-8")(sys.stdout.detach())
+# sys.stdout = codecs.getwriter("utf-8")(sys.stdout.detach())
 # ---------------------------------------------------------
 
 
@@ -20,6 +20,33 @@ def fonction(*args):
 
     for i, arg in enumerate(args):
         print(f"- {i} : {arg}")
+
+
+class Valeurs:
+
+    def __init__(self, valeurs: tuple):
+        self.valeurs = valeurs
+
+    def getValeur(self, indice: int = 0) -> object:
+        return self.valeurs[indice]
+
+    def getAllValeurs(self) -> tuple:
+        return self.valeurs
+
+
+class Resultats:
+
+    def __init__(self, resultats: list):
+        self.resultats = resultats
+
+    def hasData(self) -> bool:
+        return len(self.resultats) > 0
+
+    def getData(self) -> Valeurs:
+        return Valeurs(self.resultats.pop(0))
+
+    def getAllDatas(self) -> list[Valeurs]:
+        return [Valeurs(r) for r in self.resultats]
 
 
 class monsql:
@@ -118,19 +145,20 @@ class monsql:
         print(res, " Ok" if res == ATTENDU[etat] else " Ko")
         return res == ATTENDU[etat]
 
-    def getDatas(self, sqlCode):
+    def getDatas(self, sqlCode) -> Resultats:
         print(f"getDatas({sqlCode}) : ", end="")
-        res = ()
+        res = list()
         try:
             self.curs.execute(sqlCode)
             res = self.curs.fetchall()
             print(f"{len(res)} enregs")
+
         except Exception:
             errcls, errlib, errobj = sys.exc_info()
             print(f"{errcls}".split("'")[1] + " :")
             print(f" - ligne {errobj.tb_lineno} : {errlib}")
 
-        return res
+        return Resultats(res)
 
     def deleteData(self, nomTable, *conditions):
         lstCondValues = []
@@ -233,32 +261,48 @@ with monsql("basededonnees.db") as mabd:
             mabd.insertData("metiers", ("libelle", "Informaticien"))
             mabd.insertData("metiers", ("libelle", "Fonctionnaire"))
 
-            personne_id = mabd.getDatas("SELECT idPersonne FROM personnes WHERE nom='JACQUES'")[0][0] 
-            metier_id = mabd.getDatas("SELECT idMetier FROM metiers WHERE libelle='Informaticien'")[0][0] 
+            datas = mabd.getDatas("SELECT idPersonne FROM personnes WHERE nom='JACQUES'")
+            if datas.hasData():
+                personne_id = datas.getData().getValeur()
+                print("personne_id =", personne_id)
+
+            datas = mabd.getDatas("SELECT idMetier FROM metiers WHERE libelle='Informaticien'")
+            if datas.hasData():
+                metier_id = datas.getData().getValeur()
+                print("metier_id =", metier_id)
+
             mabd.insertData("ass_personne_metier", ("idPersonne", personne_id), ("idMetier", metier_id))
 
-            personne_id = mabd.getDatas("SELECT idPersonne FROM personnes WHERE nom='BERNARD'")[0][0] 
-            metier_id = mabd.getDatas("SELECT idMetier FROM metiers WHERE libelle='Fonctionnaire'")[0][0] 
+            datas = mabd.getDatas("SELECT idPersonne FROM personnes WHERE nom='BERNARD'")
+            if datas.hasData():
+                personne_id = datas.getData().getValeur()
+                print("personne_id =", personne_id)
+
+            datas = mabd.getDatas("SELECT idMetier FROM metiers WHERE libelle='Fonctionnaire'")
+            if datas.hasData():
+                metier_id = datas.getData().getValeur()
+                print("metier_id =", metier_id)
+
             mabd.insertData("ass_personne_metier", ("idPersonne", personne_id), ("idMetier", metier_id))
             mabd.insertData("ass_personne_metier", ("idPersonne", personne_id), ("idMetier", metier_id))
             mabd.insertData("ass_personne_metier", ("idPersonne", 100), ("idMetier", 100))
             mabd.commit()
 
-            for lst in mabd.getDatas("PRAGMA table_info(personnes)"):
-                print(f"  - {lst}")
+            for lst in mabd.getDatas("PRAGMA table_info(personnes)").getAllDatas():
+                print(f"  - {lst.getAllValeurs()}")
             print()
 
             print("Liste des tables :")
-            for t in mabd.getDatas("SELECT name FROM sqlite_master WHERE type = 'table' ORDER BY name"):
-                for enreg in mabd.getDatas(f"select * from {t[0]}"):
-                    print(f"  - {enreg}")
+            for t in mabd.getDatas("SELECT name FROM sqlite_master WHERE type = 'table' ORDER BY name").getAllDatas():
+                for enreg in mabd.getDatas(f"select * from {t.getValeur()}").getAllDatas():
+                    print(f"  - {enreg.getAllValeurs()}")
                 print()
 
             for t in mabd.getDatas("""SELECT p.idPersonne, p.nom, pm.idMetier , m.libelle
              FROM personnes p 
              INNER JOIN ass_personne_metier pm on (p.idPersonne = pm.idPersonne)
-             INNER JOIN metiers m on (pm.idMetier = m.idMetier)"""):
-                print(f"  - {t}")
+             INNER JOIN metiers m on (pm.idMetier = m.idMetier)""").getAllDatas():
+                print(f"  - {t.getAllValeurs()}")
             print()
 
             # mabd.execute("DROP table personnes")

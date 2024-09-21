@@ -3,7 +3,7 @@ from time import perf_counter
 
 
 class Mouse:
-    DBL_CLCIK_DELAY = 0.3
+    DBL_CLICK_DELAY = 0.3
     left_button_down = False
     right_button_down = False
     old_position = (0, 0)
@@ -46,7 +46,7 @@ class Mouse:
     @classmethod
     def has_double_clicked(self):
         if len(self.time) > 1:
-            res = self.time[-1]-self.time[-2] <= Mouse.DBL_CLCIK_DELAY
+            res = self.time[-1]-self.time[-2] <= Mouse.DBL_CLICK_DELAY
             if res: 
                 self.time.clear()
             return res

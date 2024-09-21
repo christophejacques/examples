@@ -1,4 +1,3 @@
-import pygame
 import random
 
 from colors import Colors
@@ -47,7 +46,8 @@ class Laby(Application):
         # print("args:", args)
         self.parent = parent
         self.screen = screen
-        self.title = self.parent.title
+        if self.parent:
+            self.title = self.parent.title
         w, h = screen.get_size()
         self.cell_size = args[0]
         self.chemin = None
@@ -141,7 +141,7 @@ class Laby(Application):
                     # chemin trouve
                     self.chemin = pile.copy()
                     self.chemin.append((x, y))
-                    print(f"Chemin de {len(self.chemin)} cases")
+                    print(f"Chemin de {len(self.chemin)} cases", flush=True)
 
                 if self.is_done(x, y):
                     self.cells[x][y].updated = True
@@ -157,7 +157,7 @@ class Laby(Application):
             yield coord
 
     def draw_cell(self, x, y, bg_color):
-        pygame.draw.rect(self.screen, bg_color, ((x*self.cell_size, y*self.cell_size), 
+        self.parent.tools.rect(bg_color, ((x*self.cell_size, y*self.cell_size), 
             (self.cell_size, self.cell_size)))
 
     def draw_train(self):
@@ -176,14 +176,14 @@ class Laby(Application):
                 self.draw_cell(*cell, (80, 70, 200))
 
     def update(self):
-        if self.parent.keypressed():
+        if self.parent and self.parent.keypressed():
             self.touche = self.parent.get_key()
             if self.touche == 27:
                 self.action = "QUIT"
-            elif self.touche == pygame.K_F1:
+            elif self.touche == self.parent.keys.K_F1:
                 self.show_soluce = not self.show_soluce
 
-            elif self.touche == pygame.K_SPACE:
+            elif self.touche == self.parent.keys.K_SPACE:
                 self.prepare_board()
                 self.generate()
 
@@ -206,12 +206,12 @@ class Laby(Application):
         self.draw_train()
 
         # Ligne Top fenetre
-        pygame.draw.line(self.screen, (255, 255, 255), pos1, pos2)
+        self.parent.tools.line((255, 255, 255), pos1, pos2)
         # Cellule Debut
         self.draw_cell(self.debut, 0, bg_color)
         pos2 = (0, self.height*self.cell_size)
         # Ligne Bottom fenetre
-        pygame.draw.line(self.screen, (255, 255, 255), pos1, pos2)
+        self.parent.tools.line((255, 255, 255), pos1, pos2)
         # Cellule Fin
         self.draw_cell(self.fin, self.height-1, bg_color)
 
@@ -223,25 +223,13 @@ class Laby(Application):
                 pos2 = ((i+1)*self.cell_size, (j+1)*self.cell_size)
                 if self.cells[i][j].bas:
                     pos1 = (i*self.cell_size, (j+1)*self.cell_size)
-                    pygame.draw.line(self.screen, (255, 255, 255), pos1, pos2)
+                    self.parent.tools.line((255, 255, 255), pos1, pos2)
 
                 if self.cells[i][j].droite:
                     pos1 = ((i+1)*self.cell_size, j*self.cell_size)
-                    pygame.draw.line(self.screen, (255, 255, 255), pos1, pos2)
-
-
-def main():
-    laby = Laby(20, 1600, 800)
-    running = False
-    while running:
-        laby.draw()
-
-        for event in pygame.event.get():
-            if event.type == pygame.KEYUP:
-                laby.set_size(laby.w, laby.h+laby.cell_size)
-                laby.generate()
+                    self.parent.tools.line((255, 255, 255), pos1, pos2)
 
 
 if __name__ == '__main__':
-    print("Compilation : Ok")
-    # main()
+    from exec import run
+    run(Laby)

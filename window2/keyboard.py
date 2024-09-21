@@ -1,5 +1,5 @@
 class Keyboard:
-    buffer = []
+    buffer: list = []
 
     @classmethod
     def __init__(self):

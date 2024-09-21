@@ -1,4 +1,3 @@
-import pygame
 import random
 from classes import Application
 from colors import Colors
@@ -59,15 +58,15 @@ class GameOfLife(Application):
         self.grid = newgrid.copy()
 
     def update(self):
-        if self.parent.keypressed():
+        if self.parent and self.parent.keypressed():
             self.touche = self.parent.get_key()
             if self.touche == 27:
                 self.action = "QUIT"
 
-            elif self.touche in (pygame.K_KP_ENTER, pygame.K_RETURN):
+            elif self.touche in (self.parent.keys.K_KP_ENTER, self.parent.keys.K_RETURN):
                 self.initialisation(self.grid)
 
-            elif self.touche == pygame.K_SPACE:
+            elif self.touche == self.parent.keys.K_SPACE:
                 self.updating = not self.updating
 
     def mouse_button_down(self, mouseX, mouseY, button):
@@ -107,11 +106,12 @@ class GameOfLife(Application):
                     color = (200, 200, 200)
                 else:
                     color = (0, 50, 50)
-                pygame.draw.rect(self.screen, color, (j*self.SIZE, i*self.SIZE, self.SIZE, self.SIZE))
+                self.parent.tools.rect(color, (j*self.SIZE, i*self.SIZE, self.SIZE, self.SIZE))
         self.update()
         if self.mouse_button_state == 0 and self.updating:
             self.new_frame()
 
 
 if __name__ == '__main__':
-    print("Compilation : Ok")
+    from exec import run
+    run(GameOfLife)

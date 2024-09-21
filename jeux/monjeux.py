@@ -18,7 +18,7 @@ def Quit():
     Application_launched = False
 
 
-def key_pressed(key_code, key_mode):
+def key_press(key_code, key_mode=None):
     global Application_launched
 
     if key_mode == pygame.KMOD_LALT and key_code == pygame.K_F4 or key_code == pygame.K_ESCAPE:
@@ -63,6 +63,7 @@ def key_pressed(key_code, key_mode):
             etoiles.maximum -= 10
 
     elif key_code == "show_fichier":
+        print("show fichier")
         win.get_zone("Fichier").active = not win.get_zone("Fichier").active
 
     elif key_code == pygame.K_KP_PLUS:
@@ -74,7 +75,7 @@ def key_pressed(key_code, key_mode):
 pygame.init()
 
 try:
-    pygame.mixer_music.load(r"D:\Mes Documents\Musique\Chrono Trigger\[1.04] - Peaceful Days.mp3")
+    pygame.mixer_music.load(r"D:\Mes Documents\Musique\Jeux\Chrono Trigger\[1.04] - Peaceful Days.mp3")
 except Exception:
     print("Error loading music")
 
@@ -168,6 +169,8 @@ menu3 = Graphical_Text("   Etoiles   ", "Arial", 16, light_grey, black, "gauche 
 decalage += 1+menu3.get_width()
 menu4 = Graphical_Text("   Aide   ", "Arial", 16, light_grey, black, "gauche Haut", (decalage, 0))
 decalage += 1+menu4.get_width()
+musik = Graphical_Text("   Music   ", "Arial", 16, light_grey, black, "gauche Haut", (decalage, 0))
+decalage += 1+musik.get_width()
 menu5 = Graphical_Text("   Quitter   ", "Arial", 16, light_grey, black, "gauche Haut", (decalage, 0))
 
 decalage = 0
@@ -179,6 +182,7 @@ zmenus.add(menu1)
 zmenus.add(menu2)
 zmenus.add(menu3)
 zmenus.add(menu4)
+zmenus.add(musik)
 zmenus.add(menu5)
 
 zmenu1.add(menu11)
@@ -187,14 +191,15 @@ zmenu1.add(menu12)
 zmenus.register(["on_mouse_move", "on_mouse_enter", "on_click", "on_mouse_exit"])
 zmenu1.register(["on_mouse_move", "on_mouse_enter", "on_click", "on_mouse_exit"])
 
-menu1.register(["on_mouse_enter", {"on_click": "key_pressed('show_fichier')"}, "on_mouse_exit"])
-menu2.register(["on_mouse_enter", {"on_click": "key_pressed(pygame.K_KP1)"}, "on_mouse_exit"])
-menu3.register(["on_mouse_enter", {"on_click": "key_pressed(pygame.K_KP2)"}, "on_mouse_exit"])
-menu4.register(["on_mouse_enter", {"on_click": "key_pressed(pygame.K_KP3)"}, "on_mouse_exit"])
+menu1.register(["on_mouse_enter", {"on_click": "key_press('show_fichier')"}, "on_mouse_exit"])
+menu2.register(["on_mouse_enter", {"on_click": "key_press(pygame.K_KP1)"}, "on_mouse_exit"])
+menu3.register(["on_mouse_enter", {"on_click": "key_press(pygame.K_KP2)"}, "on_mouse_exit"])
+menu4.register(["on_mouse_enter", {"on_click": "key_press(pygame.K_KP3)"}, "on_mouse_exit"])
+musik.register(["on_mouse_enter", {"on_click": "key_press(pygame.K_p)"}, "on_mouse_exit"])
 menu5.register(["on_mouse_enter", {"on_click": "Quit()"}, "on_mouse_exit"])
 
-menu11.register(["on_mouse_enter", {"on_click": "key_pressed(pygame.K_KP_PLUS)"}, "on_mouse_exit"])
-menu12.register(["on_mouse_enter", {"on_click": "key_pressed(pygame.K_KP_MINUS)"}, "on_mouse_exit"])
+menu11.register(["on_mouse_enter", {"on_click": "key_press(pygame.K_KP_PLUS)"}, "on_mouse_exit"])
+menu12.register(["on_mouse_enter", {"on_click": "key_press(pygame.K_KP_MINUS)"}, "on_mouse_exit"])
 zmenu1.active = False
 
 # pygame.mixer_music.play()
@@ -238,7 +243,7 @@ while Application_launched:
             if key_code in [pygame.K_KP1, pygame.K_KP2, pygame.K_KP3, pygame.K_KP_MINUS,
                     pygame.K_KP_PLUS, pygame.K_SPACE, pygame.K_p,
                     pygame.K_ESCAPE] or key_mode == pygame.KMOD_LALT and key_code == pygame.K_F4:
-                key_pressed(key_code, key_mode)
+                key_press(key_code, key_mode)
 
             elif key_code == pygame.K_c:
                 track_mouse_position = not track_mouse_position

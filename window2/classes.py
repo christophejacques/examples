@@ -47,7 +47,7 @@ class Application(metaclass=ABCMeta):
     title = ""
 
     WINDOW_PROPERTIES = ["RESIZABLE"]
-    DEFAULT_CONFIG = ("?", (0, 0, 0))
+    DEFAULT_CONFIG: tuple = ("?", (0, 0, 0))
 
     @abstractmethod
     def __init__(self, parent, screen, *args):
@@ -58,7 +58,6 @@ class Application(metaclass=ABCMeta):
 
     def close(self):
         pass
-        # print("Application closed !")
 
     @abstractmethod
     def resize(self, screen):
@@ -84,7 +83,7 @@ class Application(metaclass=ABCMeta):
 
     @abstractmethod
     def update(self):
-        if self.parent.keypressed():
+        if self.parent and self.parent.keypressed():
             self.touche = self.parent.get_key()
             if self.touche == 27:
                 self.action = "QUIT"
@@ -100,7 +99,8 @@ class NoApplication(Application):
 
     def __init__(self, parent, screen, *args):
         self.parent = parent
-        self.title = self.parent.title
+        if self.parent:
+            self.title = self.parent.title
         self.touche = ""
         self.action = ""
 
@@ -254,3 +254,8 @@ def get_all_classes(type_classe):
                     # print("CONFIG=", classe.DEFAULT_CONFIG)
                     liste_classes.append(classe)
     return liste_classes
+
+
+if __name__ == '__main__':
+    from exec import run
+    run(NoApplication)

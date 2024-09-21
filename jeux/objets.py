@@ -259,7 +259,7 @@ class Graphical_Text(AbstractZoneContent):
 
         hauteur = self.get_height()
         for i, texte in enumerate(self.texte):
-            print(texte)
+            # print(texte)
             self.screen.blit(texte, (self.dx+self.decalage[0],
                                      self.dy+self.decalage[1] + i*hauteur + self.decaly))
 
@@ -270,14 +270,14 @@ class Graphical_Text(AbstractZoneContent):
         else:
             return [res]
 
-    def on_mouse_enter(self):
-        self.mouse_entered = True
+    # def on_mouse_enter(self):
+    #     self.mouse_entered = True
 
-    def on_mouse_move(self, mouse_position):
-        pass
+    # def on_mouse_move(self, mouse_position):
+    #     pass
 
-    def on_mouse_exit(self):
-        self.mouse_entered = False
+    # def on_mouse_exit(self):
+    #     self.mouse_entered = False
 
 
 class Menu(AbstractZoneContent):
@@ -302,6 +302,7 @@ def main():
         assert isinstance(Lignes(0), AbstractZoneContent), "Problème de la classe Lignes"
         assert isinstance(Graphical_Text(""), AbstractZoneContent), "Problème de la classe Graphical_Text"
         assert isinstance(Menu(), AbstractZoneContent), "Problème de la classe Menu"
+        
     except Exception:
         traceback.print_exc()
 

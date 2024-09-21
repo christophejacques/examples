@@ -37,4 +37,5 @@ def get_shortcut_filename(path):
         return target
 
 
+print("Decode:", path)
 print("Target:", get_shortcut_filename(path))

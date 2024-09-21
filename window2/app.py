@@ -83,6 +83,39 @@ class Icone:
         self.screen_surf.blit(self.text_surf, self.title_rect)
 
 
+class Keys:
+    def __init__(self):
+        for attrib in filter(lambda a: a[:2] == "K_", dir(pygame)):
+            setattr(self, attrib, getattr(pygame, attrib))
+
+
+class Tools:
+
+    def __init__(self, screen):
+        self.screen = screen
+
+    def font(self, police, taille):
+        return pygame.font.SysFont(police, taille)
+
+    def line(self, couleur, *coords):
+        pygame.draw.line(self.screen, couleur, *coords)
+
+    def Rect(self, *coords):
+        return pygame.Rect(*coords)
+
+    def rect(self, couleur, *coords):
+        pygame.draw.rect(self.screen, couleur, *coords)
+
+    def circle(self, couleur, *coords):
+        pygame.draw.circle(self.screen, couleur, *coords)
+
+    def pixels3d(self):
+        return pygame.surfarray.pixels3d(self.screen)
+
+    def get_ticks(self):
+        return pygame.time.get_ticks()
+
+
 class Window:
 
     ICONE_WIDTH = 30
@@ -117,9 +150,11 @@ class Window:
         self.set_title(text)
         self.sound_index = 0
         self.sounds = {}
+        self.keys = Keys()
         try:
             self.instance = self.app(self, self.window_draw_surf, args)
             self.instance.post_init()
+
         except Exception as e:
             self.set_error()
             print("Window.__init__() Error:", e)
@@ -133,6 +168,9 @@ class Window:
         self.window_draw_surf = self.window_surf.subsurface(
             pygame.Rect(self.border_size, self.ICONE_HEIGHT, w-2*self.border_size, h-self.ICONE_HEIGHT-self.border_size))
         self.window_draw_surf.fill(self.colour)
+
+        self.tools = Tools(self.window_draw_surf)
+
         self.top_surf = self.window_surf.subsurface(pygame.Rect(0, 0, w, self.ICONE_HEIGHT))
         self.min_surf = self.top_surf.subsurface(pygame.Rect(w-3*self.ICONE_WIDTH-self.border_size, 0, self.ICONE_WIDTH, self.ICONE_HEIGHT))
         self.max_surf = self.top_surf.subsurface(pygame.Rect(w-2*self.ICONE_WIDTH-self.border_size, 0, self.ICONE_WIDTH, self.ICONE_HEIGHT))
@@ -162,6 +200,7 @@ class Window:
         if update_app and not self.on_error:
             try:
                 self.instance.resize(self.window_draw_surf)
+                
             except Exception as e:
                 self.set_error()
                 print("Window.set_size() Error:", e)
@@ -422,10 +461,9 @@ class OperatingSystem:
         self.liste_systray.clear()
 
     def get_systray_apps(self):
-        total = 0
-        classes = []
+        total: int = 0
+        classes: list = []
         for une_classe in get_all_classes("SysTray"):
-            # print("systray", une_classe)
             classes.append(une_classe)
 
         classes.sort(key=lambda k: k.PRIORITY)
@@ -943,7 +981,7 @@ class Tache:
     TASK_WIDTH = TASK_WIDTH_MAX
     TASK_SELECT_HEIGHT = 3
     TASK_ICONE_SIZE = 20
-    TASK_TITLE_BORDER = 2
+    TASK_TITLE_BORDER = 5
 
     def __init__(self, screen, title, couleur, x, window):
         self.screen_surf = screen

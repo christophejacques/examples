@@ -1,6 +1,10 @@
 import pygame
 
 
+def fprint(*args, **kwargs):
+    print(*args, **kwargs, flush=True)
+
+
 def get_pygame_type_name(index):
     for constante in dir(pygame):
         if constante[0] in "AZERTYUIOPMLKJHGFDSQWXCVBN":
@@ -13,25 +17,25 @@ class VAR:
 
 
 def Quitter(*args):
-    print(args)
+    fprint(args)
     VAR.running = False
 
 
 def mouse_move(event):
-    print(event)
+    fprint(event)
 
 
 def mouse_button_up(event):
     if event.button == 1:
         pass
-    print(event)
+    fprint(event)
 
 
 def exec_keyup(event):
     if event.key == pygame.K_ESCAPE:
         Quitter(event)
     else:
-        print(event)
+        fprint(event)
 
 
 event2fonction = {
@@ -69,6 +73,6 @@ while VAR.running:
             if callable(fonction):
                 fonction(event)
         else:
-            print(get_pygame_type_name(event.type))
+            fprint(get_pygame_type_name(event.type))
 
 pygame.quit()

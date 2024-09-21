@@ -17,7 +17,7 @@ def multiplicationMatrice(m1, m2):
     return resultat
 
 
-sizeX = 800
+sizeX = 1000
 sizeY = 600
 
 z_max = 30

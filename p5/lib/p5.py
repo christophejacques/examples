@@ -1,4 +1,3 @@
-#! c:\bat\python.bat -3.11
 import pygame
 import math
 import random

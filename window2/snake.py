@@ -1,4 +1,3 @@
-import pygame
 import random
 from classes import Application
 from colors import Colors
@@ -27,9 +26,10 @@ class Apples:
 
 class Snake:
 
-    def __init__(self):
+    def __init__(self, tools):
         self.tail = []
         self.to_show = ""
+        self.tools = tools
 
     def init(self):
         self.tail.clear()
@@ -49,7 +49,7 @@ class Snake:
         self.vel = self.key_vel
         
         suivant = (self.pos[0] + self.vel[0], self.pos[1] + self.vel[1])
-        if not pygame.Rect(0, 0, SnakeGame.w, SnakeGame.h).collidepoint(*suivant):
+        if not self.tools.Rect(0, 0, SnakeGame.w, SnakeGame.h).collidepoint(*suivant):
             self.to_show = f"OUT {suivant} Taille: {len(self.tail)}"
             self.is_alive = False
             return 
@@ -82,14 +82,14 @@ class SnakeGame(Application):
     w, h = 0, 0
 
     def __init__(self, parent, screen, args):
-        self.snake = Snake()
-        self.apples = Apples()
         self.set_parent(parent)
+        self.snake = Snake(parent.tools)
+        self.apples = Apples()
         self.resize(screen)
-        self.FONT = pygame.font.SysFont("comicsans", 100)
         self.action = ""
 
     def set_parent(self, parent):
+        print(f"parent({parent=})", flush=True)
         self.parent = parent
 
     def resize(self, screen):
@@ -117,26 +117,26 @@ class SnakeGame(Application):
             return
 
         if self.parent.keypressed():
-            if self.parent.view_key("LAST") == pygame.K_ESCAPE:
+            if self.parent.view_key("LAST") == self.parent.keys.K_ESCAPE:
                 self.parent.get_key()
                 self.action = "QUIT"
 
         if self.frameCount % 4 == 1:
             self.touche = self.parent.get_key()
-            if self.touche == pygame.K_SPACE:
+            if self.touche == self.parent.keys.K_SPACE:
                 self.initialisation()
 
             if self.snake.is_alive:
-                if self.touche == pygame.K_UP:
+                if self.touche == self.parent.keys.K_UP:
                     if self.snake.vel[1] != 1:
                         self.snake.key_vel = (0, -1)
-                elif self.touche == pygame.K_DOWN:
+                elif self.touche == self.parent.keys.K_DOWN:
                     if self.snake.vel[1] != -1:
                         self.snake.key_vel = (0, 1)
-                elif self.touche == pygame.K_LEFT:
+                elif self.touche == self.parent.keys.K_LEFT:
                     if self.snake.vel[0] != 1:
                         self.snake.key_vel = (-1, 0)
-                elif self.touche == pygame.K_RIGHT:
+                elif self.touche == self.parent.keys.K_RIGHT:
                     if self.snake.vel[0] != -1:
                         self.snake.key_vel = (1, 0)
 
@@ -161,42 +161,6 @@ class SnakeGame(Application):
             self.screen.fill(Colors.WHITE, (x, y, SnakeGame.size, SnakeGame.size))
 
 
-def run():
-    pygame.init()
-    running = True
-    screen = pygame.display.set_mode((1600, 600), pygame.RESIZABLE)
-    f = SnakeGame(None, screen, ())
-    while running:
-        pygame.time.Clock().tick(60)
-        f.update()
-        f.draw()
-        pygame.display.update()
-        for event in pygame.event.get():
-            if event.type == pygame.KMOD_LGUI:
-                pass
-
-            elif event.type == pygame.MOUSEBUTTONDOWN:
-                pass
-
-            elif event.type == pygame.MOUSEBUTTONUP:
-                pass
-
-            elif event.type == pygame.KEYUP:
-                running = not event.key == pygame.K_ESCAPE
-
-            elif event.type == pygame.AUDIO_S16:
-                pass
-
-            elif event.type == pygame.QUIT:
-                running = False
-
-            elif event.type == pygame.VIDEORESIZE:
-                # print(event.type)
-                f.resize(screen)
-
-    pygame.quit()
-
-
 if __name__ == '__main__':
-    print("Compilation : Ok")
-    run()
+    from exec import run
+    run(SnakeGame)

@@ -183,23 +183,31 @@ def download_image(directory: str, img_name: str):
         "https://nonecss.com/file_image/",
         ]
     sites = [(site + img_name) for site in sites]
+    sites += [string_format("https://fivetiu.com/{img_name:lower}/cover-n.jpg", img_name=img_name)]
 
     while not downloaded and sites:
         url = sites.pop(0)
-        req = ur.Request(url, headers=MY_HEADER)
+
         try:
+            req = ur.Request(url, headers=MY_HEADER)
             page = ur.urlopen(req, timeout=10)
             
             type_fichier, extension = page.getheader("Content-Type").split("/")
-            if type_fichier != "image":
-                return
+            if type_fichier == "image":
+                with open(directory + "\\" + img_name, "wb") as fh_img:
+                    fh_img.write(page.read())
+                print(" Done", end="")
+                downloaded = True
+            else:
+                print("x", end="")
 
-            with open(directory + "\\" + img_name, "wb") as fh_img:
-                fh_img.write(page.read())
-            print(" Done", end="")
-            downloaded = True
+        except ur.HTTPError as httperror:
+            print(".", end="")
 
-        except ur.HTTPError:
+        except Exception as e:
+            print("Erreur:", e)
+
+        if not downloaded:
             if site_added >= 3:
                 print(" Not found", end="")
             else:
@@ -226,11 +234,6 @@ def download_image(directory: str, img_name: str):
                         sites.append(another_site)
                     else:
                         print(" Not found", end="")
-
-            # for ligne in str(e.fp.read()).split("<p>")[1:]:
-            #     print(ligne.split("</p>")[0])
-        except Exception as e:
-            print(e)
 
     print()
 

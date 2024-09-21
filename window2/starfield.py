@@ -1,4 +1,3 @@
-import pygame
 import math
 import random
 from classes import Application
@@ -17,12 +16,12 @@ class Variables:
 class StarField(Application):
 
     DEFAULT_CONFIG = ("Starfiel 50", Colors.DARK_ORANGE, 50)
-
     MIN_SIZE = (400, 300)
 
     def __init__(self, parent, screen, args):
         self.parent = parent
-        self.title = self.parent.title
+        if self.parent:
+            self.title = self.parent.title
         self.screen = screen
         self.maximum = args[0]
         self.action = ""
@@ -49,16 +48,17 @@ class StarField(Application):
         return self.action
 
     def update(self):
-        self.parent.set_title(self.title + f" ({len(self.liste)})")
-        if self.parent.keypressed():
-            self.touche = self.parent.get_key()
-            if self.touche == pygame.K_ESCAPE:
-                self.action = "QUIT"
-            elif self.touche == pygame.K_KP_MINUS:
-                if self.maximum > 10: 
-                    self.maximum -= 10
-            elif self.touche == pygame.K_KP_PLUS:
-                self.maximum += 10
+        if self.parent:
+            self.parent.set_title(self.title + f" ({len(self.liste)})")
+            if self.parent.keypressed():
+                self.touche = self.parent.get_key()
+                if self.touche == self.parent.keys.K_ESCAPE:
+                    self.action = "QUIT"
+                elif self.touche == self.parent.keys.K_KP_MINUS:
+                    if self.maximum > 10: 
+                        self.maximum -= 10
+                elif self.touche == self.parent.keys.K_KP_PLUS:
+                    self.maximum += 10
 
         if len(self.liste) < self.maximum:
             self.liste.append(Star())
@@ -72,8 +72,8 @@ class StarField(Application):
             res = etoile.get_attrs()
             if res:
                 couleur, pstar, star, taille = res
-                pygame.draw.line(self.screen, couleur, pstar, star)
-                pygame.draw.circle(self.screen, couleur, star, taille)
+                self.parent.tools.line(couleur, pstar, star)
+                self.parent.tools.circle(couleur, star, taille)
             else:
                 self.liste.pop(i)
 
@@ -127,4 +127,5 @@ class Star:
 
 
 if __name__ == '__main__':
-    print("Compilation : Ok")
+    from exec import run
+    run(StarField)
