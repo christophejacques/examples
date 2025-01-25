@@ -60,9 +60,10 @@ for cle in sorted(files):
     if len(files[cle]) <= 1:
         continue
     nb_doublons += 1
-    for size, file in files[cle]:
+    print(cle)
+    for size, file in sorted(files[cle]):
         try:
-            print(f"{human_readable_size(size):>10} -", file[:130])
+            print(f"  {human_readable_size(size):>10} -", file[:130])
         except UnicodeEncodeError:
             print(file[:file.rindex("\\")], "..")
             # print("UnicodeEncodeError")

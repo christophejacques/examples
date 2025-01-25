@@ -28,18 +28,23 @@ class Icone:
     ICONE_DECAL = 50
 
     def __init__(self, screen, title, couleur, x, y, app, *args):
-        self.screen_surf = screen
         self.title = title
         self.couleur = couleur
         self.app = app
         self.args = args
         self.icone_rect = pygame.Rect(x, y, self.ICONE_WIDTH, self.ICONE_HEIGHT)
         self.dest_rect = self.icone_rect
-        self.icone_surf = self.screen_surf.subsurface(self.icone_rect)
+        
+        self.update_screen(screen)
         self.icone_surf.fill(self.couleur)
         self.text_surf = SYS_FONT.render(title, False, (255, 255, 255))
         self.title_rect = pygame.Rect(x, Icone.ICONE_HEIGHT+y, Icone.ICONE_WIDTH, Icone.ICONE_HEIGHT)
         self.mouse_over = False
+
+    def update_screen(self, screen):
+        self.screen_surf = screen
+        self.icone_surf = self.screen_surf.subsurface(self.icone_rect)
+
 
     def move(self, dx=0, dy=0, liste_icones=None):
         if dx or dy:
@@ -254,6 +259,9 @@ class Window:
             self.max_surf.fill(self.theme_color((50, 120, 120), (120, 120, 120)))
             pygame.draw.rect(self.max_surf, self.theme_color((0, 0, 0), (60, 60, 60)), (10, 8, 11, 5), 1)
             pygame.draw.rect(self.max_surf, self.theme_color((0, 0, 0), (60, 60, 60)), (11, 9, 9, 3), 1)
+            if self.last_statut() == "MAXIMIZED":
+                pygame.draw.line(self.max_surf, self.theme_color((0, 0, 0), (60, 60, 60)), (8, 14), (18, 14), 1)
+                pygame.draw.line(self.max_surf, self.theme_color((0, 0, 0), (60, 60, 60)), (8, 10), (8, 14), 1)
         else:
             self.max_surf.fill((50, 120, 120))
             pygame.draw.rect(self.max_surf, (60, 60, 60), (10, 8, 11, 5), 1)
@@ -307,16 +315,19 @@ class Window:
             return None
 
     def restaure(self):
+        # print(f"restaure({self.statut})", flush=True)
         if self.last_statut() == "MAXIMIZED":
             self.statut.pop()
             self.set_size(*self.old_rect_size)
 
     def minimize(self):
+        # print(f"minimize({self.statut})", flush=True)
         if self.last_statut() != "MINIMIZED":
             self.statut.append("MINIMIZED")
             self.stop_channels()
 
     def maximize(self):
+        # print(f"maximize({self.statut})", flush=True)
         if self.last_statut() != "MAXIMIZED":
             self.old_rect_size = self.window.copy()
             self.statut.append("MAXIMIZED")
@@ -339,7 +350,8 @@ class Window:
             self.right_rect = self.right_rect.move(x, y)
 
     def resize(self, direction, dx=0, dy=0):
-        x, y, w, h = *self.window.topleft, *self.window.size
+        x, y = self.window.topleft
+        w, h = self.window.size
         if dy != 0 and "BOTTOM" in direction:
             if h+dy >= self.min_size[1]+self.border_size+self.top_rect.height:
                 h += dy
@@ -414,7 +426,26 @@ class OperatingSystem:
         self.screen = pygame.display.set_mode(disp_size, pygame.RESIZABLE, 24)
         self.set_size()
 
+    def update_screen(self):
+        self.set_size()
+        for icone in self.liste_icones:
+            icone.update_screen(self.screen_surf)
+
+        for tache in self.liste_taches:
+            tache.update_screen(self.barre_taches)
+        self.resize_taches()
+
+        for systray in self.liste_systray:
+            systray.update_screen(self.barre_taches)
+
+        screen_size = pygame.display.get_window_size()
+        for fenetre in self.liste_fenetres:
+            if fenetre.last_statut() == "MAXIMIZED":
+                fenetre.set_size(0, 0, screen_size[0], screen_size[1]-OperatingSystem.TASK_BAR_HEIGHT)
+
+
     def set_size(self):
+        # print(self.screen.get_size(), flush=True)
         self.width, self.height = self.screen.get_size() 
         self.last_position = (10, 10)
         self.screen_surf = self.screen.subsurface(0, 0, self.width, self.height-self.TASK_BAR_HEIGHT)
@@ -864,6 +895,7 @@ class OperatingSystem:
                 self.get_active_window().move(mouse_position[0]-mx, mouse_position[1]-my)
 
             elif not Mouse.left_button_down:
+                # Execution des methodes : mouse_enter, mouse_exit et mouse_move dans les instances
                 self.mouse_enter_leave(False)
                 for fenetre in reversed(self.liste_fenetres):
                     if fenetre.last_statut() != "MINIMIZED":
@@ -883,6 +915,10 @@ class OperatingSystem:
                                     fenetre.max_surf.fill((70, 190, 220))
                                     pygame.draw.rect(fenetre.max_surf, (0, 0, 0), (10, 8, 11, 5), 1)
                                     pygame.draw.rect(fenetre.max_surf, (0, 0, 0), (11, 9, 9, 3), 1)
+                                    if fenetre.last_statut() == "MAXIMIZED":
+                                        pygame.draw.line(fenetre.max_surf, (0, 0, 0), (8, 14), (18, 14), 1)
+                                        pygame.draw.line(fenetre.max_surf, (0, 0, 0), (8, 10), (8, 14), 1)
+
                                 elif fenetre.close_rect.collidepoint(mouse_position):
                                     Mouse.cursor_over = "CLOSE"
                                     fenetre.close_surf.fill((240, 90, 90))
@@ -984,13 +1020,16 @@ class Tache:
     TASK_TITLE_BORDER = 5
 
     def __init__(self, screen, title, couleur, x, window):
-        self.screen_surf = screen
+        self.update_screen(screen)
         self.title = title
         self.couleur = (50, 50, 50)
         self.window = window
         self.mouse_over = False
         self.set_pos(x)
         self.set_title(title)
+
+    def update_screen(self, screen):
+        self.screen_surf = screen
 
     def set_pos(self, x):
         self.posx = x
@@ -1054,13 +1093,11 @@ def run():
             elif event.type in (pygame.AUDIO_S16, pygame.WINDOWENTER, pygame.ACTIVEEVENT):
                 my_os.mouse_enter_leave()
 
-            elif event.type in (pygame.WINDOWMAXIMIZED, pygame.WINDOWRESTORED):
-                my_os.close_all()
-                my_os.close_all_icones()
-                my_os.close_all_systray_apps()
-                my_os.set_size()
-                my_os.get_applications()
-                my_os.get_systray_apps()
+            elif event.type in (
+                    pygame.WINDOWMAXIMIZED, 
+                    pygame.WINDOWRESTORED,
+                    pygame.VIDEORESIZE):
+                my_os.update_screen()
 
             elif event.type == pygame.QUIT:
                 my_os.running = False

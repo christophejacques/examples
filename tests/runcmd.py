@@ -446,7 +446,7 @@ for index in range(1, 8):
         case 3:
             CommandLine("(echo Hello World || echo End this)").run().to_screen()
         case 4:
-            CommandLine("wc -l 2> /dev/null && echo Fini").run().to_screen()
+            CommandLine("echo ligne | wc -l 2> /dev/null && echo Fini").run().to_screen()
         case 5:
             CommandLine("Echo un deux && ((Echo trois quatre | grep trois) | grep quatre) && echo cinq six").run().to_screen()
         case 6:

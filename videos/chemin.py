@@ -120,3 +120,4 @@ if __name__ == "__main__":
     print(directory.get_drive())
     directory.to_root()
     print(list(directory.scandir("FILE")))
+    

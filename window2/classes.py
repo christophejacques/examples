@@ -20,6 +20,10 @@ class SysTray(metaclass=ABCMeta):
         pass
 
     @abstractmethod
+    def update_screen(self, screen):
+        pass
+
+    @abstractmethod
     def set_posx(self, x):
         pass
 
@@ -137,15 +141,18 @@ class SystemDateTime(SysTray):
     DEFAULT_CONFIG = ("Date Time", (50, 200, 50))
 
     def __init__(self, screen, couleur, x):
-        self.screen = screen
+        self.update_screen(screen)
         self.couleur = (100, 100, 100)
         self.posx = x
-        self.width = screen.get_size()[0]
         # self.SYS_FONT = pygame.font.SysFont("comicsans", 12)
         self.SYS_FONT = pygame.font.SysFont("courier", 16)
         self.systray_width = self.SYS_FONT.render(" 99/99/9999 99:99:99 ", False, (255, 255, 255)).get_size()[0]
         self.etat = 1
         self.format = "%d/%m/%Y %H:%M:%S"
+
+    def update_screen(self, screen):
+        self.screen = screen
+        self.width = screen.get_size()[0]
 
     def set_posx(self, x):
         self.posx = x
@@ -180,13 +187,16 @@ class SoundView(SysTray):
     DEFAULT_CONFIG = ("Sound", (50, 200, 50))
 
     def __init__(self, screen, couleur, x):
-        self.screen = screen
+        self.update_screen(screen)
         self.couleur = (100, 100, 100)
         self.posx = x
-        self.width = screen.get_size()[0]
         self.SYS_FONT = pygame.font.SysFont("comicsans", 12)
         self.systray_width = 25
         self.etat = 1
+
+    def update_screen(self, screen):
+        self.screen = screen
+        self.width = screen.get_size()[0]
 
     def set_posx(self, x):
         self.posx = x
