@@ -10,8 +10,6 @@ multi: list[str] = ["o ", "Ko", "Mo", "Go", "To", "Po", "??"]
 hostname = "perso.numericable.com"
 username = "cjacques"
 
-local_file = "mon_fichier.txt"
-
 
 def fprint(*args, **kwargs):
     print(*args, flush=True, **kwargs)
@@ -24,6 +22,7 @@ def int2human(size_str: str) -> str:
 def readable_date(date_param: str) -> str:
     return (date_param[:4] + "-" + date_param[4:6] + "-" + date_param[6:8] + " " + 
         date_param[8:10] + ":" + date_param[10:12] + ":" + date_param[12:])
+
 
 class MyFTP:
 
@@ -43,7 +42,6 @@ class MyFTP:
         self.datem: list = list()
 
     def __enter__(self, *args):
-        # fprint("enter:", args)
         return self
 
     def __exit__(self, param1, param2, traceback):
@@ -54,8 +52,7 @@ class MyFTP:
     def scan(self, chemin: str, level: int=0) -> None:
         rep: str
 
-        self.cd(chemin)
-        self.getliste()
+        self.getliste(chemin)
 
         liste_dirs: list = self.dirs.copy()
         while liste_dirs:
@@ -67,11 +64,13 @@ class MyFTP:
         if level == 0:
             self.cd(chemin)
 
-    def getliste(self):
+    def getliste(self, remote_path: str="/"):
         self.dirs.clear()
         self.files.clear()
         self.sizes.clear()
         self.datem.clear()
+
+        self.cd(remote_path)
 
         fprint("List content:")
         max_filename_size: int = 0
