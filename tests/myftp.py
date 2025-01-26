@@ -1,5 +1,3 @@
-import sys
-sys.path.insert(0, ".")
 import os
 import math
 from ftplib import FTP
@@ -21,7 +19,7 @@ def fprint(*args, **kwargs):
 def int2human(size_str: str) -> str:
     size: int = int(size_str)
     logarithme: int = int(math.log2(size) // 10)
-    return f"{size / 1024 ** logarithme:.2f} {multi[logarithme]}"
+    return f"{size / 1024 ** logarithme:,.2f} {multi[logarithme]}"
 
 def readable_date(date_param: str) -> str:
     return (date_param[:4] + "-" + date_param[4:6] + "-" + date_param[6:8] + " " + 
@@ -52,6 +50,22 @@ class MyFTP:
         if param1:
             fprint("exit:", param2)
         self.close()
+
+    def scan(self, chemin: str, level: int=0) -> None:
+        rep: str
+
+        self.cd(chemin)
+        self.getliste()
+
+        liste_dirs: list = self.dirs.copy()
+        while liste_dirs:
+            rep = liste_dirs.pop(0)
+            level += 1
+            self.scan(f"{chemin}/{rep}", level)
+            level -= 1
+
+        if level == 0:
+            self.cd(chemin)
 
     def getliste(self):
         self.dirs.clear()
@@ -151,12 +165,5 @@ if __name__ != "__main__":
     exit()
     
 with MyFTP(hostname, username, password) as my_ftp:
-    fprint("Current dir:", my_ftp.pwd())
-    my_ftp.cd("/MCJ")
-    # my_ftp.md("shapez")
-    my_ftp.getliste()
-
-    for rep in my_ftp.dirs.copy():
-        fprint()
-        my_ftp.cd(f"/MCJ/{rep}")
-        my_ftp.getliste()
+    # my_ftp.getliste()
+    my_ftp.scan("/ASP")
