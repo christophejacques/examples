@@ -11,7 +11,7 @@ os.environ['SDL_VIDEO_WINDOW_POS'] = "5,30"
 pg.init()
 
 # Variables globales
-nb_etoiles: int = 1000
+nb_etoiles: int = 5000
 ecartement: int = 8
 acceleration: int = -4
 distanceMaxZ: int = 20
@@ -46,16 +46,26 @@ def get_radius(distance) -> int:
 
 def get_color(distance) -> tuple[int, int, int]:
     colorG = int(distance[3] * (255-(distance[2]*8.5)))
+    if colorG < 0 or colorG > 255:
+        colorG = 0
     return (0, colorG, colorG) 
 
 
 dt: float = 0.0
 tick: float
-
+dirX = 2
+dirY = 2
 while running:
     tick = perf_counter()
         
     screen.fill((0, 0, 0))
+    centre += (dirX, dirY)
+    
+    if centre[0] < 200 or centre[0] > 1700:
+        dirX *= -1
+    if centre[1] < 100 or centre[1] > 900:
+        dirY *= -1
+
     for coord in coords:
         affich = coord.copy()
         affich[:2] /= coord[2] / ecartement

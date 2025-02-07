@@ -37,9 +37,7 @@ class MyFTP:
             fprint(welcome)
 
         self.dirs: list = list()
-        self.files: list = list()
-        self.sizes: list = list()
-        self.datem: list = list()
+        self.fichiers: dict = dict()
 
     def __enter__(self, *args):
         return self
@@ -66,9 +64,7 @@ class MyFTP:
 
     def getliste(self, remote_path: str="/"):
         self.dirs.clear()
-        self.files.clear()
-        self.sizes.clear()
-        self.datem.clear()
+        self.fichiers.clear()
 
         self.cd(remote_path)
 
@@ -80,17 +76,20 @@ class MyFTP:
             match file_type.get("type", None):
                 case "dir":
                     self.dirs.append(file_name)
+
                 case "file":
                     if len(file_name) > max_filename_size:
                         max_filename_size = len(file_name)
-                    self.files.append(file_name)
-                    self.sizes.append(f"{int2human(file_type.get("size", 0)):>12}")
-                    self.datem.append(file_type.get("modify", ""))
+
+                    self.fichiers[file_name] = {}
+                    self.fichiers[file_name]["size"] = f"{int2human(file_type.get("size", 0)):>12}"
+                    self.fichiers[file_name]["date"] = file_type.get("modify", "")
 
         fprint("Dirs:", self.dirs)
         fprint("Files:")
-        for index, file_name in enumerate(self.files):
-            print(f"- {readable_date(self.datem[index])}  {file_name:{max_filename_size}} {self.sizes[index]}")
+        for fichier in sorted(self.fichiers):
+            fprint(f"- {readable_date(self.fichiers[fichier]["date"])}", end=" ")
+            fprint(f"- {self.fichiers[fichier]["size"]} {fichier}")
 
     def close(self):
         if self.ftp:
@@ -164,5 +163,4 @@ if __name__ != "__main__":
     exit()
     
 with MyFTP(hostname, username, password) as my_ftp:
-    # my_ftp.getliste()
     my_ftp.scan("/ASP")
