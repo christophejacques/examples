@@ -15,8 +15,7 @@ class GameOfLife(Application):
     olds = 0
     compteur = 0
 
-    def __init__(self, parent, screen, args):
-        self.parent = parent
+    def __init__(self, screen, args):
         self.grid = []
         self.resize(screen)
         self.action = ""
@@ -57,17 +56,19 @@ class GameOfLife(Application):
                     newgrid[i][j] = 0
         self.grid = newgrid.copy()
 
+    def keyreleased(self, event):
+        self.touche = self.keys.get_key()
+        if self.touche == 27:
+            self.action = "QUIT"
+
+        elif self.touche in (self.keys.K_KP_ENTER, self.keys.K_RETURN):
+            self.initialisation(self.grid)
+
+        elif self.touche == self.keys.K_SPACE:
+            self.updating = not self.updating
+
     def update(self):
-        if self.parent and self.parent.keypressed():
-            self.touche = self.parent.get_key()
-            if self.touche == 27:
-                self.action = "QUIT"
-
-            elif self.touche in (self.parent.keys.K_KP_ENTER, self.parent.keys.K_RETURN):
-                self.initialisation(self.grid)
-
-            elif self.touche == self.parent.keys.K_SPACE:
-                self.updating = not self.updating
+        pass
 
     def mouse_button_down(self, mouseX, mouseY, button):
         self.mouse_button_state = button
@@ -106,7 +107,8 @@ class GameOfLife(Application):
                     color = (200, 200, 200)
                 else:
                     color = (0, 50, 50)
-                self.parent.tools.rect(color, (j*self.SIZE, i*self.SIZE, self.SIZE, self.SIZE))
+                self.tools.rect(color, (j*self.SIZE, i*self.SIZE, self.SIZE, self.SIZE))
+                
         self.update()
         if self.mouse_button_state == 0 and self.updating:
             self.new_frame()

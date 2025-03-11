@@ -7,6 +7,51 @@ from os import path
 from datetime import datetime
 
 
+class Sound:
+
+    def load_sound(self, fichier, volume): ...
+    def play_sound(self, index, callback=None): ...
+    def stop_channels(self): ...
+    def remove_unused_channels(self): ...
+
+
+class Keys:
+    def __init__(self, window):
+        for attrib in filter(lambda a: a[:2] == "K_", dir(pygame)):
+            setattr(self, attrib, getattr(pygame, attrib))
+
+        self.get_key = window.get_key
+        self.view_key = window.view_key
+        self.clear_key_buffer = window.clear_key_buffer            
+
+
+class Tools:
+
+    def __init__(self, screen):
+        self.screen = screen
+
+    def font(self, police, taille):
+        return pygame.font.SysFont(police, taille)
+
+    def line(self, couleur, *coords):
+        pygame.draw.line(self.screen, couleur, *coords)
+
+    def Rect(self, *coords):
+        return pygame.Rect(*coords)
+
+    def rect(self, couleur, *coords):
+        pygame.draw.rect(self.screen, couleur, *coords)
+
+    def circle(self, couleur, *coords):
+        pygame.draw.circle(self.screen, couleur, *coords)
+
+    def pixels3d(self):
+        return pygame.surfarray.pixels3d(self.screen)
+
+    def get_ticks(self):
+        return pygame.time.get_ticks()
+
+
 class SysTray(metaclass=ABCMeta):
 
     PRIORITY = 99
@@ -49,12 +94,15 @@ class SysTray(metaclass=ABCMeta):
 class Application(metaclass=ABCMeta):
     MIN_SIZE = (200, 100)
     title = ""
+    tools: Tools
+    sound: Sound
+    keys: Keys
 
     WINDOW_PROPERTIES = ["RESIZABLE"]
     DEFAULT_CONFIG: tuple = ("?", (0, 0, 0))
 
     @abstractmethod
-    def __init__(self, parent, screen, *args):
+    def __init__(self, screen, *args):
         pass
 
     def post_init(self):
@@ -69,6 +117,17 @@ class Application(metaclass=ABCMeta):
 
     def get_action(self):
         return None
+
+    def keypressed(self, event):
+        pass
+
+    def keyreleased(self, event):
+        touche = self.keys.get_key()
+        if touche == 27:
+            self.action = "QUIT"
+
+    def load_sound(self, fichier, volume):
+        print("version initiale")
 
     def mouse_enter(self, mouseX, mouseY):
         pass
@@ -85,52 +144,14 @@ class Application(metaclass=ABCMeta):
     def mouse_button_up(self, mouseX, mouseY, button):
         pass
 
-    @abstractmethod
-    def update(self):
-        if self.parent and self.parent.keypressed():
-            self.touche = self.parent.get_key()
-            if self.touche == 27:
-                self.action = "QUIT"
-
-    @abstractmethod
-    def draw(self):
+    def set_title(self):
         pass
 
-
-class NoApplication(Application):
-
-    DEFAULT_CONFIG = ("No Application", (80, 80, 80))
-
-    def __init__(self, parent, screen, *args):
-        self.parent = parent
-        if self.parent:
-            self.title = self.parent.title
-        self.touche = ""
-        self.action = ""
-
-    def resize(self, screen):
-        self.parent.set_title(self.title + " Resize({}x{})".format(*screen.get_size()))
-
-    def mouse_enter(self, mouseX, mouseY):
-        self.parent.set_title(self.title + " Mouse_Enter()")
-
-    def mouse_exit(self):
-        self.parent.set_title(self.title + " Mouse_Exit()")
-
-    def mouse_move(self, mouseX, mouseY):
-        self.parent.set_title(self.title + f" Mouse_Move({mouseX}, {mouseY})")
-        if mouseX > 200 and mouseY > 200:
-            a = 1 / 0
-
-    def mouse_button_up(self, mouseX, mouseY, button):
-        self.parent.set_title(self.title + f" Mouse_button_up({button})")
-
-    def get_action(self):
-        return self.action
-
+    @abstractmethod
     def update(self):
-        super().update()
+        pass
 
+    @abstractmethod
     def draw(self):
         pass
 

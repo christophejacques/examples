@@ -10,31 +10,26 @@ class TicTacToe(Application):
     WINDOW_PROPERTIES = ["NO_MAX"]
     DEFAULT_CONFIG = ("Tic Tac Toe", Colors.DARK_BLUE)
 
-    def __init__(self, parent, screen, args):
-        self.set_parent(parent)
-        print(f"{parent=}", flush=True)
-        self.resize(screen)
-        self.FONT = self.parent.tools.font("comicsans", 100)
-
-        self.nombre = self.screen.get_size()[0]//200 
+    def __init__(self, screen, args):
+        self.screen = screen
+        self.nombre = screen.get_size()[0]//200 
         self.action = ""
         self.grid = []
         self.tour = "X"
         self.initialisation()
 
     def post_init(self):
+        self.resize(self.screen)
+        self.FONT = self.tools.font("comicsans", 100)
+
         w, h = self.screen.get_size()
         longueur = self.MIN_SIZE[0]
-        if self.parent:
-            self.parent.resize("BOTTOM RIGHT", -(w-longueur), -(h-longueur))
+        self.win_resize("BOTTOM RIGHT", -(w-longueur), -(h-longueur))
 
     def initialisation(self):
         self.grid.clear()
         for _ in range(3):
             self.grid.append(["" for _ in range(3)])
-
-    def set_parent(self, parent):
-        self.parent = parent
 
     def resize(self, screen):
         self.screen = screen
@@ -145,28 +140,30 @@ class TicTacToe(Application):
 
         return move
 
-    def update(self):
-        if self.parent and self.parent.keypressed():
-            self.touche = self.parent.get_key()
-            if self.touche == self.parent.keys.K_ESCAPE:
-                self.action = "QUIT"
-            elif self.touche == self.parent.keys.K_SPACE:
+    def keyreleased(self, event):
+        self.touche = self.keys.get_key()
+        if self.touche == self.keys.K_ESCAPE:
+            self.action = "QUIT"
+        elif self.touche == self.keys.K_SPACE:
+            self.initialisation()
+        elif self.touche in (self.keys.K_KP_ENTER, self.keys.K_RETURN):
+            if self.isResolved(self.grid, "X") + self.isResolved(self.grid, "O") + self.isTie(self.grid):
                 self.initialisation()
-            elif self.touche in (self.parent.keys.K_KP_ENTER, self.parent.keys.K_RETURN):
-                if self.isResolved(self.grid, "X") + self.isResolved(self.grid, "O") + self.isTie(self.grid):
-                    self.initialisation()
-                else:
-                    x, y = self.ia(self.tour)
-                    self.mouse_button_up(10+x*self.dx, 10+y*self.dy, 1)
+            else:
+                x, y = self.ia(self.tour)
+                self.mouse_button_up(10+x*self.dx, 10+y*self.dy, 1)
+
+    def update(self):
+        pass
 
     def draw(self):
         self.screen.fill(Colors.BLACK)
 
-        self.parent.tools.line(Colors.WHITE, (self.width // 3, 0), (self.width // 3, self.height), 2)
-        self.parent.tools.line(Colors.WHITE, (2*self.width // 3, 0), (2*self.width // 3, self.height), 2)
-        self.parent.tools.line(Colors.WHITE, (0, self.height // 3), (self.width, self.height // 3), 2)
-        self.parent.tools.line(Colors.WHITE, (0, 2*self.height // 3), (self.width, 2*self.height // 3), 2)
-        self.parent.tools.rect(Colors.WHITE, (0, 0, self.width-1, self.height-1), 2)
+        self.tools.line(Colors.WHITE, (self.width // 3, 0), (self.width // 3, self.height), 2)
+        self.tools.line(Colors.WHITE, (2*self.width // 3, 0), (2*self.width // 3, self.height), 2)
+        self.tools.line(Colors.WHITE, (0, self.height // 3), (self.width, self.height // 3), 2)
+        self.tools.line(Colors.WHITE, (0, 2*self.height // 3), (self.width, 2*self.height // 3), 2)
+        self.tools.rect(Colors.WHITE, (0, 0, self.width-1, self.height-1), 2)
 
         sol = self.isResolved(self.grid, "X") + self.isResolved(self.grid, "O") + "  "
         sol = sol if sol.strip() != "" else self.isTie(self.grid) + "  "

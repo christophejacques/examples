@@ -42,18 +42,16 @@ class Demineur(Application):
     x = 0
     y = 0
 
-    def __init__(self, parent, screen, *args):
+    def __init__(self, screen, *args):
         self.grid = []
-        self.parent = parent
         self.screen = screen
-        self.SYS_FONT = self.parent.tools.font("comicsans", 30)
         self.cursor_cell_over = None
 
     def post_init(self):
+        self.SYS_FONT = self.tools.font("comicsans", 30)
         w, h = self.screen.get_size()
         longueur = min(w, h)//Cell.size * Cell.size
-        if self.parent:
-            self.parent.resize("BOTTOM RIGHT", -(w-longueur), -(h-longueur))
+        self.win_resize("BOTTOM RIGHT", -(w-longueur), -(h-longueur))
 
         # self.resize(self.screen)
 
@@ -62,11 +60,11 @@ class Demineur(Application):
         self.initialize()
 
     def initialize(self):
+        print("initialize", self.screen, flush=True)
         self.action = ""
         # initialisation du tableau 2D
         self.TAILLE = min(self.screen.get_size())//50
-        if self.parent:
-            self.parent.set_title(f"Demineur taille: {self.TAILLE}")
+        self.set_title(f"Demineur taille: {self.TAILLE}")
             
         self.grid.clear()
         for row in range(self.TAILLE):
@@ -111,7 +109,7 @@ class Demineur(Application):
             for col in range(self.TAILLE):
                 if not (self.grid[col][row].marked and self.grid[col][row].bee or self.grid[col][row].revealed):
                     return False
-        self.parent.set_title("Demineur terminé")
+        self.set_title("Demineur terminé")
         return True
 
     def reveal_zeros(self, x, y):
@@ -133,13 +131,12 @@ class Demineur(Application):
         row = mouseY // 50
         if 0 <= col < self.TAILLE and 0 <= row < self.TAILLE:
             # lrect = pygame.Rect(*self.grid[col][row].draw_rect())
-            lrect = self.parent.tools.Rect(*self.grid[col][row].draw_rect())
+            lrect = self.tools.Rect(*self.grid[col][row].draw_rect())
             self.cursor_cell_over = lrect
         else:
             self.cursor_cell_over = None
 
     def mouse_enter(self, mouseX, mouseY):
-        # print("mouse_enter()")
         self.mouse_move(mouseX, mouseY)
 
     def mouse_exit(self):
@@ -164,19 +161,19 @@ class Demineur(Application):
             if self.grid_resolved():
                 self.show_all()
 
-    def update(self):
-        if not self.parent or not self.parent.keypressed():
-            return 
-
-        self.touche = self.parent.get_key()
-        if self.touche == self.parent.keys.K_ESCAPE:
+    def keyreleased(self, event):
+        self.touche = self.keys.get_key()
+        if self.touche == self.keys.K_ESCAPE:
             self.action = "QUIT"
-        elif self.touche == self.parent.keys.K_SPACE:
+        elif self.touche == self.keys.K_SPACE:
             self.initialize()
-        elif self.touche == self.parent.keys.K_F1:
+        elif self.touche == self.keys.K_F1:
             self.show_all()
         else:
             print("keyCode:", self.touche)
+
+    def update(self): 
+        pass
 
     def draw(self):
         self.screen.fill(Colors.BLACK)
@@ -189,21 +186,21 @@ class Demineur(Application):
                         else:
                             couleur_fond = (200, 200, 200)
                         # pygame.draw.rect(self.screen, couleur_fond, self.grid[col][row].draw_square())
-                        self.parent.tools.rect(couleur_fond, self.grid[col][row].draw_square())
+                        self.tools.rect(couleur_fond, self.grid[col][row].draw_square())
 
                         if self.grid[col][row].marked:
                             couleur_fond = (0, 250, 0)
                         else:
                             couleur_fond = (250, 0, 0)
                         # pygame.draw.circle(self.screen, couleur_fond, *self.grid[col][row].draw_circle())
-                        self.parent.tools.circle(couleur_fond, *self.grid[col][row].draw_circle())
+                        self.tools.circle(couleur_fond, *self.grid[col][row].draw_circle())
                     else:
                         if self.grid[col][row].marked:
                             couleur_fond = self.MARKED
                         else:
                             couleur_fond = (200, 200, 200)
                         # pygame.draw.rect(self.screen, couleur_fond, self.grid[col][row].draw_square())
-                        self.parent.tools.rect(couleur_fond, self.grid[col][row].draw_square())
+                        self.tools.rect(couleur_fond, self.grid[col][row].draw_square())
 
                         if self.grid[col][row].marked:
                             self.graph_print(col, row, Colors.RED)
@@ -215,11 +212,11 @@ class Demineur(Application):
                     else:
                         couleur_fond = (10, 10, 10)
                     # pygame.draw.rect(self.screen, couleur_fond, self.grid[col][row].draw_square())
-                    self.parent.tools.rect(couleur_fond, self.grid[col][row].draw_square())
+                    self.tools.rect(couleur_fond, self.grid[col][row].draw_square())
 
         if self.cursor_cell_over:
             # pygame.draw.rect(self.screen, (0, 255, 0), (*self.cursor_cell_over.topleft, self.cursor_cell_over.width-2, self.cursor_cell_over.width-2), 4)
-            self.parent.tools.rect((0, 255, 0), (*self.cursor_cell_over.topleft, self.cursor_cell_over.width-2, self.cursor_cell_over.width-2), 4)
+            self.tools.rect((0, 255, 0), (*self.cursor_cell_over.topleft, self.cursor_cell_over.width-2, self.cursor_cell_over.width-2), 4)
 
 
 if __name__ == '__main__':

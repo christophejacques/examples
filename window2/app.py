@@ -5,7 +5,7 @@ from audio import Audio
 from mouse import Mouse
 from keyboard import Keyboard
 from colors import Colors
-from classes import get_all_classes
+from classes import Keys, Tools, Sound, get_all_classes
 
 
 def get_pygame_const_name(index):
@@ -88,39 +88,6 @@ class Icone:
         self.screen_surf.blit(self.text_surf, self.title_rect)
 
 
-class Keys:
-    def __init__(self):
-        for attrib in filter(lambda a: a[:2] == "K_", dir(pygame)):
-            setattr(self, attrib, getattr(pygame, attrib))
-
-
-class Tools:
-
-    def __init__(self, screen):
-        self.screen = screen
-
-    def font(self, police, taille):
-        return pygame.font.SysFont(police, taille)
-
-    def line(self, couleur, *coords):
-        pygame.draw.line(self.screen, couleur, *coords)
-
-    def Rect(self, *coords):
-        return pygame.Rect(*coords)
-
-    def rect(self, couleur, *coords):
-        pygame.draw.rect(self.screen, couleur, *coords)
-
-    def circle(self, couleur, *coords):
-        pygame.draw.circle(self.screen, couleur, *coords)
-
-    def pixels3d(self):
-        return pygame.surfarray.pixels3d(self.screen)
-
-    def get_ticks(self):
-        return pygame.time.get_ticks()
-
-
 class Window:
 
     ICONE_WIDTH = 30
@@ -155,9 +122,20 @@ class Window:
         self.set_title(text)
         self.sound_index = 0
         self.sounds = {}
-        self.keys = Keys()
         try:
-            self.instance = self.app(self, self.window_draw_surf, args)
+            self.instance = self.app(self.window_draw_surf, args)
+
+            self.instance.set_title = self.set_title
+            self.instance.win_resize = self.resize
+            self.instance.tools = Tools(self.window_draw_surf)
+            self.instance.keys = Keys(self)
+
+            self.instance.sound = Sound()
+            self.instance.sound.load_sound = self.load_sound
+            self.instance.sound.play_sound = self.play_sound
+            self.instance.sound.stop_channels = self.stop_channels
+            self.instance.sound.remove_unused_channels = self.remove_unused_channels        
+
             self.instance.post_init()
 
         except Exception as e:
@@ -174,7 +152,7 @@ class Window:
             pygame.Rect(self.border_size, self.ICONE_HEIGHT, w-2*self.border_size, h-self.ICONE_HEIGHT-self.border_size))
         self.window_draw_surf.fill(self.colour)
 
-        self.tools = Tools(self.window_draw_surf)
+        # self.tools = Tools(self.window_draw_surf)
 
         self.top_surf = self.window_surf.subsurface(pygame.Rect(0, 0, w, self.ICONE_HEIGHT))
         self.min_surf = self.top_surf.subsurface(pygame.Rect(w-3*self.ICONE_WIDTH-self.border_size, 0, self.ICONE_WIDTH, self.ICONE_HEIGHT))
@@ -204,6 +182,7 @@ class Window:
 
         if update_app and not self.on_error:
             try:
+                self.instance.tools = Tools(self.window_draw_surf)
                 self.instance.resize(self.window_draw_surf)
                 
             except Exception as e:
@@ -211,6 +190,22 @@ class Window:
                 print("Window.set_size() Error:", e)
 
         self.set_surface_color()
+
+    def resize(self, direction, dx=0, dy=0):
+        x, y = self.window.topleft
+        w, h = self.window.size
+        if dy != 0 and "BOTTOM" in direction:
+            if h+dy >= self.min_size[1]+self.border_size+self.top_rect.height:
+                h += dy
+        if dx != 0 and "LEFT" in direction:
+            if w-dx >= self.min_size[0]+2*self.border_size:
+                x += dx
+                w -= dx
+        elif dx != 0 and "RIGHT" in direction:
+            if w+dx >= self.min_size[0]+2*self.border_size:
+                w += dx
+        
+        self.set_size(x, y, w, h)
 
     def search_for_in(self, value, liste):
         for val in liste:
@@ -295,12 +290,16 @@ class Window:
         else:
             return False
 
+    def keyreleased(self, event):
+        pass
+
     def clear_key_buffer(self):
         if self.active:
             return Keyboard.clear_buffer()
 
     def get_key(self):
         if self.active:
+            print(f"window.get_key({self.title})")
             return Keyboard.get_key()
         else:
             return None
@@ -348,22 +347,6 @@ class Window:
             self.bottom_rect = self.bottom_rect.move(x, y)
             self.left_rect = self.left_rect.move(x, y)
             self.right_rect = self.right_rect.move(x, y)
-
-    def resize(self, direction, dx=0, dy=0):
-        x, y = self.window.topleft
-        w, h = self.window.size
-        if dy != 0 and "BOTTOM" in direction:
-            if h+dy >= self.min_size[1]+self.border_size+self.top_rect.height:
-                h += dy
-        if dx != 0 and "LEFT" in direction:
-            if w-dx >= self.min_size[0]+2*self.border_size:
-                x += dx
-                w -= dx
-        elif dx != 0 and "RIGHT" in direction:
-            if w+dx >= self.min_size[0]+2*self.border_size:
-                w += dx
-        # print(dx, dy)
-        self.set_size(x, y, w, h)
 
     def update(self):
         if not self.on_error and self.last_statut() != "MINIMIZED":
@@ -683,6 +666,8 @@ class OperatingSystem:
                 self.close(fenetre)
 
     def check_keyboard_events(self):
+        return
+
         if not Keyboard.keypressed():
             return
 
@@ -695,6 +680,7 @@ class OperatingSystem:
                 event_key = Keyboard.view_last_key()
             else:
                 event_key = Keyboard.get_key()
+
             if event_key == pygame.K_k:
                 self.close(self.get_active_window())
     
@@ -704,6 +690,24 @@ class OperatingSystem:
             elif event_key == pygame.K_SPACE:
                 if not self.get_active_window():
                     self.show_all_windows()
+
+    def keypressed(self, event):
+        fenetre = self.get_active_window()
+        if fenetre:
+            fenetre.instance.keypressed(event)
+
+    def keyreleased(self, event):
+        print(f"os.keyreleased({event.key})", flush=True)
+        fenetre = self.get_active_window()
+        if event.key == pygame.K_ESCAPE and not fenetre:
+            self.running = False
+
+        elif event.key == pygame.K_TAB:
+            Keyboard.get_key()
+            self.activate_next_window()
+
+        elif fenetre:
+            fenetre.instance.keyreleased(event)
 
     def update(self):
         # diminution de 33.33% de la puissance allouee aux fenetres non actives
@@ -1087,8 +1091,12 @@ def run():
             elif event.type == pygame.MOUSEBUTTONUP:
                 my_os.mouse_button_up(event.pos, event.button)
 
+            elif event.type == pygame.KEYDOWN:
+                my_os.keypressed(event)
+
             elif event.type == pygame.KEYUP:
                 Keyboard.add_key_to_buffer(event.key)
+                my_os.keyreleased(event)
 
             elif event.type in (pygame.AUDIO_S16, pygame.WINDOWENTER, pygame.ACTIVEEVENT):
                 my_os.mouse_enter_leave()

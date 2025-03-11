@@ -207,8 +207,7 @@ class RayCasting(Application):
 
     MIN_SIZE = (400, 300)
 
-    def __init__(self, parent, screen, args):
-        self.parent = parent
+    def __init__(self, screen, args):
         self.screen = screen
         self.color = (20, 10, 10)
         self.action = ""
@@ -251,6 +250,14 @@ class RayCasting(Application):
     def get_action(self):
         return self.action
 
+    def keyreleased(self, event):
+        # return  # pour deboguage
+        self.touche = self.keys.get_key()
+        if self.touche == self.keys.K_ESCAPE:
+            self.action = "QUIT"
+        elif self.touche == self.keys.K_SPACE:
+            self.set_zone(self.size)
+
     def update(self):
         for cercle in self.cercles:
             cercle.update()
@@ -262,28 +269,20 @@ class RayCasting(Application):
                 rayon.cast(self.walls)
                 rayon.cast_to_cercle(self.cercles)
 
-        # return  # pour deboguage
-        if self.parent and self.parent.keypressed():
-            self.touche = self.parent.get_key()
-            if self.touche == self.parent.keys.K_ESCAPE:
-                self.action = "QUIT"
-            elif self.touche == self.parent.keys.K_SPACE:
-                self.set_zone(self.size)
-
     def draw(self):
         self.screen.fill(self.color)
         for source in self.sources:
             for rayon in source.rayons:
                 couleur = source.color
                 if rayon.longueur:
-                    self.parent.tools.line(couleur, source.to_point(), rayon.to_dest())
+                    self.tools.line(couleur, source.to_point(), rayon.to_dest())
 
         for wall in self.walls:
-            self.parent.tools.line( (10, 200, 30), *wall.to_line())
+            self.tools.line( (10, 200, 30), *wall.to_line())
 
         for cercle in self.cercles:
-            self.parent.tools.circle(self.color, *cercle.to_dest())
-            self.parent.tools.circle((10, 200, 30), *cercle.to_dest(), 1)
+            self.tools.circle(self.color, *cercle.to_dest())
+            self.tools.circle((10, 200, 30), *cercle.to_dest(), 1)
 
 
 if __name__ == '__main__':

@@ -4,6 +4,7 @@ import traceback
 from mouse import Mouse
 from audio import Audio
 from keyboard import Keyboard
+from classes import Tools, Keys, Sound
 
 
 
@@ -16,39 +17,6 @@ def get_pygame_const_name(index):
 
 def fprint(*args, **kwargs):
     print(*args, **kwargs, flush=True)
-
-
-class Keys:
-    def __init__(self):
-        for attrib in filter(lambda a: a[:2] == "K_", dir(pygame)):
-            setattr(self, attrib, getattr(pygame, attrib))
-
-
-class Tools:
-
-    def __init__(self, screen):
-        self.screen = screen
-
-    def font(self, police, taille):
-        return pygame.font.SysFont(police, taille)
-
-    def line(self, couleur, *coords):
-        pygame.draw.line(self.screen, couleur, *coords)
-
-    def Rect(self, *coords):
-        return pygame.Rect(*coords)
-
-    def rect(self, couleur, *coords):
-        pygame.draw.rect(self.screen, couleur, *coords)
-
-    def circle(self, couleur, *coords):
-        pygame.draw.circle(self.screen, couleur, *coords)
-
-    def pixels3d(self):
-        return pygame.surfarray.pixels3d(self.screen)
-
-    def get_ticks(self):
-        return pygame.time.get_ticks()
 
 
 class Window:
@@ -87,10 +55,21 @@ class Window:
         self.sound_index = 0
         self.sounds = {}
         self.tools = Tools(full_screen)
-        self.keys = Keys()
 
         try:
-            self.instance = self.app(self, self.window_draw_surf, args)
+            self.instance = self.app(self.window_draw_surf, args)
+
+            self.instance.set_title = self.set_title
+            self.instance.win_resize = self.resize
+            self.instance.tools = self.tools
+            self.instance.keys = Keys(self)
+            
+            self.instance.sound = Sound()
+            self.instance.sound.load_sound = self.load_sound
+            self.instance.sound.play_sound = self.play_sound
+            self.instance.sound.stop_channels = self.stop_channels
+            self.instance.sound.remove_unused_channels = self.remove_unused_channels        
+
             self.instance.post_init()
 
         except Exception as e:
@@ -118,7 +97,6 @@ class Window:
         self.bottom_rect = self.window.clip((x, y+h-self.border_size), (w, self.border_size))
         self.left_rect = self.window.clip((x, y, self.border_size, h))
         self.right_rect = self.window.clip((x+w-self.border_size, y, self.border_size, h))
-
 
     def search_for_in(self, value, liste):
         for val in liste:
@@ -208,7 +186,6 @@ class Window:
         pass
 
     def resize(self, direction, dx=0, dy=0):
-        # self.app.screen = pygame.display.set_mode((1000, 600), pygame.RESIZABLE) 
         self.instance.resize(self.instance.screen)
 
     def update(self):
@@ -244,10 +221,14 @@ def run(application):
         for event in pygame.event.get():
 
             if event.type == pygame.KEYDOWN:
-                pass
+                instance.keypressed(event)
 
             elif event.type == pygame.KEYUP:
                 Keyboard.add_key_to_buffer(event.key)
+                instance.keyreleased(event)
+
+            elif event.type == pygame.TEXTINPUT:
+                pass
 
             elif event.type == pygame.KMOD_LGUI:
                 Mouse.set_pos(event.pos)

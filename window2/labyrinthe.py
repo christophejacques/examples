@@ -42,12 +42,9 @@ class Laby(Application):
 
     MIN_SIZE = (400, 300)
     
-    def __init__(self, parent, screen, args):  # args = cell_size
-        # print("args:", args)
-        self.parent = parent
+    def __init__(self, screen, args):  # args = cell_size
         self.screen = screen
-        if self.parent:
-            self.title = self.parent.title
+        self.title = self.DEFAULT_CONFIG[0]
         w, h = screen.get_size()
         self.cell_size = args[0]
         self.chemin = None
@@ -157,7 +154,7 @@ class Laby(Application):
             yield coord
 
     def draw_cell(self, x, y, bg_color):
-        self.parent.tools.rect(bg_color, ((x*self.cell_size, y*self.cell_size), 
+        self.tools.rect(bg_color, ((x*self.cell_size, y*self.cell_size), 
             (self.cell_size, self.cell_size)))
 
     def draw_train(self):
@@ -175,17 +172,19 @@ class Laby(Application):
             for cell in self.train:
                 self.draw_cell(*cell, (80, 70, 200))
 
-    def update(self):
-        if self.parent and self.parent.keypressed():
-            self.touche = self.parent.get_key()
-            if self.touche == 27:
-                self.action = "QUIT"
-            elif self.touche == self.parent.keys.K_F1:
-                self.show_soluce = not self.show_soluce
+    def keyreleased(self, event):
+        self.touche = self.keys.get_key()
+        if self.touche == 27:
+            self.action = "QUIT"
+        elif self.touche == self.keys.K_F1:
+            self.show_soluce = not self.show_soluce
 
-            elif self.touche == self.parent.keys.K_SPACE:
-                self.prepare_board()
-                self.generate()
+        elif self.touche == self.keys.K_SPACE:
+            self.prepare_board()
+            self.generate()
+
+    def update(self):
+        pass
 
     def draw(self):
         if self.generated:
@@ -206,12 +205,12 @@ class Laby(Application):
         self.draw_train()
 
         # Ligne Top fenetre
-        self.parent.tools.line((255, 255, 255), pos1, pos2)
+        self.tools.line((255, 255, 255), pos1, pos2)
         # Cellule Debut
         self.draw_cell(self.debut, 0, bg_color)
         pos2 = (0, self.height*self.cell_size)
         # Ligne Bottom fenetre
-        self.parent.tools.line((255, 255, 255), pos1, pos2)
+        self.tools.line((255, 255, 255), pos1, pos2)
         # Cellule Fin
         self.draw_cell(self.fin, self.height-1, bg_color)
 
@@ -223,11 +222,11 @@ class Laby(Application):
                 pos2 = ((i+1)*self.cell_size, (j+1)*self.cell_size)
                 if self.cells[i][j].bas:
                     pos1 = (i*self.cell_size, (j+1)*self.cell_size)
-                    self.parent.tools.line((255, 255, 255), pos1, pos2)
+                    self.tools.line((255, 255, 255), pos1, pos2)
 
                 if self.cells[i][j].droite:
                     pos1 = ((i+1)*self.cell_size, j*self.cell_size)
-                    self.parent.tools.line((255, 255, 255), pos1, pos2)
+                    self.tools.line((255, 255, 255), pos1, pos2)
 
 
 if __name__ == '__main__':

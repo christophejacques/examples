@@ -119,5 +119,8 @@ if __name__ == "__main__":
     print(f"{directory}")
     print(directory.get_drive())
     directory.to_root()
-    print(list(directory.scandir("FILE")))
+    for fileDir in directory.scandir("DIRECTORY"):
+        print(f"- [{fileDir.name}]")
+    for fileDir in directory.scandir("FILE"):
+        print(f"- {fileDir.name}")
     

@@ -18,10 +18,8 @@ class StarField(Application):
     DEFAULT_CONFIG = ("Starfiel 50", Colors.DARK_ORANGE, 50)
     MIN_SIZE = (400, 300)
 
-    def __init__(self, parent, screen, args):
-        self.parent = parent
-        if self.parent:
-            self.title = self.parent.title
+    def __init__(self, screen, args):
+        self.title = self.DEFAULT_CONFIG[0]
         self.screen = screen
         self.maximum = args[0]
         self.action = ""
@@ -47,19 +45,18 @@ class StarField(Application):
     def get_action(self):
         return self.action
 
-    def update(self):
-        if self.parent:
-            self.parent.set_title(self.title + f" ({len(self.liste)})")
-            if self.parent.keypressed():
-                self.touche = self.parent.get_key()
-                if self.touche == self.parent.keys.K_ESCAPE:
-                    self.action = "QUIT"
-                elif self.touche == self.parent.keys.K_KP_MINUS:
-                    if self.maximum > 10: 
-                        self.maximum -= 10
-                elif self.touche == self.parent.keys.K_KP_PLUS:
-                    self.maximum += 10
+    def keyreleased(self, event):
+        self.set_title(self.title + f" ({len(self.liste)})")
+        self.touche = self.keys.get_key()
+        if self.touche == self.keys.K_ESCAPE:
+            self.action = "QUIT"
+        elif self.touche == self.keys.K_KP_MINUS:
+            if self.maximum > 10: 
+                self.maximum -= 10
+        elif self.touche == self.keys.K_KP_PLUS:
+            self.maximum += 10
 
+    def update(self):
         if len(self.liste) < self.maximum:
             self.liste.append(Star())
 
@@ -72,8 +69,8 @@ class StarField(Application):
             res = etoile.get_attrs()
             if res:
                 couleur, pstar, star, taille = res
-                self.parent.tools.line(couleur, pstar, star)
-                self.parent.tools.circle(couleur, star, taille)
+                self.tools.line(couleur, pstar, star)
+                self.tools.circle(couleur, star, taille)
             else:
                 self.liste.pop(i)
 

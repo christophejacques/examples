@@ -89,7 +89,7 @@ class MyFTP:
         fprint("Files:")
         for fichier in sorted(self.fichiers):
             fprint(f"- {readable_date(self.fichiers[fichier]["date"])}", end=" ")
-            fprint(f"- {self.fichiers[fichier]["size"]} {fichier}")
+            fprint(f"{self.fichiers[fichier]["size"]} {fichier}")
 
     def close(self):
         if self.ftp:

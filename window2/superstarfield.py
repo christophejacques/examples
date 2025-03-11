@@ -11,15 +11,15 @@ class SuperStarfield(Application):
     DEFAULT_CONFIG = ("Super Starfield", Colors.ORANGE)
     WINDOW_PROPERTIES = ["RESIZABLE"]
 
-    def __init__(self, parent, screen, args):
-        self.set_parent(parent)
-
+    def __init__(self, screen, args):
         # set up a random batch of stars for the background
+        self.screen = screen
         self.z_range = (50, 2000)  # range for Z coordinates of stars
-
         self.action = ""
         self.background_color = (0, 0, 0)
-        self.resize(screen)
+
+    def post_init(self):
+        self.resize(self.screen)
 
     def resize(self, screen):
         w, h = screen.get_size()
@@ -27,8 +27,7 @@ class SuperStarfield(Application):
         self.screen = screen
         self.screen_size = np.array(self.screen.get_size())
         self.mid_screen = self.screen_size // 2
-        if self.parent:
-            self.parent.set_title("{} - {} étoiles".format(self.DEFAULT_CONFIG[0], self.nr_stars))
+        self.set_title(f"{self.DEFAULT_CONFIG[0]} - {self.nr_stars} étoiles")
         self.init()
 
     def init(self):
@@ -38,23 +37,19 @@ class SuperStarfield(Application):
         # adjust Z coordinates as more stars needed at distance for a balanced view
         self.stars[:, 2] = (self.stars[:, 2] ** 0.5) * (self.z_range[1] - self.z_range[0]) + self.z_range[0]
         self.star_move = np.array([0.0, 0.0, -0.5])
-        self.prev_time = self.parent.tools.get_ticks()
-
-    def set_parent(self, parent):
-        self.parent = parent
+        self.prev_time = self.tools.get_ticks()
 
     def get_action(self):
         return self.action
 
-    def update(self):
-        if self.parent:
-            if self.parent.keypressed():
-                self.touche = self.parent.get_key()
-                if self.touche == self.parent.keys.K_ESCAPE:
-                    self.action = "QUIT"
+    def keyreleased(self, event):
+        self.touche = self.keys.get_key()
+        if self.touche == self.keys.K_ESCAPE:
+            self.action = "QUIT"
 
+    def update(self):
         # clear screen for a new frame
-        self.time = self.parent.tools.get_ticks()
+        self.time = self.tools.get_ticks()
         # self.screen.fill(self.background_color)
         self.move_stars(self.time, self.prev_time)
 
@@ -91,7 +86,7 @@ class SuperStarfield(Application):
         self.screen.fill(self.background_color)
         while self.screen.get_locked():
             self.screen.unlock()
-        rgb_array = self.parent.tools.pixels3d()
+        rgb_array = self.tools.pixels3d()
         # print(self.time)
 
         # define color as a function of distance

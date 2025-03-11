@@ -6,13 +6,6 @@
             120
         ]
     },
-    "NoApplication": {
-        "libelle": "No Application",
-        "position": [
-            10,
-            340
-        ]
-    },
     "Demineur": {
         "libelle": "D\u00e9mineur",
         "position": [
@@ -39,6 +32,13 @@
         "position": [
             270,
             120
+        ]
+    },
+    "NoApplication": {
+        "libelle": "No Application",
+        "position": [
+            10,
+            340
         ]
     },
     "RayCasting": {

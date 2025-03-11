@@ -26,10 +26,10 @@ class Apples:
 
 class Snake:
 
-    def __init__(self, tools):
+    def __init__(self):
         self.tail = []
         self.to_show = ""
-        self.tools = tools
+        # self.tools = tools
 
     def init(self):
         self.tail.clear()
@@ -37,6 +37,9 @@ class Snake:
         self.pos = (SnakeGame.w//2, SnakeGame.h//2)
         self.vel = (1, 0)
         self.key_vel = (0, 0)
+
+    def set_tools(self, tools):
+        self.tools = tools
 
     def eat(self, position, apples):
         for i, apple in enumerate(apples.liste):
@@ -81,16 +84,14 @@ class SnakeGame(Application):
     size = 10
     w, h = 0, 0
 
-    def __init__(self, parent, screen, args):
-        self.set_parent(parent)
-        self.snake = Snake(parent.tools)
+    def __init__(self, screen, args):
+        self.snake = Snake()
         self.apples = Apples()
         self.resize(screen)
         self.action = ""
 
-    def set_parent(self, parent):
-        print(f"parent({parent=})", flush=True)
-        self.parent = parent
+    def post_init(self):
+        self.snake.set_tools(self.tools)
 
     def resize(self, screen):
         self.screen = screen
@@ -111,44 +112,42 @@ class SnakeGame(Application):
     def get_action(self):
         return self.action
 
+    def keyreleased(self, event):
+        if self.keys.view_key("LAST") == self.keys.K_ESCAPE:
+            self.keys.get_key()
+            self.action = "QUIT"
+
     def update(self):
         self.frameCount += 1
-        if not self.parent:
-            return
-
-        if self.parent.keypressed():
-            if self.parent.view_key("LAST") == self.parent.keys.K_ESCAPE:
-                self.parent.get_key()
-                self.action = "QUIT"
 
         if self.frameCount % 4 == 1:
-            self.touche = self.parent.get_key()
-            if self.touche == self.parent.keys.K_SPACE:
+            self.touche = self.keys.get_key()
+            if self.touche == self.keys.K_SPACE:
                 self.initialisation()
 
             if self.snake.is_alive:
-                if self.touche == self.parent.keys.K_UP:
+                if self.touche == self.keys.K_UP:
                     if self.snake.vel[1] != 1:
                         self.snake.key_vel = (0, -1)
-                elif self.touche == self.parent.keys.K_DOWN:
+                elif self.touche == self.keys.K_DOWN:
                     if self.snake.vel[1] != -1:
                         self.snake.key_vel = (0, 1)
-                elif self.touche == self.parent.keys.K_LEFT:
+                elif self.touche == self.keys.K_LEFT:
                     if self.snake.vel[0] != 1:
                         self.snake.key_vel = (-1, 0)
-                elif self.touche == self.parent.keys.K_RIGHT:
+                elif self.touche == self.keys.K_RIGHT:
                     if self.snake.vel[0] != -1:
                         self.snake.key_vel = (1, 0)
 
                 self.snake.update(self.apples)
 
             elif self.touche is not None:
-                self.parent.clear_key_buffer()
+                self.keys.clear_key_buffer()
                 self.snake.init()
                 self.apples.init()
 
         if self.snake.to_show:
-            self.parent.set_title(SnakeGame.DEFAULT_CONFIG[0] + " : " + self.snake.to_show)
+            self.set_title(SnakeGame.DEFAULT_CONFIG[0] + " : " + self.snake.to_show)
             self.snake.to_show = ""
 
     def draw(self):

@@ -210,8 +210,8 @@ def download_image(directory: str, img_name: str):
         ]
     sites = [(site + img_name) for site in sites]
 
-    basename: str = img_name.split(".")[0]
-    sites += [string_format("https://fivetiu.com/{basename:lower}/cover-n.jpg", basename=basename)]
+    # basename: str = img_name.split(".")[0]
+    # sites += [string_format("https://fivetiu.com/{basename:lower}/cover-n.jpg", basename=basename)]
 
     while not downloaded and sites:
         url = sites.pop(0)
