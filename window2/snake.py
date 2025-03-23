@@ -85,6 +85,7 @@ class SnakeGame(Application):
     w, h = 0, 0
 
     def __init__(self, screen, args):
+        super().__init__(screen)
         self.snake = Snake()
         self.apples = Apples()
         self.resize(screen)

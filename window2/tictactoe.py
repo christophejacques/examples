@@ -11,6 +11,7 @@ class TicTacToe(Application):
     DEFAULT_CONFIG = ("Tic Tac Toe", Colors.DARK_BLUE)
 
     def __init__(self, screen, args):
+        super().__init__(screen)
         self.screen = screen
         self.nombre = screen.get_size()[0]//200 
         self.action = ""

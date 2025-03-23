@@ -12,6 +12,7 @@ class SuperStarfield(Application):
     WINDOW_PROPERTIES = ["RESIZABLE"]
 
     def __init__(self, screen, args):
+        super().__init__(screen)
         # set up a random batch of stars for the background
         self.screen = screen
         self.z_range = (50, 2000)  # range for Z coordinates of stars

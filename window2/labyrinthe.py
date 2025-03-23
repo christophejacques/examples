@@ -43,6 +43,7 @@ class Laby(Application):
     MIN_SIZE = (400, 300)
     
     def __init__(self, screen, args):  # args = cell_size
+        super().__init__(screen)
         self.screen = screen
         self.title = self.DEFAULT_CONFIG[0]
         w, h = screen.get_size()

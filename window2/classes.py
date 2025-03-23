@@ -7,27 +7,41 @@ from os import path
 from datetime import datetime
 
 
+class Variable:
+
+    DEBUG: bool = False
+    window: object
+
+
 class Sound:
 
-    def load_sound(self, fichier, volume): ...
-    def play_sound(self, index, callback=None): ...
-    def stop_channels(self): ...
-    def remove_unused_channels(self): ...
+    def __init__(self):
+        self.load_sound = Variable.window.load_sound
+        self.play_sound = Variable.window.play_sound
+        self.stop_channels = Variable.window.stop_channels
+        self.remove_unused_channels = Variable.window.remove_unused_channels
 
 
 class Keys:
-    def __init__(self, window):
+
+    def __init__(self):
+        if Variable.DEBUG:
+            print("Keys.__init__()", self.window, flush=True)
+
         for attrib in filter(lambda a: a[:2] == "K_", dir(pygame)):
             setattr(self, attrib, getattr(pygame, attrib))
 
-        self.get_key = window.get_key
-        self.view_key = window.view_key
-        self.clear_key_buffer = window.clear_key_buffer            
+        self.get_key = Variable.window.get_key
+        self.view_key = Variable.window.view_key
+        self.clear_key_buffer = Variable.window.clear_key_buffer            
 
 
 class Tools:
 
     def __init__(self, screen):
+        if Variable.DEBUG:
+            print("Tools.__init__()", screen, flush=True)
+            
         self.screen = screen
 
     def font(self, police, taille):
@@ -45,14 +59,21 @@ class Tools:
     def circle(self, couleur, *coords):
         pygame.draw.circle(self.screen, couleur, *coords)
 
+    def polygon(self, couleur, liste_points, taille):
+        pygame.draw.polygon(self.screen, couleur, liste_points, taille)
+
     def pixels3d(self):
         return pygame.surfarray.pixels3d(self.screen)
 
     def get_ticks(self):
         return pygame.time.get_ticks()
 
+    def blit(self, surface, rect):
+        self.screen.blit(surface, rect)
+
 
 class SysTray(metaclass=ABCMeta):
+    tools: Tools
 
     PRIORITY = 99
     DEFAULT_CONFIG = ("?", (0, 0, 0))
@@ -61,8 +82,9 @@ class SysTray(metaclass=ABCMeta):
     mouse_over = False
 
     @abstractmethod
-    def __init__(self):
-        pass
+    def __init__(self, screen):
+        self.tools = Tools(screen)
+        # self.sound = Sound()
 
     @abstractmethod
     def update_screen(self, screen):
@@ -103,7 +125,12 @@ class Application(metaclass=ABCMeta):
 
     @abstractmethod
     def __init__(self, screen, *args):
-        pass
+        self.tools = Tools(screen)
+        self.keys = Keys()
+        self.sound = Sound()
+        window = Variable.window
+        self.set_title = window.set_title
+        self.win_resize = window.resize
 
     def post_init(self):
         pass
@@ -144,9 +171,6 @@ class Application(metaclass=ABCMeta):
     def mouse_button_up(self, mouseX, mouseY, button):
         pass
 
-    def set_title(self):
-        pass
-
     @abstractmethod
     def update(self):
         pass
@@ -162,11 +186,13 @@ class SystemDateTime(SysTray):
     DEFAULT_CONFIG = ("Date Time", (50, 200, 50))
 
     def __init__(self, screen, couleur, x):
+        super().__init__(screen)
         self.update_screen(screen)
         self.couleur = (100, 100, 100)
         self.posx = x
         # self.SYS_FONT = pygame.font.SysFont("comicsans", 12)
-        self.SYS_FONT = pygame.font.SysFont("courier", 16)
+        self.SYS_FONT = self.tools.font("courier", 16)
+
         self.systray_width = self.SYS_FONT.render(" 99/99/9999 99:99:99 ", False, (255, 255, 255)).get_size()[0]
         self.etat = 1
         self.format = "%d/%m/%Y %H:%M:%S"
@@ -196,7 +222,8 @@ class SystemDateTime(SysTray):
     def update(self):
         texte = datetime.now().strftime(self.format)
         self.text_surf = self.SYS_FONT.render(texte, False, (255, 255, 255))
-        self.systray_rect = pygame.Rect(self.width - self.systray_width - self.posx, self.TEXT_OFFSET, self.systray_width, 25)
+        # self.systray_rect = pygame.Rect(self.width - self.systray_width - self.posx, self.TEXT_OFFSET, self.systray_width, 25)
+        self.systray_rect = self.tools.Rect(self.width - self.systray_width - self.posx, self.TEXT_OFFSET, self.systray_width, 25)
 
     def draw(self):
         self.screen.blit(self.text_surf, self.systray_rect)
@@ -208,10 +235,12 @@ class SoundView(SysTray):
     DEFAULT_CONFIG = ("Sound", (50, 200, 50))
 
     def __init__(self, screen, couleur, x):
+        super().__init__(screen)
         self.update_screen(screen)
         self.couleur = (100, 100, 100)
         self.posx = x
-        self.SYS_FONT = pygame.font.SysFont("comicsans", 12)
+        # self.SYS_FONT = pygame.font.SysFont("comicsans", 12)
+        self.SYS_FONT = self.tools.font("comicsans", 12)
         self.systray_width = 25
         self.etat = 1
 
@@ -236,7 +265,8 @@ class SoundView(SysTray):
         mute_unmute()
 
     def update(self):
-        self.systray_rect = pygame.Rect(self.width - self.systray_width - self.posx, 0, self.systray_width, 25)
+        # self.systray_rect = pygame.Rect(self.width - self.systray_width - self.posx, 0, self.systray_width, 25)
+        self.systray_rect = self.tools.Rect(self.width - self.systray_width - self.posx, 0, self.systray_width, 25)
 
     def draw(self):
         x = self.width - self.systray_width - self.posx + self.TEXT_OFFSET
@@ -247,11 +277,13 @@ class SoundView(SysTray):
         color = color2 if Audio.MUTE else color1
 
         points = [(x, 12), (x+6, 7), (x+6, 17)]
-        pygame.draw.polygon(self.screen, color1, points, 1)
+        # pygame.draw.polygon(self.screen, color1, points, 1)
+        self.tools.polygon(color1, points, 1)
 
         x += 8
         for i in range(3):
-            pygame.draw.line(self.screen, color, (x+2*i, y-2*i), (x+2*i, y+h+2*i))
+            # pygame.draw.line(self.screen, color, (x+2*i, y-2*i), (x+2*i, y+h+2*i))
+            self.tools.line(color, (x+2*i, y-2*i), (x+2*i, y+h+2*i))
 
 
 def make_path(*args):
@@ -271,7 +303,7 @@ def get_classes_from_file(type_classe, fichier):
         yield classe
 
 
-def get_all_classes(type_classe):
+def get_all_classes(type_classe: str):
     import os
     liste_classes = []
     # Recherche d'une classe Application dans les fichiers .py
@@ -288,5 +320,5 @@ def get_all_classes(type_classe):
 
 
 if __name__ == '__main__':
-    from exec import run
-    run(NoApplication)
+    for cls in get_all_classes("Application"):
+        print(cls)

@@ -4,7 +4,7 @@ import traceback
 from mouse import Mouse
 from audio import Audio
 from keyboard import Keyboard
-from classes import Tools, Keys, Sound
+from classes import Tools, Variable
 
 
 
@@ -57,19 +57,8 @@ class Window:
         self.tools = Tools(full_screen)
 
         try:
+            Variable.window = self
             self.instance = self.app(self.window_draw_surf, args)
-
-            self.instance.set_title = self.set_title
-            self.instance.win_resize = self.resize
-            self.instance.tools = self.tools
-            self.instance.keys = Keys(self)
-            
-            self.instance.sound = Sound()
-            self.instance.sound.load_sound = self.load_sound
-            self.instance.sound.play_sound = self.play_sound
-            self.instance.sound.stop_channels = self.stop_channels
-            self.instance.sound.remove_unused_channels = self.remove_unused_channels        
-
             self.instance.post_init()
 
         except Exception as e:
@@ -185,8 +174,8 @@ class Window:
     def move(self, x=0, y=0):
         pass
 
-    def resize(self, direction, dx=0, dy=0):
-        self.instance.resize(self.instance.screen)
+    def resize(self, direction, dx=0, dy=0, width=None, height=None):
+        self.instance.resize(self.instance.tools.screen)
 
     def update(self):
         pass

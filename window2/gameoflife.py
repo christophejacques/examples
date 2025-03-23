@@ -16,6 +16,7 @@ class GameOfLife(Application):
     compteur = 0
 
     def __init__(self, screen, args):
+        super().__init__(screen)
         self.grid = []
         self.resize(screen)
         self.action = ""

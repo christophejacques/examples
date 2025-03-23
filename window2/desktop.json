@@ -6,6 +6,13 @@
             120
         ]
     },
+    "Calculatrice": {
+        "libelle": "Calculatrice",
+        "position": [
+            140,
+            340
+        ]
+    },
     "Demineur": {
         "libelle": "D\u00e9mineur",
         "position": [

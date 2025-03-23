@@ -43,6 +43,7 @@ class Demineur(Application):
     y = 0
 
     def __init__(self, screen, *args):
+        super().__init__(screen)
         self.grid = []
         self.screen = screen
         self.cursor_cell_over = None

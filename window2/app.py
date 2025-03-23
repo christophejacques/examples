@@ -1,11 +1,12 @@
 import pygame
 import json
+import traceback
 
 from audio import Audio
 from mouse import Mouse
 from keyboard import Keyboard
 from colors import Colors
-from classes import Keys, Tools, Sound, get_all_classes
+from classes import Variable, Tools, get_all_classes
 
 
 def get_pygame_const_name(index):
@@ -20,6 +21,7 @@ pygame.init()
 # SYS_FONT = pygame.font.SysFont(pygame.font.get_default_font(), 16)
 # SYS_FONT = pygame.font.SysFont("comicsans", 12)
 SYS_FONT = pygame.font.SysFont("courier", 12)
+# SYS_FONT = pygame.font.SysFont("sans serif", 18)
 
 
 class Icone:
@@ -123,24 +125,14 @@ class Window:
         self.sound_index = 0
         self.sounds = {}
         try:
+            Variable.window = self
             self.instance = self.app(self.window_draw_surf, args)
-
-            self.instance.set_title = self.set_title
-            self.instance.win_resize = self.resize
-            self.instance.tools = Tools(self.window_draw_surf)
-            self.instance.keys = Keys(self)
-
-            self.instance.sound = Sound()
-            self.instance.sound.load_sound = self.load_sound
-            self.instance.sound.play_sound = self.play_sound
-            self.instance.sound.stop_channels = self.stop_channels
-            self.instance.sound.remove_unused_channels = self.remove_unused_channels        
-
             self.instance.post_init()
 
         except Exception as e:
             self.set_error()
             print("Window.__init__() Error:", e)
+            traceback.print_exc()
 
     def set_size(self, x, y, w, h, update_app=True):
         self.border_size = 0 if self.last_statut() == "MAXIMIZED" else self.WINDOW_BORDER_SIZE
@@ -151,8 +143,6 @@ class Window:
         self.window_draw_surf = self.window_surf.subsurface(
             pygame.Rect(self.border_size, self.ICONE_HEIGHT, w-2*self.border_size, h-self.ICONE_HEIGHT-self.border_size))
         self.window_draw_surf.fill(self.colour)
-
-        # self.tools = Tools(self.window_draw_surf)
 
         self.top_surf = self.window_surf.subsurface(pygame.Rect(0, 0, w, self.ICONE_HEIGHT))
         self.min_surf = self.top_surf.subsurface(pygame.Rect(w-3*self.ICONE_WIDTH-self.border_size, 0, self.ICONE_WIDTH, self.ICONE_HEIGHT))
@@ -191,8 +181,13 @@ class Window:
 
         self.set_surface_color()
 
-    def resize(self, direction, dx=0, dy=0):
+    def resize(self, direction, dx=0, dy=0, width=None, height=None):
+        # print(f"{dx=}, {dy=}, {width=}, {height=}", flush=True)
         x, y = self.window.topleft
+        if not width is None:
+            self.set_size(x, y, width, height)
+            return 
+            
         w, h = self.window.size
         if dy != 0 and "BOTTOM" in direction:
             if h+dy >= self.min_size[1]+self.border_size+self.top_rect.height:
@@ -299,7 +294,7 @@ class Window:
 
     def get_key(self):
         if self.active:
-            print(f"window.get_key({self.title})")
+            # print(f"window.get_key({self.title})")
             return Keyboard.get_key()
         else:
             return None
@@ -402,10 +397,10 @@ class OperatingSystem:
 
         if desktops[0][1] > 1000:
             # Full HD max resolution
-            disp_size = (1600, 800)
+            disp_size = (1400, 788)
         else:
             disp_size = desktops[0]
-        # self.screen = pygame.display.set_mode(disp_size, pygame.FULLSCREEN, 24)
+        # self.screen = pygame.display.set_mode(desktops[0], pygame.FULLSCREEN, 24)
         self.screen = pygame.display.set_mode(disp_size, pygame.RESIZABLE, 24)
         self.set_size()
 
@@ -438,9 +433,11 @@ class OperatingSystem:
 
     def load_background_image(self):
         try:
-            image = pygame.image.load("wallpaper.jpg")
+            # image = pygame.image.load("wallpaper.jpg")
+            image = pygame.image.load("pornstar.jpg")
             *_, img_width, img_height = image.get_rect()
-            self.background = pygame.transform.scale(image, (img_width, img_height))
+            # self.background = pygame.transform.scale(image, (img_width, img_height))
+            self.background = pygame.transform.scale(image, (self.width, self.width*img_height//img_width))
         except Exception as e:
             print("Error loading background:", e)
             self.background = None
@@ -483,6 +480,7 @@ class OperatingSystem:
         classes.sort(key=lambda k: k.PRIORITY)
         for une_classe in classes:
             libelle, color, *args = une_classe.DEFAULT_CONFIG
+            Variable.window = self.barre_taches
             systray = une_classe(self.barre_taches, color, total)
             self.liste_systray.append(systray)
             total += systray.get_width()
@@ -609,6 +607,7 @@ class OperatingSystem:
                 if fenetre != fenetre_active:
                     if fenetre.last_statut() != "MINIMIZED":
                         self.activate_window(fenetre)
+                        break
 
     def load_icones(self):
         contenu = {}
@@ -697,7 +696,7 @@ class OperatingSystem:
             fenetre.instance.keypressed(event)
 
     def keyreleased(self, event):
-        print(f"os.keyreleased({event.key})", flush=True)
+        # print(f"os.keyreleased({event.key})", flush=True)
         fenetre = self.get_active_window()
         if event.key == pygame.K_ESCAPE and not fenetre:
             self.running = False
@@ -718,12 +717,6 @@ class OperatingSystem:
         for fenetre in self.liste_fenetres:
             if self.active_time or fenetre.active:
                 fenetre.update()
-
-        # for appli in Audio.APPLI:
-        #     print("App", appli, end=": ")
-        #     for snd_idx in Audio.APPLI[appli]["SOUNDS"]:
-        #         print(Audio.get_sound_volume(appli, snd_idx), end=", ")
-        #     print()
 
         # Barre des tache avec ses taches
         for tache in self.liste_taches:
@@ -751,7 +744,7 @@ class OperatingSystem:
         for fenetre in self.liste_fenetres:
             fenetre.draw(self.screen_surf)
 
-        # Barre des tache avec ses taches
+        # Barre de tache avec ses taches
         self.barre_taches.fill((20, 20, 20, 100))
         for tache in self.liste_taches:
             tache.draw()

@@ -19,6 +19,7 @@ class StarField(Application):
     MIN_SIZE = (400, 300)
 
     def __init__(self, screen, args):
+        super().__init__(screen)
         self.title = self.DEFAULT_CONFIG[0]
         self.screen = screen
         self.maximum = args[0]

@@ -42,15 +42,14 @@ class Firework(Application):
     WINDOW_PROPERTIES = ["SOUND(60)", "RESIZABLE"]
 
     def __init__(self, screen, args):
-
+        
+        super().__init__(screen)
         self.resize(screen)
         self.nombre = self.screen.get_size()[0]//300 
 
         self.action = ""
         self.fusees = []
         self.particles = []
-
-    def post_init(self):
         self.load_sounds()
 
     def keyreleased(self, event):

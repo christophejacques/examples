@@ -208,6 +208,7 @@ class RayCasting(Application):
     MIN_SIZE = (400, 300)
 
     def __init__(self, screen, args):
+        super().__init__(screen)
         self.screen = screen
         self.color = (20, 10, 10)
         self.action = ""

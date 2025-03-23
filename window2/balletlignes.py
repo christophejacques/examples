@@ -41,6 +41,7 @@ class BalletLignes(Application):
     DEFAULT_CONFIG = ("BalletLignes 500", Colors.MIDDLE_RED, 500)
 
     def __init__(self, screen, args):
+        super().__init__(screen)
         self.lignes = list()
         self.resize(screen)
         self.nombre = args[0]
