@@ -1,10 +1,8 @@
 import pygame
 
-from audio import Audio
 from abc import abstractmethod, ABCMeta
 from os import path
 # from os.path import sep as separateur
-from datetime import datetime
 
 
 class Variable:
@@ -13,9 +11,60 @@ class Variable:
     window: object
 
 
+class Theme:
+    theme: str = "CLAIR"
+
+    data = {
+        "CLAIR": {
+            "FORE_COLOR": (0, 0, 0),
+            "INACTIVE_FORE_COLOR": (250, 250, 250),
+            "GRAY_COLOR": (50, 50, 250),
+            "BOUTON_COLOR": (180, 180, 180),
+            "PUSH_COLOR": (255, 255, 255),
+            "MOUSE_OVER_COLOR": (210, 210, 210),
+            "THEME_ACTIVE_COLOR": (10, 130, 170, 50),
+            "THEME_INACTIVE_COLOR": (130, 130, 150, 50),
+            "THEME_ERROR_COLOR": (200, 20, 20),
+            "TASK_BUTTON_BACK_COLOR": (180, 180, 180),
+            "TASK_ERROR_BUTTON_BACK_COLOR": (180, 20, 20),
+            "TASK_BAR_COLOR": (200, 200, 200, 100)
+
+        },
+        "SOMBRE": {
+            "FORE_COLOR": (250, 250, 250),
+            "INACTIVE_FORE_COLOR": (15, 15, 15),
+            "GRAY_COLOR": (200, 200, 100),
+            "BOUTON_COLOR": (70, 70, 70),
+            "PUSH_COLOR": (0, 0, 0),
+            "MOUSE_OVER_COLOR": (40, 40, 40),
+            "THEME_ACTIVE_COLOR": (10, 80, 120, 50),
+            "THEME_INACTIVE_COLOR": (100, 100, 120, 50),
+            "THEME_ERROR_COLOR": (170, 20, 20),
+            "TASK_BUTTON_BACK_COLOR": (80, 80, 80),
+            "TASK_ERROR_BUTTON_BACK_COLOR": (250, 50, 50),
+            "TASK_BAR_COLOR": (20, 20, 20, 100)
+        }    
+    }
+
+    @classmethod
+    def get_theme(self):
+        return Theme.theme
+
+    @classmethod
+    def set_theme(self, theme):
+        Theme.theme = theme.upper()
+
+    @classmethod
+    def get(self, type_color):
+        return Theme.data[Theme.theme][type_color]
+
+
 class Sound:
 
     def __init__(self):
+        if Variable.DEBUG:
+            print(f"Sound.__init__({Variable.window.title})", flush=True)
+
         self.load_sound = Variable.window.load_sound
         self.play_sound = Variable.window.play_sound
         self.stop_channels = Variable.window.stop_channels
@@ -26,7 +75,7 @@ class Keys:
 
     def __init__(self):
         if Variable.DEBUG:
-            print("Keys.__init__()", self.window, flush=True)
+            print(f"Keys.__init__({Variable.window.title})", flush=True)
 
         for attrib in filter(lambda a: a[:2] == "K_", dir(pygame)):
             setattr(self, attrib, getattr(pygame, attrib))
@@ -40,8 +89,10 @@ class Tools:
 
     def __init__(self, screen):
         if Variable.DEBUG:
-            print("Tools.__init__()", screen, flush=True)
-            
+            print(f"Tools.__init__({screen})", flush=True)
+        self.update_screen(screen)
+
+    def update_screen(self, screen):
         self.screen = screen
 
     def font(self, police, taille):
@@ -84,11 +135,12 @@ class SysTray(metaclass=ABCMeta):
     @abstractmethod
     def __init__(self, screen):
         self.tools = Tools(screen)
+        self.theme = Theme()
         # self.sound = Sound()
 
     @abstractmethod
-    def update_screen(self, screen):
-        pass
+    def update_screen(self, screen, posx=0):
+        self.tools = Tools(screen)
 
     @abstractmethod
     def set_posx(self, x):
@@ -96,6 +148,12 @@ class SysTray(metaclass=ABCMeta):
 
     @abstractmethod
     def get_width(self):
+        pass
+
+    def get_action(self):
+        return None
+
+    def get_theme(self):
         pass
 
     def mouse_move(self):
@@ -128,6 +186,7 @@ class Application(metaclass=ABCMeta):
         self.tools = Tools(screen)
         self.keys = Keys()
         self.sound = Sound()
+        self.theme = Theme()
         window = Variable.window
         self.set_title = window.set_title
         self.win_resize = window.resize
@@ -140,6 +199,9 @@ class Application(metaclass=ABCMeta):
 
     @abstractmethod
     def resize(self, screen):
+        pass
+
+    def get_theme(self):
         pass
 
     def get_action(self):
@@ -178,112 +240,6 @@ class Application(metaclass=ABCMeta):
     @abstractmethod
     def draw(self):
         pass
-
-
-class SystemDateTime(SysTray):
-
-    PRIORITY = 1
-    DEFAULT_CONFIG = ("Date Time", (50, 200, 50))
-
-    def __init__(self, screen, couleur, x):
-        super().__init__(screen)
-        self.update_screen(screen)
-        self.couleur = (100, 100, 100)
-        self.posx = x
-        # self.SYS_FONT = pygame.font.SysFont("comicsans", 12)
-        self.SYS_FONT = self.tools.font("courier", 16)
-
-        self.systray_width = self.SYS_FONT.render(" 99/99/9999 99:99:99 ", False, (255, 255, 255)).get_size()[0]
-        self.etat = 1
-        self.format = "%d/%m/%Y %H:%M:%S"
-
-    def update_screen(self, screen):
-        self.screen = screen
-        self.width = screen.get_size()[0]
-
-    def set_posx(self, x):
-        self.posx = x
-
-    def get_width(self):
-        return self.systray_width
-
-    def mouse_up(self):
-        self.etat += 1
-        if self.etat > 3:
-            self.etat = 1
-        self.format = {
-            1: "%d/%m/%Y %H:%M:%S ",
-            2: " %d/%m/%Y ",
-            3: " %H:%M:%S "
-        }[self.etat]
-        self.systray_width = self.SYS_FONT.render(datetime.now().strftime(self.format), 
-            False, (255, 255, 255)).get_size()[0]
-        
-    def update(self):
-        texte = datetime.now().strftime(self.format)
-        self.text_surf = self.SYS_FONT.render(texte, False, (255, 255, 255))
-        # self.systray_rect = pygame.Rect(self.width - self.systray_width - self.posx, self.TEXT_OFFSET, self.systray_width, 25)
-        self.systray_rect = self.tools.Rect(self.width - self.systray_width - self.posx, self.TEXT_OFFSET, self.systray_width, 25)
-
-    def draw(self):
-        self.screen.blit(self.text_surf, self.systray_rect)
-
-
-class SoundView(SysTray):
-
-    PRIORITY = 2
-    DEFAULT_CONFIG = ("Sound", (50, 200, 50))
-
-    def __init__(self, screen, couleur, x):
-        super().__init__(screen)
-        self.update_screen(screen)
-        self.couleur = (100, 100, 100)
-        self.posx = x
-        # self.SYS_FONT = pygame.font.SysFont("comicsans", 12)
-        self.SYS_FONT = self.tools.font("comicsans", 12)
-        self.systray_width = 25
-        self.etat = 1
-
-    def update_screen(self, screen):
-        self.screen = screen
-        self.width = screen.get_size()[0]
-
-    def set_posx(self, x):
-        self.posx = x
-
-    def get_width(self):
-        return self.systray_width
-
-    def mouse_up(self):
-        self.etat += 1
-        if self.etat > 2:
-            self.etat = 1
-        self.format, mute_unmute = {
-            1: ("  <)  ", Audio.unmute_all_applications),
-            2: (" <X)  ", Audio.mute_all_applications)
-        }[self.etat]
-        mute_unmute()
-
-    def update(self):
-        # self.systray_rect = pygame.Rect(self.width - self.systray_width - self.posx, 0, self.systray_width, 25)
-        self.systray_rect = self.tools.Rect(self.width - self.systray_width - self.posx, 0, self.systray_width, 25)
-
-    def draw(self):
-        x = self.width - self.systray_width - self.posx + self.TEXT_OFFSET
-        y = 10
-        h = 4
-        color1 = (240, 240, 240)
-        color2 = (80, 80, 80)
-        color = color2 if Audio.MUTE else color1
-
-        points = [(x, 12), (x+6, 7), (x+6, 17)]
-        # pygame.draw.polygon(self.screen, color1, points, 1)
-        self.tools.polygon(color1, points, 1)
-
-        x += 8
-        for i in range(3):
-            # pygame.draw.line(self.screen, color, (x+2*i, y-2*i), (x+2*i, y+h+2*i))
-            self.tools.line(color, (x+2*i, y-2*i), (x+2*i, y+h+2*i))
 
 
 def make_path(*args):

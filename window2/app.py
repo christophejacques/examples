@@ -6,7 +6,7 @@ from audio import Audio
 from mouse import Mouse
 from keyboard import Keyboard
 from colors import Colors
-from classes import Variable, Tools, get_all_classes
+from classes import Variable, Tools, get_all_classes, Theme
 
 
 def get_pygame_const_name(index):
@@ -21,7 +21,6 @@ pygame.init()
 # SYS_FONT = pygame.font.SysFont(pygame.font.get_default_font(), 16)
 # SYS_FONT = pygame.font.SysFont("comicsans", 12)
 SYS_FONT = pygame.font.SysFont("courier", 12)
-# SYS_FONT = pygame.font.SysFont("sans serif", 18)
 
 
 class Icone:
@@ -39,7 +38,9 @@ class Icone:
         
         self.update_screen(screen)
         self.icone_surf.fill(self.couleur)
-        self.text_surf = SYS_FONT.render(title, False, (255, 255, 255))
+        self.title = title
+
+        self.update_theme()
         self.title_rect = pygame.Rect(x, Icone.ICONE_HEIGHT+y, Icone.ICONE_WIDTH, Icone.ICONE_HEIGHT)
         self.mouse_over = False
 
@@ -47,6 +48,8 @@ class Icone:
         self.screen_surf = screen
         self.icone_surf = self.screen_surf.subsurface(self.icone_rect)
 
+    def update_theme(self):
+        self.text_surf = SYS_FONT.render(self.title, False, Theme.get("FORE_COLOR"))
 
     def move(self, dx=0, dy=0, liste_icones=None):
         if dx or dy:
@@ -201,6 +204,11 @@ class Window:
                 w += dx
         
         self.set_size(x, y, w, h)
+
+    def update_theme(self):
+        if self.on_error:
+            return
+        self.instance.get_theme()
 
     def search_for_in(self, value, liste):
         for val in liste:
@@ -378,10 +386,12 @@ class OperatingSystem:
     TASK_BAR_DECAL = 1
     TASK_BAR_MENU_WIDTH = 3
     NEW_WINDOW_DECAL = 30
+    TASK_BAR_COLOR = (20, 20, 20, 100)
 
     def __init__(self):
         self.running = True
         Audio.init(False)
+        Theme.set_theme("SOMBRE")
 
         desktops = pygame.display.get_desktop_sizes()
         # define display/window height based on (the first) desktop size
@@ -413,14 +423,36 @@ class OperatingSystem:
             tache.update_screen(self.barre_taches)
         self.resize_taches()
 
+        total: int = 0
         for systray in self.liste_systray:
-            systray.update_screen(self.barre_taches)
+            systray.update_screen(self.barre_taches, total)
+            total += systray.get_width()
+
 
         screen_size = pygame.display.get_window_size()
         for fenetre in self.liste_fenetres:
             if fenetre.last_statut() == "MAXIMIZED":
                 fenetre.set_size(0, 0, screen_size[0], screen_size[1]-OperatingSystem.TASK_BAR_HEIGHT)
 
+    def update_theme(self):
+        for icone in self.liste_icones:
+            icone.update_theme()
+
+        Window.THEME_ACTIVE_COLOR = Theme.get("THEME_ACTIVE_COLOR")
+        Window.THEME_INACTIVE_COLOR = Theme.get("THEME_INACTIVE_COLOR")
+        Window.THEME_ERROR_COLOR = Theme.get("THEME_ERROR_COLOR")
+        for fenetre in self.liste_fenetres:
+            fenetre.update_theme()
+
+        OperatingSystem.TASK_BAR_COLOR = Theme.get("TASK_BAR_COLOR")
+
+        Tache.TASK_BUTTON_BACK_COLOR = Theme.get("TASK_BUTTON_BACK_COLOR")
+        Tache.TASK_ERROR_BUTTON_BACK_COLOR = Theme.get("TASK_ERROR_BUTTON_BACK_COLOR")
+        for tache in self.liste_taches:
+            tache.get_theme()
+
+        for systray in self.liste_systray:
+            systray.get_theme()
 
     def set_size(self):
         # print(self.screen.get_size(), flush=True)
@@ -433,11 +465,17 @@ class OperatingSystem:
 
     def load_background_image(self):
         try:
-            # image = pygame.image.load("wallpaper.jpg")
-            image = pygame.image.load("pornstar.jpg")
+            image = pygame.image.load("wallpaper/pornstar34.jpg")
+            # image = pygame.image.load("wallpaper/wallpaper1.jpg")
+            # image = pygame.image.load("pornstar.jpg")
             *_, img_width, img_height = image.get_rect()
-            # self.background = pygame.transform.scale(image, (img_width, img_height))
-            self.background = pygame.transform.scale(image, (self.width, self.width*img_height//img_width))
+
+            # print(self.width, self.height, img_width, img_height, flush=True)
+            if self.width > img_width:
+                self.background = pygame.transform.scale(image, (self.width, self.width*img_height//img_width))
+            else:
+                self.background = pygame.transform.scale(image, (img_width, img_height))
+
         except Exception as e:
             print("Error loading background:", e)
             self.background = None
@@ -659,6 +697,13 @@ class OperatingSystem:
                 return f
         return None
 
+    def get_systrays_actions(self):
+        for systray in self.liste_systray:
+            systray_action = systray.get_action()
+            if systray_action and systray_action[:12] == "CHANGE_THEME":
+                Theme.set_theme(systray_action[13:])
+                self.update_theme()
+
     def get_windows_actions(self):
         for fenetre in self.liste_fenetres:
             if not fenetre.on_error and fenetre.instance.get_action() == "QUIT":
@@ -745,7 +790,7 @@ class OperatingSystem:
             fenetre.draw(self.screen_surf)
 
         # Barre de tache avec ses taches
-        self.barre_taches.fill((20, 20, 20, 100))
+        self.barre_taches.fill(OperatingSystem.TASK_BAR_COLOR)
         for tache in self.liste_taches:
             tache.draw()
 
@@ -804,6 +849,7 @@ class OperatingSystem:
                 if systray.systray_rect.collidepoint((mouse_position[0], mouse_position[1]-self.barre_taches_rect[1])) and (
                    systray.systray_rect.collidepoint((Mouse.get_saved_pos()[0], Mouse.get_saved_pos()[1]-self.barre_taches_rect[1]))):
                     systray.mouse_up()
+                    # update all systrays position if necessary
                     self.update_systray_pos()
             else:
                 # Gestion click tache dans barre des taches
@@ -1016,6 +1062,9 @@ class Tache:
     TASK_ICONE_SIZE = 20
     TASK_TITLE_BORDER = 5
 
+    TASK_BUTTON_BACK_COLOR = (80, 80, 80)
+    TASK_ERROR_BUTTON_BACK_COLOR = (250, 50, 50)
+
     def __init__(self, screen, title, couleur, x, window):
         self.update_screen(screen)
         self.title = title
@@ -1024,6 +1073,10 @@ class Tache:
         self.mouse_over = False
         self.set_pos(x)
         self.set_title(title)
+
+    def get_theme(self):
+        pass
+        # ToDo
 
     def update_screen(self, screen):
         self.screen_surf = screen
@@ -1043,7 +1096,7 @@ class Tache:
         self.tache_select_surf = self.screen_surf.subsurface(self.tache_select_rect)
 
     def set_title(self, title):
-        self.text_surf = SYS_FONT.render(title, False, (255, 255, 255))
+        self.text_surf = SYS_FONT.render(title, False, Theme.get("FORE_COLOR"))
 
     def update(self):
         if self.window.on_error and self.couleur != Window.THEME_ERROR_COLOR:
@@ -1052,11 +1105,12 @@ class Tache:
     def draw(self):
         if self.window.active:
             if self.window.on_error:
-                self.tache_button_surf.fill((250, 50, 50))
+                self.tache_button_surf.fill(Tache.TASK_ERROR_BUTTON_BACK_COLOR)
             else:
-                self.tache_button_surf.fill((80, 80, 80))
+                self.tache_button_surf.fill(Tache.TASK_BUTTON_BACK_COLOR)
         else:
             self.tache_button_surf.fill(self.couleur)
+
         if self.mouse_over:
             self.tache_select_surf.fill(Colors.CYAN)
         self.screen_surf.blit(self.text_surf, self.title_rect)
@@ -1069,6 +1123,7 @@ def run():
     my_os.get_systray_apps()
 
     while my_os.running:
+        my_os.get_systrays_actions()
         my_os.get_windows_actions()
         my_os.check_keyboard_events()
         my_os.update()
@@ -1079,10 +1134,16 @@ def run():
                 my_os.mouse_move(event.pos)
 
             elif event.type == pygame.MOUSEBUTTONDOWN:
-                my_os.mouse_button_down(event.pos, event.button)
+                if event.button != 2:
+                    my_os.mouse_button_down(event.pos, event.button)
 
             elif event.type == pygame.MOUSEBUTTONUP:
-                my_os.mouse_button_up(event.pos, event.button)
+                if event.button == 2:
+                    color: str = "SOMBRE" if Theme.get_theme() == "CLAIR" else "CLAIR"
+                    Theme.set_theme(color)
+                    my_os.update_theme()
+                else:
+                    my_os.mouse_button_up(event.pos, event.button)
 
             elif event.type == pygame.KEYDOWN:
                 my_os.keypressed(event)

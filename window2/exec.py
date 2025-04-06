@@ -195,7 +195,6 @@ def run(application):
     window = Window(screen, 0, 0, 1200, 600, "", (0, 0, 0), application, *application.DEFAULT_CONFIG[2:])
     
     instance = window.instance
-    instance.post_init()
     
     while running:
         pygame.time.Clock().tick(60)
