@@ -51,9 +51,16 @@ class Firework(Application):
         self.fusees = []
         self.particles = []
         self.load_sounds()
+        self.get_theme()
+
+    def get_theme(self):
+        if self.theme.get_theme() == "CLAIR":
+            self.back_color = (200, 200, 200)
+        else:
+            self.back_color = (0, 0, 0)
 
     def keyreleased(self, event):
-        print("Firework", event, flush=True)
+        # print("Firework", event, flush=True)
         touche = self.keys.get_key()
         if touche == self.keys.K_ESCAPE:
             self.action = "QUIT"
@@ -128,7 +135,7 @@ class Firework(Application):
                 self.particles.pop(i)
 
     def draw(self):
-        self.screen.fill(Colors.BLACK)
+        self.screen.fill(self.back_color)
         for f in self.fusees:
             self.tools.circle(f.color, f.to_draw(), f.nombre)
         for p in self.particles:

@@ -210,11 +210,17 @@ class RayCasting(Application):
     def __init__(self, screen, args):
         super().__init__(screen)
         self.screen = screen
-        self.color = (20, 10, 10)
         self.action = ""
         self.nb_walls = args[1]
         self.nb_sources = args[0]
         self.set_zone(self.screen.get_size())
+        self.get_theme()
+
+    def get_theme(self):
+        if self.theme.get_theme() == "CLAIR":
+            self.color = Colors.WHITE
+        else:
+            self.color = Colors.BLACK
 
     def set_sources(self):
         self.sources = []

@@ -47,6 +47,17 @@ class Demineur(Application):
         self.grid = []
         self.screen = screen
         self.cursor_cell_over = None
+        self.get_theme()
+
+    def get_theme(self):
+        if self.theme.get_theme() == "CLAIR":
+            self.back_color = Colors.WHITE
+            self.grid_color = (200, 200, 200)
+            self.MARKED = (20, 20, 4)
+        else:
+            self.back_color = Colors.BLACK
+            self.grid_color = (50, 50, 50)
+            self.MARKED = (100, 100, 20)
 
     def post_init(self):
         self.SYS_FONT = self.tools.font("comicsans", 30)
@@ -177,7 +188,7 @@ class Demineur(Application):
         pass
 
     def draw(self):
-        self.screen.fill(Colors.BLACK)
+        self.screen.fill(self.grid_color)
         for col in range(self.TAILLE):
             for row in range(self.TAILLE):
                 if self.grid[col][row].revealed:
@@ -211,7 +222,7 @@ class Demineur(Application):
                     if self.grid[col][row].marked:
                         couleur_fond = self.MARKED
                     else:
-                        couleur_fond = (10, 10, 10)
+                        couleur_fond = self.back_color
                     # pygame.draw.rect(self.screen, couleur_fond, self.grid[col][row].draw_square())
                     self.tools.rect(couleur_fond, self.grid[col][row].draw_square())
 

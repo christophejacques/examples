@@ -90,9 +90,14 @@ class SnakeGame(Application):
         self.apples = Apples()
         self.resize(screen)
         self.action = ""
+        self.get_theme()
 
     def post_init(self):
         self.snake.set_tools(self.tools)
+
+    def get_theme(self):
+        self.fore_color = self.theme.get("FORE_COLOR")
+        self.back_color = self.theme.get("BACKGROUND_COLOR")
 
     def resize(self, screen):
         self.screen = screen
@@ -152,13 +157,13 @@ class SnakeGame(Application):
             self.snake.to_show = ""
 
     def draw(self):
-        self.screen.fill(Colors.BLACK)
+        self.screen.fill(self.back_color)
 
         for x, y in self.apples.to_draw():
             self.screen.fill(Colors.GREEN, (x, y, SnakeGame.size, SnakeGame.size))
         
         for x, y in self.snake.to_draw():
-            self.screen.fill(Colors.WHITE, (x, y, SnakeGame.size, SnakeGame.size))
+            self.screen.fill(self.fore_color, (x, y, SnakeGame.size, SnakeGame.size))
 
 
 if __name__ == '__main__':

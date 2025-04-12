@@ -17,7 +17,14 @@ class SuperStarfield(Application):
         self.screen = screen
         self.z_range = (50, 2000)  # range for Z coordinates of stars
         self.action = ""
-        self.background_color = (0, 0, 0)
+        
+        self.get_theme()
+
+    def get_theme(self):
+        if self.theme.get_theme() == "CLAIR":
+            self.background_color = Colors.WHITE
+        else:
+            self.background_color = Colors.BLACK
 
     def post_init(self):
         self.resize(self.screen)

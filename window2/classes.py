@@ -17,6 +17,7 @@ class Theme:
     data = {
         "CLAIR": {
             "FORE_COLOR": (0, 0, 0),
+            "BACKGROUND_COLOR": (255, 255, 255),
             "INACTIVE_FORE_COLOR": (250, 250, 250),
             "GRAY_COLOR": (50, 50, 250),
             "BOUTON_COLOR": (180, 180, 180),
@@ -26,12 +27,14 @@ class Theme:
             "THEME_INACTIVE_COLOR": (130, 130, 150, 50),
             "THEME_ERROR_COLOR": (200, 20, 20),
             "TASK_BUTTON_BACK_COLOR": (180, 180, 180),
+            "TASK_SELECTED_BUTTON_BACK_COLOR": (150, 150, 150),
             "TASK_ERROR_BUTTON_BACK_COLOR": (180, 20, 20),
             "TASK_BAR_COLOR": (200, 200, 200, 100)
 
         },
         "SOMBRE": {
             "FORE_COLOR": (250, 250, 250),
+            "BACKGROUND_COLOR": (0, 0, 0),
             "INACTIVE_FORE_COLOR": (15, 15, 15),
             "GRAY_COLOR": (200, 200, 100),
             "BOUTON_COLOR": (70, 70, 70),
@@ -41,6 +44,7 @@ class Theme:
             "THEME_INACTIVE_COLOR": (100, 100, 120, 50),
             "THEME_ERROR_COLOR": (170, 20, 20),
             "TASK_BUTTON_BACK_COLOR": (80, 80, 80),
+            "TASK_SELECTED_BUTTON_BACK_COLOR": (50, 50, 50),
             "TASK_ERROR_BUTTON_BACK_COLOR": (250, 50, 50),
             "TASK_BAR_COLOR": (20, 20, 20, 100)
         }    

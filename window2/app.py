@@ -208,6 +208,7 @@ class Window:
     def update_theme(self):
         if self.on_error:
             return
+        self.set_surface_color()
         self.instance.get_theme()
 
     def search_for_in(self, value, liste):
@@ -242,13 +243,15 @@ class Window:
         return mouseX, mouseY
 
     def set_surface_color(self):
-        self.top_surf.fill(self.theme_color(check_error=True))
+        color = self.theme_color(check_error=True)
+        self.top_surf.fill(color)
+
         self.set_win_buttons_surface_color()
         if self.last_statut() != "MAXIMIZED":
-            self.bottom_surf.fill(self.theme_color(check_error=True))
-            self.left_surf.fill(self.theme_color(check_error=True))
-            self.right_surf.fill(self.theme_color(check_error=True))
-        self.title_surf.fill(self.theme_color(check_error=True))
+            self.bottom_surf.fill(color)
+            self.left_surf.fill(color)
+            self.right_surf.fill(color)
+        self.title_surf.fill(color)
 
     def set_win_buttons_surface_color(self):
         self.min_surf.fill(self.theme_color((10, 100, 140), (110, 110, 110)))
@@ -277,7 +280,12 @@ class Window:
         self.on_error = True
         self.set_surface_color()
 
-    def theme_color(self, active_color=THEME_ACTIVE_COLOR, inactive_color=THEME_INACTIVE_COLOR, check_error=False):
+    def theme_color(self, active_color=None, inactive_color=None, check_error=False):
+        if active_color is None:
+            active_color = Window.THEME_ACTIVE_COLOR
+        if inactive_color is None:
+            inactive_color = Window.THEME_INACTIVE_COLOR
+
         if check_error and self.on_error:
             return self.THEME_ERROR_COLOR
         return active_color if self.active else inactive_color
@@ -413,6 +421,7 @@ class OperatingSystem:
         # self.screen = pygame.display.set_mode(desktops[0], pygame.FULLSCREEN, 24)
         self.screen = pygame.display.set_mode(disp_size, pygame.RESIZABLE, 24)
         self.set_size()
+        self.update_theme()
 
     def update_screen(self):
         self.set_size()
@@ -441,6 +450,7 @@ class OperatingSystem:
         Window.THEME_ACTIVE_COLOR = Theme.get("THEME_ACTIVE_COLOR")
         Window.THEME_INACTIVE_COLOR = Theme.get("THEME_INACTIVE_COLOR")
         Window.THEME_ERROR_COLOR = Theme.get("THEME_ERROR_COLOR")
+
         for fenetre in self.liste_fenetres:
             fenetre.update_theme()
 
@@ -448,6 +458,7 @@ class OperatingSystem:
 
         Tache.TASK_BUTTON_BACK_COLOR = Theme.get("TASK_BUTTON_BACK_COLOR")
         Tache.TASK_ERROR_BUTTON_BACK_COLOR = Theme.get("TASK_ERROR_BUTTON_BACK_COLOR")
+        Tache.TASK_SELECTED_BUTTON_BACK_COLOR = Theme.get("TASK_SELECTED_BUTTON_BACK_COLOR")
         for tache in self.liste_taches:
             tache.get_theme()
 
@@ -465,7 +476,10 @@ class OperatingSystem:
 
     def load_background_image(self):
         try:
-            image = pygame.image.load("wallpaper/pornstar34.jpg")
+            # image = pygame.image.load("wallpaper/pornstar34.jpg")
+            # image = pygame.image.load("Wallpaper/Tiffany Doll/pornstar390.jpg")
+            # image = pygame.image.load("Wallpaper/Lexy Belle/pornstar463.jpg")
+            image = pygame.image.load("Wallpaper/Nikita Bellucci/pornstar293.jpg")
             # image = pygame.image.load("wallpaper/wallpaper1.jpg")
             # image = pygame.image.load("pornstar.jpg")
             *_, img_width, img_height = image.get_rect()
@@ -1063,20 +1077,23 @@ class Tache:
     TASK_TITLE_BORDER = 5
 
     TASK_BUTTON_BACK_COLOR = (80, 80, 80)
+    TASK_SELECTED_BUTTON_BACK_COLOR = (50, 50, 50)
     TASK_ERROR_BUTTON_BACK_COLOR = (250, 50, 50)
 
     def __init__(self, screen, title, couleur, x, window):
         self.update_screen(screen)
         self.title = title
-        self.couleur = (50, 50, 50)
         self.window = window
         self.mouse_over = False
         self.set_pos(x)
-        self.set_title(title)
+        self.get_theme()
 
     def get_theme(self):
-        pass
-        # ToDo
+        self.text_surf = SYS_FONT.render(self.title, False, Theme.get("FORE_COLOR"))
+        if self.window.on_error:
+            self.couleur = Window.THEME_ERROR_COLOR
+        else:
+            self.couleur = Tache.TASK_BUTTON_BACK_COLOR
 
     def update_screen(self, screen):
         self.screen_surf = screen
@@ -1096,7 +1113,8 @@ class Tache:
         self.tache_select_surf = self.screen_surf.subsurface(self.tache_select_rect)
 
     def set_title(self, title):
-        self.text_surf = SYS_FONT.render(title, False, Theme.get("FORE_COLOR"))
+        self.title = title
+        self.text_surf = SYS_FONT.render(self.title, False, Theme.get("FORE_COLOR"))
 
     def update(self):
         if self.window.on_error and self.couleur != Window.THEME_ERROR_COLOR:
@@ -1107,7 +1125,7 @@ class Tache:
             if self.window.on_error:
                 self.tache_button_surf.fill(Tache.TASK_ERROR_BUTTON_BACK_COLOR)
             else:
-                self.tache_button_surf.fill(Tache.TASK_BUTTON_BACK_COLOR)
+                self.tache_button_surf.fill(Tache.TASK_SELECTED_BUTTON_BACK_COLOR)
         else:
             self.tache_button_surf.fill(self.couleur)
 

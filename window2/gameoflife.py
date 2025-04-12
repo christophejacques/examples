@@ -21,6 +21,14 @@ class GameOfLife(Application):
         self.resize(screen)
         self.action = ""
         self.mouse_button_state = 0
+        self.get_theme()
+
+    def get_theme(self):
+        self.fore_color = self.theme.get("FORE_COLOR")
+        if self.theme.get_theme() == "CLAIR":
+            self.back_color = (0, 250, 250)
+        else:
+            self.back_color = (0, 50, 50)
 
     def initialisation(self, grid, rand=True):
         grid.clear()
@@ -92,7 +100,7 @@ class GameOfLife(Application):
                     print("x:", x, " y:", y, " ROWS:", self.ROWS, " COLS:", self.COLS)
 
     def draw(self):
-        self.screen.fill(Colors.BLACK)
+        self.screen.fill(self.back_color)
         s = sum([sum(x) for x in self.grid])
         if self.olds == s:
             self.compteur += 1
@@ -105,9 +113,9 @@ class GameOfLife(Application):
         for i, col in enumerate(self.grid):
             for j, c in enumerate(col):
                 if c == 1:
-                    color = (200, 200, 200)
+                    color = self.fore_color
                 else:
-                    color = (0, 50, 50)
+                    color = self.back_color
                 self.tools.rect(color, (j*self.SIZE, i*self.SIZE, self.SIZE, self.SIZE))
                 
         self.update()

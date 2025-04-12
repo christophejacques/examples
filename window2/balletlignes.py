@@ -48,6 +48,8 @@ class BalletLignes(Application):
         self.title = self.DEFAULT_CONFIG[0]
         self.action = ""
 
+        self.get_theme()
+
     def resize(self, screen):
         print(f"demineur resize({screen})", flush=True)
         self.screen = screen
@@ -59,6 +61,12 @@ class BalletLignes(Application):
 
     def get_action(self):
         return self.action
+
+    def get_theme(self):
+        if self.theme.get_theme() == "CLAIR":
+            self.back_color = Colors.WHITE
+        else:
+            self.back_color = Colors.BLACK
 
     def keyreleased(self, event):
         self.touche = self.keys.get_key()
@@ -74,7 +82,7 @@ class BalletLignes(Application):
             ligne.update()
 
     def draw(self):
-        self.screen.fill(Colors.BLACK)
+        self.screen.fill(self.back_color)
         for ligne in self.lignes:
             self.tools.line(ligne.couleur, *ligne.coords)
 

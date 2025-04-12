@@ -18,6 +18,11 @@ class TicTacToe(Application):
         self.grid = []
         self.tour = "X"
         self.initialisation()
+        self.get_theme()
+
+    def get_theme(self):
+        self.fore_color = self.theme.get("FORE_COLOR")
+        self.back_color = self.theme.get("BACKGROUND_COLOR")
 
     def post_init(self):
         self.resize(self.screen)
@@ -158,13 +163,13 @@ class TicTacToe(Application):
         pass
 
     def draw(self):
-        self.screen.fill(Colors.BLACK)
+        self.screen.fill(self.back_color)
 
-        self.tools.line(Colors.WHITE, (self.width // 3, 0), (self.width // 3, self.height), 2)
-        self.tools.line(Colors.WHITE, (2*self.width // 3, 0), (2*self.width // 3, self.height), 2)
-        self.tools.line(Colors.WHITE, (0, self.height // 3), (self.width, self.height // 3), 2)
-        self.tools.line(Colors.WHITE, (0, 2*self.height // 3), (self.width, 2*self.height // 3), 2)
-        self.tools.rect(Colors.WHITE, (0, 0, self.width-1, self.height-1), 2)
+        self.tools.line(self.fore_color, (self.width // 3, 0), (self.width // 3, self.height), 2)
+        self.tools.line(self.fore_color, (2*self.width // 3, 0), (2*self.width // 3, self.height), 2)
+        self.tools.line(self.fore_color, (0, self.height // 3), (self.width, self.height // 3), 2)
+        self.tools.line(self.fore_color, (0, 2*self.height // 3), (self.width, 2*self.height // 3), 2)
+        self.tools.rect(self.fore_color, (0, 0, self.width-1, self.height-1), 2)
 
         sol = self.isResolved(self.grid, "X") + self.isResolved(self.grid, "O") + "  "
         sol = sol if sol.strip() != "" else self.isTie(self.grid) + "  "
@@ -172,7 +177,7 @@ class TicTacToe(Application):
         for i in range(3):
             for j in range(3):
                 decode = sol
-                color = (255, 255, 255)
+                color = self.fore_color
                 while len(decode) > 2:
                     if (decode[0] == "R" and int(decode[1]) == j) or (
                         decode[0] == "C" and int(decode[1]) == i) or (

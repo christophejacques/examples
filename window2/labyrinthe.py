@@ -54,6 +54,11 @@ class Laby(Application):
         self.action = ""
         self.set_size(w, h)
         self.generate()
+        self.get_theme()
+
+    def get_theme(self):
+        self.fore_color = self.theme.get("FORE_COLOR")
+        self.back_color = self.theme.get("BACKGROUND_COLOR")
 
     def set_size(self, w, h):
         self.w = w
@@ -189,7 +194,8 @@ class Laby(Application):
 
     def draw(self):
         if self.generated:
-            self.screen.fill((20, 20, 20))
+            # self.screen.fill((20, 20, 20))
+            self.screen.fill(self.back_color)
         else:
             self.screen.fill((60, 30, 20))
 
@@ -206,12 +212,12 @@ class Laby(Application):
         self.draw_train()
 
         # Ligne Top fenetre
-        self.tools.line((255, 255, 255), pos1, pos2)
+        self.tools.line(self.fore_color, pos1, pos2)
         # Cellule Debut
         self.draw_cell(self.debut, 0, bg_color)
         pos2 = (0, self.height*self.cell_size)
         # Ligne Bottom fenetre
-        self.tools.line((255, 255, 255), pos1, pos2)
+        self.tools.line(self.fore_color, pos1, pos2)
         # Cellule Fin
         self.draw_cell(self.fin, self.height-1, bg_color)
 
@@ -223,11 +229,11 @@ class Laby(Application):
                 pos2 = ((i+1)*self.cell_size, (j+1)*self.cell_size)
                 if self.cells[i][j].bas:
                     pos1 = (i*self.cell_size, (j+1)*self.cell_size)
-                    self.tools.line((255, 255, 255), pos1, pos2)
+                    self.tools.line(self.fore_color, pos1, pos2)
 
                 if self.cells[i][j].droite:
                     pos1 = ((i+1)*self.cell_size, j*self.cell_size)
-                    self.tools.line((255, 255, 255), pos1, pos2)
+                    self.tools.line(self.fore_color, pos1, pos2)
 
 
 if __name__ == '__main__':
