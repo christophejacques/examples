@@ -6,7 +6,7 @@ from audio import Audio
 from mouse import Mouse
 from keyboard import Keyboard
 from colors import Colors
-from classes import Variable, Tools, get_all_classes, Theme
+from classes import Variable, Tools, get_all_classes, Theme, Registres
 
 
 def get_pygame_const_name(index):
@@ -90,6 +90,72 @@ class Icone:
         if self.mouse_over:
             pygame.draw.rect(self.screen_surf, Colors.GREY, self.dest_rect, 1)
             pygame.draw.rect(self.icone_surf, Colors.WHITE, (0, 0, self.ICONE_WIDTH, self.ICONE_HEIGHT), 1)
+        self.screen_surf.blit(self.text_surf, self.title_rect)
+
+
+class Tache:
+    TASK_HEIGHT = 0
+    TASK_WIDTH_MAX = 200
+    TASK_WIDTH = TASK_WIDTH_MAX
+    TASK_SELECT_HEIGHT = 3
+    TASK_ICONE_SIZE = 20
+    TASK_TITLE_BORDER = 5
+
+    TASK_BUTTON_BACK_COLOR = (80, 80, 80)
+    TASK_SELECTED_BUTTON_BACK_COLOR = (50, 50, 50)
+    TASK_ERROR_BUTTON_BACK_COLOR = (250, 50, 50)
+
+    def __init__(self, screen, title, couleur, x, window):
+        self.update_screen(screen)
+        self.title = title
+        self.window = window
+        self.mouse_over = False
+        self.set_pos(x)
+        self.get_theme()
+
+    def get_theme(self):
+        self.text_surf = SYS_FONT.render(self.title, False, Theme.get("FORE_COLOR"))
+        if self.window.on_error:
+            self.couleur = Window.THEME_ERROR_COLOR
+        else:
+            self.couleur = Tache.TASK_BUTTON_BACK_COLOR
+
+    def update_screen(self, screen):
+        self.screen_surf = screen
+
+    def set_pos(self, x):
+        self.posx = x
+        self.tache_rect = pygame.Rect(self.posx, 0, Tache.TASK_WIDTH, Tache.TASK_HEIGHT)
+        self.tache_button_rect = self.tache_rect.clip(
+            (self.posx, 0), (Tache.TASK_WIDTH, Tache.TASK_HEIGHT-Tache.TASK_SELECT_HEIGHT))
+        self.title_rect = self.tache_button_rect.clip(
+            (self.posx+Tache.TASK_ICONE_SIZE, Tache.TASK_TITLE_BORDER), 
+            (Tache.TASK_WIDTH-Tache.TASK_ICONE_SIZE, Tache.TASK_HEIGHT-Tache.TASK_SELECT_HEIGHT))
+        self.tache_select_rect = self.tache_rect.clip(
+            (self.posx, Tache.TASK_HEIGHT-Tache.TASK_SELECT_HEIGHT), (Tache.TASK_WIDTH, Tache.TASK_SELECT_HEIGHT))
+
+        self.tache_button_surf = self.screen_surf.subsurface(self.tache_button_rect)
+        self.tache_select_surf = self.screen_surf.subsurface(self.tache_select_rect)
+
+    def set_title(self, title):
+        self.title = title
+        self.text_surf = SYS_FONT.render(self.title, False, Theme.get("FORE_COLOR"))
+
+    def update(self):
+        if self.window.on_error and self.couleur != Window.THEME_ERROR_COLOR:
+            self.couleur = Window.THEME_ERROR_COLOR
+    
+    def draw(self):
+        if self.window.active:
+            if self.window.on_error:
+                self.tache_button_surf.fill(Tache.TASK_ERROR_BUTTON_BACK_COLOR)
+            else:
+                self.tache_button_surf.fill(Tache.TASK_SELECTED_BUTTON_BACK_COLOR)
+        else:
+            self.tache_button_surf.fill(self.couleur)
+
+        if self.mouse_over:
+            self.tache_select_surf.fill(Colors.CYAN)
         self.screen_surf.blit(self.text_surf, self.title_rect)
 
 
@@ -381,6 +447,7 @@ class Window:
 
     def close(self):
         if not self.on_error:
+            self.instance.registre.save_file()
             self.instance.close()
         else:
             Keyboard.clear_buffer()
@@ -398,6 +465,9 @@ class OperatingSystem:
 
     def __init__(self):
         self.running = True
+        Tache.TASK_HEIGHT = OperatingSystem.TASK_BAR_HEIGHT
+        self.registre = Registres("OS")
+
         Audio.init(False)
         Theme.set_theme("SOMBRE")
 
@@ -415,7 +485,7 @@ class OperatingSystem:
 
         if desktops[0][1] > 1000:
             # Full HD max resolution
-            disp_size = (1400, 788)
+            disp_size = (1800, 788)
         else:
             disp_size = desktops[0]
         # self.screen = pygame.display.set_mode(desktops[0], pygame.FULLSCREEN, 24)
@@ -431,17 +501,27 @@ class OperatingSystem:
         for tache in self.liste_taches:
             tache.update_screen(self.barre_taches)
         self.resize_taches()
-
-        total: int = 0
-        for systray in self.liste_systray:
-            systray.update_screen(self.barre_taches, total)
-            total += systray.get_width()
-
+        self.update_systrays_positions()
 
         screen_size = pygame.display.get_window_size()
         for fenetre in self.liste_fenetres:
             if fenetre.last_statut() == "MAXIMIZED":
                 fenetre.set_size(0, 0, screen_size[0], screen_size[1]-OperatingSystem.TASK_BAR_HEIGHT)
+
+    def update_systrays_positions(self):
+        total: int = 0
+        width, height = self.barre_taches.get_size()
+        for systray in self.liste_systray:
+            systray_width = systray.get_width()
+
+            sysapp_rect = pygame.Rect(
+                width - total - systray_width, 0, 
+                systray_width, height)
+
+            systray.update_screen(self.barre_taches.subsurface(sysapp_rect))
+            
+            # calcul du decalage de zone pour le prochain SysTray
+            total += systray_width + systray.TEXT_OFFSET
 
     def update_theme(self):
         for icone in self.liste_icones:
@@ -475,13 +555,14 @@ class OperatingSystem:
         self.load_background_image()
 
     def load_background_image(self):
+        image_file = self.registre.load("Wallpaper", "pornstar.jpg")
         try:
             # image = pygame.image.load("wallpaper/pornstar34.jpg")
             # image = pygame.image.load("Wallpaper/Tiffany Doll/pornstar390.jpg")
             # image = pygame.image.load("Wallpaper/Lexy Belle/pornstar463.jpg")
-            image = pygame.image.load("Wallpaper/Nikita Bellucci/pornstar293.jpg")
+            # image = pygame.image.load("Wallpaper/Nikita Bellucci/pornstar293.jpg")
             # image = pygame.image.load("wallpaper/wallpaper1.jpg")
-            # image = pygame.image.load("pornstar.jpg")
+            image = pygame.image.load(image_file)
             *_, img_width, img_height = image.get_rect()
 
             # print(self.width, self.height, img_width, img_height, flush=True)
@@ -515,15 +596,21 @@ class OperatingSystem:
         icone = Icone(self.screen_surf, title, couleur, self.ico_posX, self.ico_posY, app, *args)
         self.liste_icones.append(icone)
 
-    def get_applications(self):
+    def load_applications(self):
         for une_classe in get_all_classes("Application"):
             libelle, color, *args = une_classe.DEFAULT_CONFIG
             self.create_icone(libelle, color, une_classe, *args)
 
     def close_all_systray_apps(self):
+        # Enregistrement de la base de registre des systrays
+        for systray in self.liste_systray:
+            # print("check:", systray.DEFAULT_CONFIG[0], end=" = ")
+            # print(systray.registre.get_all())
+            systray.registre.save_file()
+
         self.liste_systray.clear()
 
-    def get_systray_apps(self):
+    def load_systray_apps(self):
         total: int = 0
         classes: list = []
         for une_classe in get_all_classes("SysTray"):
@@ -533,38 +620,76 @@ class OperatingSystem:
         for une_classe in classes:
             libelle, color, *args = une_classe.DEFAULT_CONFIG
             Variable.window = self.barre_taches
-            systray = une_classe(self.barre_taches, color, total)
-            self.liste_systray.append(systray)
-            total += systray.get_width()
 
-    def get_systray_width(self):
+            # calcul de la position de la zone a affecter au SysTray
+            width, height = self.barre_taches.get_size()
+            sysapp_rect = pygame.Rect(
+                width - total - une_classe.INITIAL_WIDTH, 0, 
+                une_classe.INITIAL_WIDTH, height)
+
+            # Initialisation dy SysTray
+            systray = une_classe(self.barre_taches.subsurface(sysapp_rect), color)
+            self.liste_systray.append(systray)
+            
+            # calcul du decalage de zone pour le prochain SysTray
+            total += systray.get_width() + une_classe.TEXT_OFFSET
+
+    def get_systrays_x(self):
         if self.liste_systray:
-            return self.liste_systray[-1].get_width() + self.liste_systray[-1].posx
+            return self.liste_systray[-1].get_offset()[0] 
+        else:
+            return self.barre_taches.get_size()[0]
+
+    def get_systrays_width(self):
+        # recupere la taille de la zone contenant tous les systrays
+        if self.liste_systray:
+            systrays_size = self.barre_taches.get_size()[0] - self.liste_systray[-1].tools.screen.get_offset()[0] 
+            return systrays_size
         else:
             return 0
 
     def update_systray_pos(self):
         total = 0
         for systray in self.liste_systray:
-            posx = systray.posx
-            if posx != total:
-                systray.set_posx(total)
-            total += systray.get_width()
+            systray_size = systray.tools.screen.get_size()[0]
+            systray_width = systray.get_width()
+            if systray_size != systray_width:
+                self.update_systrays_positions()
+                return
 
     def open(self, title, couleur, app, *args):
+        # Check si la fenetre est unique
+        if "UNIQUE" in app.WINDOW_PROPERTIES:
+            for fenetre in self.liste_fenetres:
+                if fenetre.app == app:
+                    self.activate_window(fenetre)
+                    return
+
         self.last_position = self.last_position[0]+self.NEW_WINDOW_DECAL, self.last_position[1]+self.NEW_WINDOW_DECAL
         largeur = self.width//2
         hauteur = self.height//2
         if self.last_position[0]+largeur > self.width or (
            self.last_position[1]+hauteur > self.height-self.TASK_BAR_HEIGHT):
             self.last_position = (self.NEW_WINDOW_DECAL+10, 10)
-        fenetre = Window(*self.last_position, largeur, hauteur, title, couleur, app, *args)
 
-        systray_width = self.get_systray_width()
-        if (1+len(self.liste_taches))*(Tache.TASK_WIDTH+self.TASK_BAR_DECAL) > \
-            self.barre_taches_rect[2] - self.TASK_BAR_MENU_WIDTH - systray_width:
-            Tache.TASK_WIDTH = (self.barre_taches_rect[2] - self.TASK_BAR_MENU_WIDTH - systray_width) // \
-                               (1+len(self.liste_taches)) - self.TASK_BAR_DECAL
+        if "CENTER" in app.WINDOW_PROPERTIES:
+            print(self.width, "x", self.height)
+            x = largeur - app.MIN_SIZE[0] // 2
+            y = hauteur - app.MIN_SIZE[1] // 2
+            fenetre = Window(x, y, largeur, hauteur, title, couleur, app, *args)
+        else:
+            fenetre = Window(*self.last_position, largeur, hauteur, title, couleur, app, *args)
+        
+        systrays_width = self.get_systrays_width()
+        if len(self.liste_taches) == 0:
+            Tache.TASK_WIDTH = Tache.TASK_WIDTH_MAX
+        else:
+            if (1+len(self.liste_taches))*(Tache.TASK_WIDTH+self.TASK_BAR_DECAL) > \
+                self.barre_taches_rect[2] - self.TASK_BAR_MENU_WIDTH - systrays_width:
+
+                Tache.TASK_WIDTH = (self.barre_taches_rect[2] - self.TASK_BAR_MENU_WIDTH - systrays_width) // \
+                                   (1+len(self.liste_taches)) - self.TASK_BAR_DECAL
+        
         self.resize_taches()
         tache = Tache(self.barre_taches, title, couleur, 
             self.TASK_BAR_MENU_WIDTH+len(self.liste_taches)*(Tache.TASK_WIDTH+self.TASK_BAR_DECAL), fenetre)
@@ -601,10 +726,13 @@ class OperatingSystem:
             if tache.window == fenetre:
                 self.liste_taches.pop(i)
                 if Tache.TASK_WIDTH < Tache.TASK_WIDTH_MAX:
-                    systray_width = self.get_systray_width()
-                    Tache.TASK_WIDTH = min(Tache.TASK_WIDTH_MAX, 
-                        (self.barre_taches_rect[2] - self.TASK_BAR_MENU_WIDTH - systray_width) // \
-                        len(self.liste_taches) - self.TASK_BAR_DECAL)
+                    systray_width = self.get_systrays_width()
+                    if len(self.liste_taches) == 0:
+                        Tache.TASK_WIDTH = Tache.TASK_WIDTH_MAX
+                    else:
+                        Tache.TASK_WIDTH = min(Tache.TASK_WIDTH_MAX, 
+                            (self.barre_taches_rect[2] - self.TASK_BAR_MENU_WIDTH - systray_width) // \
+                            len(self.liste_taches) - self.TASK_BAR_DECAL)
                     self.resize_taches()
                 else:
                     self.calculate_tache_position(i)
@@ -618,8 +746,12 @@ class OperatingSystem:
             self.activate_last_window()
 
     def close_all(self):
+        # Fermeture des fenetres
         while self.liste_fenetres:
             self.close(self.liste_fenetres[0])
+
+        # Fermeture des systrays
+        self.close_all_systray_apps()
 
     def show_all_windows(self):
         for f in self.liste_fenetres:
@@ -686,6 +818,9 @@ class OperatingSystem:
                 file_handle.write(json.dumps(contenu, indent=4))
         except Exception as e:
             print("save_icones Error:", e)
+
+        # Sauvegarde de la base de registre de l'OS
+        self.registre.save_file()
     
     def get_icone_mouse_over(self):
         for icone in self.liste_icones:
@@ -714,14 +849,35 @@ class OperatingSystem:
     def get_systrays_actions(self):
         for systray in self.liste_systray:
             systray_action = systray.get_action()
-            if systray_action and systray_action[:12] == "CHANGE_THEME":
-                Theme.set_theme(systray_action[13:])
-                self.update_theme()
+
+            if isinstance(systray_action, tuple):
+                systray_action, callback = systray_action
+            else:
+                callback = None
+
+            if systray_action is None:
+                continue
+
+            match systray_action.split(":"):
+                case ["CHANGE_THEME", new_theme]:
+                    Theme.set_theme(new_theme)
+                    self.update_theme()
+
+                case ["UPDATE", "SYSTRAYS"]:
+                    self.update_systray_pos()
+                    if callback:
+                        callback()
 
     def get_windows_actions(self):
         for fenetre in self.liste_fenetres:
-            if not fenetre.on_error and fenetre.instance.get_action() == "QUIT":
-                self.close(fenetre)
+            if not fenetre.on_error and fenetre.instance.get_action() is not None:
+                for action in fenetre.instance.get_action().split(";"):
+                    match action.split(":"):
+                        case ["QUIT"]:
+                            self.close(fenetre)
+                        case ["SET", "WALLPAPER", filename]:
+                            self.registre.save("Wallpaper", filename)
+                            self.load_background_image()
 
     def check_keyboard_events(self):
         return
@@ -811,6 +967,7 @@ class OperatingSystem:
         # Barre de tache avec ses SysTray
         for systray in self.liste_systray:
             systray.draw()
+            # print(systray.registre.get_all(), flush=True)
 
         pygame.display.update()
         self.clock.tick(60)  # Limit the frame rate to 60 FPS.
@@ -858,13 +1015,15 @@ class OperatingSystem:
             self.icone_catched_by_mouse = None
 
         if self.barre_taches_rect.collidepoint(mouse_position):
+            # La souris se trouve dans la barre de taches
             systray = self.get_systray_mouse_over()
             if systray:
-                if systray.systray_rect.collidepoint((mouse_position[0], mouse_position[1]-self.barre_taches_rect[1])) and (
-                   systray.systray_rect.collidepoint((Mouse.get_saved_pos()[0], Mouse.get_saved_pos()[1]-self.barre_taches_rect[1]))):
+                systray_rect = systray.tools.screen.get_rect().move(systray.tools.screen.get_abs_offset())
+                if systray_rect.collidepoint(mouse_position) and (
+                   systray_rect.collidepoint(Mouse.get_saved_pos())):
                     systray.mouse_up()
                     # update all systrays position if necessary
-                    self.update_systray_pos()
+                    # self.update_systray_pos()
             else:
                 # Gestion click tache dans barre des taches
                 tache = self.get_tache_mouse_over()
@@ -881,6 +1040,7 @@ class OperatingSystem:
                             self.activate_window(tache.window)
 
         else:
+            # La souris se trouve sur le bureau
             window_spotted = False
             fen_active = self.get_active_window()
             if fen_active:
@@ -931,6 +1091,11 @@ class OperatingSystem:
 
         Mouse.set_pos(mouse_position)
 
+    def mouse_wheel(self, dx, dy):
+        fen_active = self.get_active_window()
+        if fen_active:
+            fen_active.instance.mouse_wheel(dx, dy)
+
     def mouse_move(self, mouse_position):
         window_spotted = False
         mx, my = Mouse.get_pos()
@@ -939,6 +1104,7 @@ class OperatingSystem:
             self.icone_catched_by_mouse.move(mouse_position[0]-mx, mouse_position[1]-my, self.liste_icones)
 
         elif self.get_active_window() and not self.barre_taches_rect.collidepoint(mouse_position):
+            # la souris n'est pas dans la barre de tache
             if Mouse.left_button_down and self.window_catch_by_mouse:
                 # redimensionnement de la fenetre active
                 self.get_active_window().resize(Mouse.cursor_over,
@@ -1021,14 +1187,19 @@ class OperatingSystem:
 
                 # Recherche systray sous curseur
                 if self.liste_systray:
-                    x = self.liste_systray[-1].posx
-                    w = self.liste_systray[-1].get_width()
                     over_systray = False
-                    systray_rect = pygame.Rect(self.width - x - w, self.barre_taches_rect[1], x + w, self.TASK_BAR_HEIGHT)
-                    if systray_rect.collidepoint(mouse_position):
+                    rect = self.liste_systray[-1].tools.screen.get_offset()
+                    systrays_rect = pygame.Rect(
+                        rect[0], 
+                        self.barre_taches_rect[1], 
+                        self.barre_taches_rect[2]-rect[0], 
+                        self.TASK_BAR_HEIGHT)
+
+                    if systrays_rect.collidepoint(mouse_position):
                         over_systray = True
                         for systray in self.liste_systray:
-                            if systray.systray_rect.collidepoint((mouse_position[0], mouse_position[1]-self.barre_taches_rect[1])):
+                            systray_rect = pygame.Rect(systray.tools.screen.get_offset()+systray.tools.screen.get_size())
+                            if systray_rect.collidepoint((mouse_position[0], 0)):
                                 systray.mouse_over = True
                                 systray.mouse_move()
                             else:
@@ -1067,129 +1238,63 @@ class OperatingSystem:
         for systray in self.liste_systray:
             systray.mouse_over = False
 
-
-class Tache:
-    TASK_HEIGHT = OperatingSystem.TASK_BAR_HEIGHT
-    TASK_WIDTH_MAX = 200
-    TASK_WIDTH = TASK_WIDTH_MAX
-    TASK_SELECT_HEIGHT = 3
-    TASK_ICONE_SIZE = 20
-    TASK_TITLE_BORDER = 5
-
-    TASK_BUTTON_BACK_COLOR = (80, 80, 80)
-    TASK_SELECTED_BUTTON_BACK_COLOR = (50, 50, 50)
-    TASK_ERROR_BUTTON_BACK_COLOR = (250, 50, 50)
-
-    def __init__(self, screen, title, couleur, x, window):
-        self.update_screen(screen)
-        self.title = title
-        self.window = window
-        self.mouse_over = False
-        self.set_pos(x)
-        self.get_theme()
-
-    def get_theme(self):
-        self.text_surf = SYS_FONT.render(self.title, False, Theme.get("FORE_COLOR"))
-        if self.window.on_error:
-            self.couleur = Window.THEME_ERROR_COLOR
-        else:
-            self.couleur = Tache.TASK_BUTTON_BACK_COLOR
-
-    def update_screen(self, screen):
-        self.screen_surf = screen
-
-    def set_pos(self, x):
-        self.posx = x
-        self.tache_rect = pygame.Rect(self.posx, 0, Tache.TASK_WIDTH, Tache.TASK_HEIGHT)
-        self.tache_button_rect = self.tache_rect.clip(
-            (self.posx, 0), (Tache.TASK_WIDTH, Tache.TASK_HEIGHT-Tache.TASK_SELECT_HEIGHT))
-        self.title_rect = self.tache_button_rect.clip(
-            (self.posx+Tache.TASK_ICONE_SIZE, Tache.TASK_TITLE_BORDER), 
-            (Tache.TASK_WIDTH-Tache.TASK_ICONE_SIZE, Tache.TASK_HEIGHT-Tache.TASK_SELECT_HEIGHT))
-        self.tache_select_rect = self.tache_rect.clip(
-            (self.posx, Tache.TASK_HEIGHT-Tache.TASK_SELECT_HEIGHT), (Tache.TASK_WIDTH, Tache.TASK_SELECT_HEIGHT))
-
-        self.tache_button_surf = self.screen_surf.subsurface(self.tache_button_rect)
-        self.tache_select_surf = self.screen_surf.subsurface(self.tache_select_rect)
-
-    def set_title(self, title):
-        self.title = title
-        self.text_surf = SYS_FONT.render(self.title, False, Theme.get("FORE_COLOR"))
-
-    def update(self):
-        if self.window.on_error and self.couleur != Window.THEME_ERROR_COLOR:
-            self.couleur = Window.THEME_ERROR_COLOR
-    
-    def draw(self):
-        if self.window.active:
-            if self.window.on_error:
-                self.tache_button_surf.fill(Tache.TASK_ERROR_BUTTON_BACK_COLOR)
-            else:
-                self.tache_button_surf.fill(Tache.TASK_SELECTED_BUTTON_BACK_COLOR)
-        else:
-            self.tache_button_surf.fill(self.couleur)
-
-        if self.mouse_over:
-            self.tache_select_surf.fill(Colors.CYAN)
-        self.screen_surf.blit(self.text_surf, self.title_rect)
-
-
-def run():
-    my_os = OperatingSystem()
-    my_os.load_icones()
-    my_os.get_applications()
-    my_os.get_systray_apps()
-
-    while my_os.running:
-        my_os.get_systrays_actions()
-        my_os.get_windows_actions()
-        my_os.check_keyboard_events()
-        my_os.update()
-        my_os.draw()
+    def get_pygame_events(self):
 
         for event in pygame.event.get():
             if event.type == pygame.KMOD_LGUI:
-                my_os.mouse_move(event.pos)
+                self.mouse_move(event.pos)
 
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button != 2:
-                    my_os.mouse_button_down(event.pos, event.button)
+                    self.mouse_button_down(event.pos, event.button)
 
             elif event.type == pygame.MOUSEBUTTONUP:
-                if event.button == 2:
-                    color: str = "SOMBRE" if Theme.get_theme() == "CLAIR" else "CLAIR"
-                    Theme.set_theme(color)
-                    my_os.update_theme()
-                else:
-                    my_os.mouse_button_up(event.pos, event.button)
+                self.mouse_button_up(event.pos, event.button)
+
+            elif event.type == pygame.MOUSEWHEEL:
+                self.mouse_wheel(event.x, event.y)
 
             elif event.type == pygame.KEYDOWN:
-                my_os.keypressed(event)
+                self.keypressed(event)
 
             elif event.type == pygame.KEYUP:
                 Keyboard.add_key_to_buffer(event.key)
-                my_os.keyreleased(event)
+                self.keyreleased(event)
 
             elif event.type in (pygame.AUDIO_S16, pygame.WINDOWENTER, pygame.ACTIVEEVENT):
-                my_os.mouse_enter_leave()
+                self.mouse_enter_leave()
 
             elif event.type in (
                     pygame.WINDOWMAXIMIZED, 
                     pygame.WINDOWRESTORED,
                     pygame.VIDEORESIZE):
-                my_os.update_screen()
+                self.update_screen()
 
             elif event.type == pygame.QUIT:
-                my_os.running = False
+                self.running = False
 
             else:
                 # print(event.type, get_pygame_const_name(event.type))
                 pass
 
-    my_os.close_all()
-    my_os.save_icones()
-    pygame.quit()
+    def run(self):
+        self.load_icones()
+        self.load_applications()
+        self.load_systray_apps()
+
+        while self.running:
+            self.get_systrays_actions()
+            self.get_windows_actions()
+            self.check_keyboard_events()
+            self.update()
+            self.draw()
+            self.get_pygame_events()
+
+        self.close_all()
+        self.save_icones()
+        pygame.quit()
 
 
 if __name__ == "__main__":
-    run()
+    my_os = OperatingSystem()
+    my_os.run()

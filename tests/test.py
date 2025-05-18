@@ -1,105 +1,84 @@
-
-class Point:
-    def __init__(self, dest: str, dist: int = 0, depuis: str = ""):
-        self.dest: str = dest
-        self.dist: int = dist
-        self.distFromBegin: int = 0
-        self.depuis: str = ""
-        self.checked: bool = False
-
-    def comeFrom(self, depuis) -> None:
-        self.checked = True
-        self.distFromBegin = depuis.distFromBegin + self.dist
-        self.depuis = depuis.dest
-
-    def __eq__(self, other) -> bool:
-        if isinstance(other, str):
-            return self.dest == other
-        elif isinstance(other, Point):
-            return self.dest == other.dest
-        else:
-            raise TypeError(f"Erreur de type: {other.__class__.__name__} au lieu de [str | Point]")
-
-    def __repr__(self) -> str:
-        if self.dist == 0:
-            return self.dest
-        else:
-            return f"'{self.depuis} " + ">" * self.dist + f" {self.dest}' ({self.distFromBegin})"
+import json
 
 
-class Liens:
-    def __init__(self, liens: list[Point]):
-        self.liens = liens
-        self.distFromBegin: int = 0
-        self.checked = False
+class Registres:
+    __filename: str = "registres.json"
+    __data: dict
 
-    def __repr__(self) -> str:
-        res: str = f"{self.liens[0]!r}"
+    def __init__(self, application: str):
+        self.clear()
+        self.__application = application
+        self.load_file()
 
-        for p in self.liens[1:]:
-            res += f", {p}"
-        return res + "\n"
+    def load_file(self) -> None:
+        try:
+            with open(self.__filename) as reg:
+                self.__data = json.load(reg).get(self.__application, {})
 
+        except FileNotFoundError as fnfe:
+            print("Initialisation de la base de registres")
+            with open(self.__filename, "w") as reg:
+                json.dump({}, reg)
+                self.__data = dict()
 
-chemin: dict[str, Liens] = {
-    'A': Liens([Point('B', 2), Point('D', 1)]),
-    'B': Liens([Point('C', 2), Point('A', 1), Point('F', 1)]),
-    'C': Liens([Point('B', 3), Point('E', 1), Point('F', 1)]),
-    'D': Liens([Point('E', 1), Point('A', 1)]),
-    'E': Liens([Point('C', 1), Point('D', 1)]),
-    'F': Liens([Point('B', 1), Point('C', 1), Point('G', 1)]),
-    'G': Liens([Point('F', 1)])
-}
+    def save_file(self) -> None:
+        with open(self.__filename) as reg:
+            self.__reg = json.load(reg)
 
-chemin2: dict[str, Liens] = {
-    'A': Liens([Point('B', 4), Point('C', 1)]),
-    'B': Liens([Point('A', 1), Point('C', 1), Point('D', 1)]),
-    'C': Liens([Point('A', 1), Point('B', 1), Point('D', 4)]),
-    'D': Liens([Point('B', 1), Point('C', 1)]),
-}
+        self.__reg[self.__application] = self.__data
+        with open(self.__filename, "w") as reg:
+            json.dump(self.__reg, reg)
 
-DEBUG: bool = True
+    def clear(self) -> None:
+        self.__data = dict()
 
-debut: Point = Point("A")
-fin: Point = Point("G")
-solution: list[Point] = []
-cheminCourt: list[Point] = []
-maximum: int = 9 ** 99
+    def load(self, chemin_registre) -> object:
+        res : dict = self.__data
+        for registre in chemin_registre.split("."):
+            res = res.get(registre, None)
+            if res is None:
+                return
 
+        return res
 
-def ajoute(destination: Point) -> None:
-    solution.append(destination)
+    def save(self, chemin_registre, valeur) -> None:
+        res : dict = self.__data
 
+        # Creation / Recuperation des informations du chemin_registre
+        for registre in chemin_registre.split(".")[:-1]:
+            temp = res.get(registre, None)
+            if temp is None:
+                res[registre] = dict()
+                res = res.get(registre, {})
+            else:
+                res = temp
 
-def supprime() -> None:
-    solution.pop()
-
-
-def find_next(current: Point) -> list[Point]:
-    global maximum
-    global cheminCourt
-
-    if current == fin:
-        if maximum > current.distFromBegin:
-            maximum = current.distFromBegin
-        if DEBUG:
-            print(f"[>{current.distFromBegin:>3} <]", end=" = ")
-            print(solution)
-        cheminCourt = solution.copy()
-        return []
-
-    for destination in chemin[current.dest].liens:
-        if maximum >= current.distFromBegin + destination.dist and \
-         (not destination.checked or current.distFromBegin + destination.dist < destination.distFromBegin):
-            destination.comeFrom(current)
-            ajoute(destination)
-            find_next(destination)
-            supprime()
-
-    if not solution:
-        return cheminCourt
-
-    return []
+        # Creation / Mise a jour de la cle de registre finale
+        registre = chemin_registre.split(".")[-1]
+        res[registre] = valeur
 
 
-print(debut, ">", fin, "=", find_next(debut))
+if __name__ == "__main__":
+    print("Initialisation de la base de registres pour l'application: UnitTest")
+    reg = Registres("UnitTest")
+
+    print("Chargement des données de la base de registres")
+    reg.load_file()
+
+    print("Ajout d'une clé de registre simple")
+    titre = "test de fonctionnalite"
+    reg.save("titre", titre)
+
+    print("Ajout d'une clé de registre multiple")
+    propriete_titre = "Ballet de lignes"
+    reg.save("proprietes.titre", propriete_titre)
+
+    print("controle de la récupération des valeurs")
+    assert titre == reg.load("titre")
+    assert propriete_titre == reg.load("proprietes.titre")
+
+    print("Suppression des données de la base de registre")
+    reg.clear()
+    # reg.save_file()
+
+    print("Fonctionnement : OK")

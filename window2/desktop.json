@@ -55,6 +55,13 @@
             230
         ]
     },
+    "SelectWallpaper": {
+        "libelle": "SelectWallpaper",
+        "position": [
+            10,
+            450
+        ]
+    },
     "SnakeGame": {
         "libelle": "Jeu du Serpent",
         "position": [
@@ -81,6 +88,13 @@
         "position": [
             10,
             10
+        ]
+    },
+    "Modele": {
+        "libelle": "Modele",
+        "position": [
+            10,
+            560
         ]
     }
 }

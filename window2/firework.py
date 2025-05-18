@@ -45,7 +45,11 @@ class Firework(Application):
         
         super().__init__(screen)
         self.resize(screen)
-        self.nombre = self.screen.get_size()[0]//300 
+        nombre = self.registre.load("nombre")
+        if nombre is None:
+            self.nombre = self.screen.get_size()[0]//300 
+        else:
+            self.nombre = nombre
 
         self.action = ""
         self.fusees = []
@@ -68,11 +72,13 @@ class Firework(Application):
 
         if touche == self.keys.K_KP_PLUS:
             self.nombre += 1
+            self.registre.save("nombre", self.nombre)
             self.set_title(f"Feu d'artifice ({self.nombre} fusées)")
 
         elif touche == self.keys.K_KP_MINUS:
             if self.nombre > 1:
                 self.nombre -= 1
+                self.registre.save("nombre", self.nombre)
                 self.set_title(f"Feu d'artifice ({self.nombre} fusées)")
 
     def load_sounds(self):

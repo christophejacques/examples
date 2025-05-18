@@ -1,8 +1,97 @@
 import pygame
+import json
 
 from abc import abstractmethod, ABCMeta
 from os import path
 # from os.path import sep as separateur
+
+
+def fprint(*args, **kwargs):
+    print(*args, **kwargs, flush=True)
+    
+
+class Registres:
+    __filename: str = "registres.json"
+    __data: dict
+    __modified: bool
+
+    def __init__(self, application: str):
+        # print("load registres:", application, flush=True)
+        self.clear()
+        self.__application = application
+        self.load_file()
+
+    def is_modified(self) -> bool:
+        return self.__modified
+
+    def load_file(self) -> None:
+        # Lecture des registres de l'application
+        # print("chargement du registre :", self.__application, flush=True)
+        self.__modified = False
+        try:
+            with open(self.__filename, encoding="utf-8") as reg:
+                self.__data = json.load(reg).get(self.__application, None)
+
+            if self.__data is None:
+                print("Initialisation de l'application dans la base de registres", flush=True)
+                self.__modified = True
+                self.__data = dict()
+
+        except FileNotFoundError as fnfe:
+            print("Initialisation de la base de registres", flush=True)
+            self.__modified = True
+            with open(self.__filename, "w", encoding="utf-8") as reg:
+                json.dump({}, reg)
+                self.__data = dict()
+
+    def save_file(self) -> None:
+        # Sauvegarde des registres de l'application
+        if not self.__modified:
+            return
+
+        print("save registres:", self.__application, flush=True)
+        with open(self.__filename, encoding="utf-8") as reg:
+            self.__reg = json.load(reg)
+
+        self.__reg[self.__application] = self.__data
+        with open(self.__filename, "w", encoding="utf-8") as reg:
+            json.dump(self.__reg, reg)
+
+    def clear(self) -> None:
+        self.__modified = True
+        self.__data = dict()
+
+    def get_all(self) -> dict:
+        return self.__data
+
+    def load(self, chemin_registre, default=None) -> object:
+        res : dict = self.__data
+        # Recuperation des informations du chemin_registre
+        for registre in chemin_registre.split("."):
+            res = res.get(registre, None)
+            if res is None:
+                self.save(chemin_registre, default)
+                return default
+
+        # Lecture de la cle de registre finale
+        return res
+
+    def save(self, chemin_registre, valeur) -> None:
+        res : dict = self.__data
+        self.__modified = True
+
+        # Creation / Recuperation des informations du chemin_registre
+        for registre in chemin_registre.split(".")[:-1]:
+            temp = res.get(registre, None)
+            if temp is None:
+                res[registre] = dict()
+                res = res.get(registre, {})
+            else:
+                res = temp
+
+        # Creation / Mise a jour de la cle de registre finale
+        registre = chemin_registre.split(".")[-1]
+        res[registre] = valeur
 
 
 class Variable:
@@ -96,11 +185,23 @@ class Tools:
             print(f"Tools.__init__({screen})", flush=True)
         self.update_screen(screen)
 
+    def get_subtools(self, coords):
+        return Tools(self.screen.subsurface(self.Rect(*coords)))
+
     def update_screen(self, screen):
         self.screen = screen
 
+    def fill(self, color):
+        self.screen.fill(color)
+
     def font(self, police, taille):
         return pygame.font.SysFont(police, taille)
+
+    def load_image(self, image):
+        return pygame.image.load(image)
+
+    def scale_image(self, image, img_width, img_height):
+        return pygame.transform.scale(image, (img_width, img_height))
 
     def line(self, couleur, *coords):
         pygame.draw.line(self.screen, couleur, *coords)
@@ -120,6 +221,9 @@ class Tools:
     def pixels3d(self):
         return pygame.surfarray.pixels3d(self.screen)
 
+    def get_size(self):
+        return self.screen.get_size()
+
     def get_ticks(self):
         return pygame.time.get_ticks()
 
@@ -129,10 +233,13 @@ class Tools:
 
 class SysTray(metaclass=ABCMeta):
     tools: Tools
+    theme: Theme
+    registre: Registres
 
     PRIORITY = 99
     DEFAULT_CONFIG = ("?", (0, 0, 0))
     TEXT_OFFSET = 3
+    INITIAL_WIDTH = 15
 
     mouse_over = False
 
@@ -141,19 +248,22 @@ class SysTray(metaclass=ABCMeta):
         self.tools = Tools(screen)
         self.theme = Theme()
         # self.sound = Sound()
+        self.registre = Registres(self.DEFAULT_CONFIG[0])
 
     @abstractmethod
     def update_screen(self, screen, posx=0):
         self.tools = Tools(screen)
 
-    @abstractmethod
-    def set_posx(self, x):
-        pass
-
-    @abstractmethod
+    # @abstractmethod
     def get_width(self):
-        pass
+        return self.tools.screen.get_size()[0]
 
+    # 
+    # Permet d'envoyer des actions a faire par l'OS
+    # 
+    # return None : None
+    # return str  : action
+    # return tuple: action, callback
     def get_action(self):
         return None
 
@@ -181,6 +291,7 @@ class Application(metaclass=ABCMeta):
     tools: Tools
     sound: Sound
     keys: Keys
+    registre: Registres
 
     WINDOW_PROPERTIES = ["RESIZABLE"]
     DEFAULT_CONFIG: tuple = ("?", (0, 0, 0))
@@ -191,6 +302,8 @@ class Application(metaclass=ABCMeta):
         self.keys = Keys()
         self.sound = Sound()
         self.theme = Theme()
+        self.registre = Registres(self.DEFAULT_CONFIG[0])
+
         window = Variable.window
         self.set_title = window.set_title
         self.win_resize = window.resize
@@ -237,6 +350,9 @@ class Application(metaclass=ABCMeta):
     def mouse_button_up(self, mouseX, mouseY, button):
         pass
 
+    def mouse_wheel(self, dx, dy):
+        pass
+        
     @abstractmethod
     def update(self):
         pass

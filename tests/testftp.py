@@ -9,8 +9,8 @@ remote_path = "/"  # Chemin du dossier de destination sur le serveur
 local_file = "mon_fichier.txt"
 
 
-def fprint(*args):
-    print(*args, flush=True)
+def fprint(*args, **kwargs):
+    print(*args, flush=True, **kwargs)
 
 def sendfile(hostname, remote_path, local_file, username, password):
     # Connexion au serveur FTP
@@ -33,17 +33,21 @@ def sendfile(hostname, remote_path, local_file, username, password):
 def getfile(hostname, remote_path, remote_file, local_file, username, password):
 
     if os.path.exists(local_file):
+        fprint("Suppression du fichier local:", local_file, end=" .. ")
         os.remove(local_file)
+        fprint("done")
 
     fichier_recupere: bool = False
     # Connexion au serveur FTP
     with FTP(hostname) as ftp:
-        fprint("login", username)
+        fprint("login", username, end= " ... ")
         ftp.login(username, password)
+        fprint("done")
 
-        fprint(f"ftp.cwd({remote_path})")
+        fprint(f"ftp.cwd({remote_path})", end= " ")
         # Changement de répertoire sur le serveur (si nécessaire)
         ftp.cwd(remote_path)
+        fprint("ok")
 
         # Envoi du fichier
         fprint(f"ftp.retrbinary({'RETR ' + local_file})")

@@ -44,7 +44,11 @@ class BalletLignes(Application):
         super().__init__(screen)
         self.lignes = list()
         self.resize(screen)
-        self.nombre = args[0]
+        nombre = self.registre.load("nombre")
+        if nombre is None:
+            self.nombre = args[0]
+        else:
+            self.nombre = nombre
         self.title = self.DEFAULT_CONFIG[0]
         self.action = ""
 
@@ -71,12 +75,21 @@ class BalletLignes(Application):
     def keyreleased(self, event):
         self.touche = self.keys.get_key()
         if self.touche == 27:
+            self.registre.save("nombre", self.nombre)
             self.action = "QUIT"
+        elif self.touche == self.keys.K_KP_PLUS:
+            self.nombre += 10
+        elif self.touche == self.keys.K_KP_MINUS:
+            self.nombre -= 10
 
     def update(self):
-        if len(self.lignes) < self.nombre:
+        nb_lignes = len(self.lignes)
+        if nb_lignes < self.nombre:
             self.lignes.append(Ligne(self.width, self.height))
-            self.set_title(self.title + f" ({len(self.lignes)})")
+            self.set_title(self.title + f" ({1+nb_lignes})")
+        elif nb_lignes > self.nombre:
+            self.lignes.pop(0)
+            self.set_title(self.title + f" ({nb_lignes-1})")
 
         for ligne in self.lignes:
             ligne.update()

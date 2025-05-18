@@ -201,12 +201,15 @@ def run(application):
         instance.update()
         instance.draw()
 
-        match instance.get_action():
-            case "QUIT":
-                running = False
+        for action in instance.get_action().split(";"):
+            match action:
+                case "QUIT":
+                    instance.registre.save_file()
+                    running = False
 
         pygame.display.update()
         for event in pygame.event.get():
+            # print(event, get_pygame_const_name(event.type), flush=True)
 
             if event.type == pygame.KEYDOWN:
                 instance.keypressed(event)
@@ -222,10 +225,14 @@ def run(application):
                 Mouse.set_pos(event.pos)
                 instance.mouse_move(*Mouse.get_pos())
 
+            elif event.type == pygame.MOUSEWHEEL:
+                instance.mouse_wheel(event.x, event.y)
+
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 Mouse.set_pos(event.pos) 
                 Mouse.save_pos()
-                instance.mouse_button_down(*window.get_mouse_pos(), event.button)
+                instance.mouse_button_down(*event.pos, event.button)
+                # instance.mouse_button_down(*window.get_mouse_pos(), event.button)
 
             elif event.type == pygame.MOUSEBUTTONUP:
                 instance.mouse_button_up(*event.pos, event.button)
@@ -239,6 +246,7 @@ def run(application):
 
             elif event.type == pygame.QUIT:
                 running = False
+                instance.registre.save_file()
                 instance.close()
 
             elif event.type in (
