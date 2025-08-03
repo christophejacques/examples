@@ -126,4 +126,4 @@ class Star:
 
 if __name__ == '__main__':
     from exec import run
-    run(StarField)
+    run(locals())

@@ -102,4 +102,4 @@ class BalletLignes(Application):
 
 if __name__ == '__main__':
     from exec import run
-    run(BalletLignes)
+    run(locals())

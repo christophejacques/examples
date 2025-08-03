@@ -150,4 +150,4 @@ class Firework(Application):
 
 if __name__ == '__main__':
     from exec import run
-    run(Firework)
+    run(locals())

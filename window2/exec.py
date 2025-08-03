@@ -187,12 +187,38 @@ class Window:
         pass
 
 
-def run(application):
+def get_application_classe(applications):
+    liste_classes = list(filter(lambda x: not x.startswith("__"), applications))
+    liste_classes.remove("Application")
+    for classe in liste_classes:
+        classe_courante = applications.get(classe,{})
+        if not hasattr(classe_courante, "__bases__"):
+            continue
+
+        for baseClasse in classe_courante.__bases__:
+            if baseClasse.__name__ == "Application":
+                return applications.get(classe, None)
+
+
+def run(application=None):
+    if isinstance(application, dict):
+        application = get_application_classe(application)
+        if application is None:
+            fprint("No Application found")
+            return
+        fprint("Run application :", application.__name__)
+
     pygame.init()
     running = True
-    
-    screen = pygame.display.set_mode((1200, 600), pygame.RESIZABLE)
-    window = Window(screen, 0, 0, 1200, 600, "", (0, 0, 0), application, *application.DEFAULT_CONFIG[2:])
+    if "RESIZABLE" in application.WINDOW_PROPERTIES:
+        size = (1200, 600)
+    else:
+        size = (application.MIN_SIZE[0]-10, application.MIN_SIZE[1]-25)
+
+    screen = pygame.display.set_mode(size, pygame.RESIZABLE)
+    window = Window(
+        screen, 0, 0, *size, "", (0, 0, 0), 
+        application, *application.DEFAULT_CONFIG[2:])
     
     instance = window.instance
     

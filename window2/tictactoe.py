@@ -198,4 +198,4 @@ class TicTacToe(Application):
 
 if __name__ == '__main__':
     from exec import run
-    run(TicTacToe)
+    run(locals())

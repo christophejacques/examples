@@ -174,6 +174,7 @@ class Window:
         self.sound_id = None
         self.active = True
         self.mouse_over = False
+        self.mouse_over_window_draw = False
         self.properties = self.app.WINDOW_PROPERTIES
         sound_property = self.search_for_in("SOUND", self.properties)
         if sound_property:
@@ -275,7 +276,11 @@ class Window:
         if self.on_error:
             return
         self.set_surface_color()
-        self.instance.get_theme()
+        try:
+            self.instance.get_theme()
+        except Exception as erreur:
+            self.set_error()
+            print("Erreur:", erreur, flush=True)
 
     def search_for_in(self, value, liste):
         for val in liste:
@@ -447,8 +452,12 @@ class Window:
 
     def close(self):
         if not self.on_error:
-            self.instance.registre.save_file()
-            self.instance.close()
+            try:
+                self.instance.registre.save_file()
+                self.instance.close()
+            except Exception as erreur:
+                self.set_error()
+                print("Erreur:", erreur, flush=True)
         else:
             Keyboard.clear_buffer()
 
@@ -557,11 +566,6 @@ class OperatingSystem:
     def load_background_image(self):
         image_file = self.registre.load("Wallpaper", "pornstar.jpg")
         try:
-            # image = pygame.image.load("wallpaper/pornstar34.jpg")
-            # image = pygame.image.load("Wallpaper/Tiffany Doll/pornstar390.jpg")
-            # image = pygame.image.load("Wallpaper/Lexy Belle/pornstar463.jpg")
-            # image = pygame.image.load("Wallpaper/Nikita Bellucci/pornstar293.jpg")
-            # image = pygame.image.load("wallpaper/wallpaper1.jpg")
             image = pygame.image.load(image_file)
             *_, img_width, img_height = image.get_rect()
 
@@ -740,7 +744,11 @@ class OperatingSystem:
 
     def close(self, fenetre):
         if fenetre:
-            fenetre.close()
+            try:
+                fenetre.close()
+            except Exception as erreur:
+                print("Erreur:", erreur, flush=True)
+
             self.close_tache(fenetre)
             self.liste_fenetres.remove(fenetre)
             self.activate_last_window()
@@ -908,7 +916,11 @@ class OperatingSystem:
     def keypressed(self, event):
         fenetre = self.get_active_window()
         if fenetre:
-            fenetre.instance.keypressed(event)
+            try:
+                fenetre.instance.keypressed(event)
+            except Exception as erreur:
+                fenetre.set_error()
+                print("Erreur:", erreur, flush=True)
 
     def keyreleased(self, event):
         # print(f"os.keyreleased({event.key})", flush=True)
@@ -921,7 +933,11 @@ class OperatingSystem:
             self.activate_next_window()
 
         elif fenetre:
-            fenetre.instance.keyreleased(event)
+            try:
+                fenetre.instance.keyreleased(event)
+            except Exception as erreur:
+                fenetre.set_error()
+                print("Erreur:", erreur, flush=True)
 
     def update(self):
         # diminution de 33.33% de la puissance allouee aux fenetres non actives
@@ -981,12 +997,16 @@ class OperatingSystem:
         Mouse.save_pos()
 
         if self.liste_fenetres:
-            for fen in reversed(self.liste_fenetres):
-                if fen.last_statut() != "MINIMIZED" and fen.window.collidepoint(Mouse.get_pos()):
+            for fenetre in reversed(self.liste_fenetres):
+                if fenetre.last_statut() != "MINIMIZED" and fenetre.window.collidepoint(Mouse.get_pos()):
                     window_spotted = True
-                    self.activate_window(fen)
-                    if not fen.on_error and fen.window_draw.collidepoint(Mouse.get_pos()):
-                        fen.instance.mouse_button_down(*fen.get_mouse_pos(), mouse_button)
+                    self.activate_window(fenetre)
+                    if not fenetre.on_error and fenetre.window_draw.collidepoint(Mouse.get_pos()):
+                        try:
+                            fenetre.instance.mouse_button_down(*fenetre.get_mouse_pos(), mouse_button)
+                        except Exception as erreur:
+                            fenetre.set_error()
+                            print("Erreur:", erreur, flush=True)
                     break
             if not self.get_active_window():
                 Mouse.left_button_down = False
@@ -1081,7 +1101,11 @@ class OperatingSystem:
                      fen_active.window_draw.collidepoint(mouse_position)):
                     window_spotted = True
                     if not fen_active.on_error:
-                        fen_active.instance.mouse_button_up(*fen_active.get_mouse_pos(), mouse_button)
+                        try:
+                            fen_active.instance.mouse_button_up(*fen_active.get_mouse_pos(), mouse_button)
+                        except Exception as erreur:
+                            fen_active.set_error()
+                            print("Erreur:", erreur, flush=True)
 
             if not window_spotted:
                 # Gestion du double-click d'un icone du bureau
@@ -1094,7 +1118,11 @@ class OperatingSystem:
     def mouse_wheel(self, dx, dy):
         fen_active = self.get_active_window()
         if fen_active:
-            fen_active.instance.mouse_wheel(dx, dy)
+            try:
+                fen_active.instance.mouse_wheel(dx, dy)
+            except Exception as erreur:
+                fen_active.set_error()
+                print("Erreur:", erreur, flush=True)
 
     def mouse_move(self, mouse_position):
         window_spotted = False
@@ -1126,7 +1154,12 @@ class OperatingSystem:
                             if not fenetre.mouse_over:
                                 fenetre.mouse_over = True
                                 if not fenetre.on_error:
-                                    fenetre.instance.mouse_enter(*fenetre.get_mouse_pos())
+                                    try:
+                                        fenetre.instance.mouse_enter(*fenetre.get_mouse_pos())
+                                    except Exception as erreur:
+                                        fenetre.set_error()
+                                        print("Erreur:", erreur, flush=True)
+
                             window_spotted = True
                             if fenetre.top_rect.collidepoint(mouse_position):
                                 if fenetre.min_rect.collidepoint(mouse_position):
@@ -1151,15 +1184,22 @@ class OperatingSystem:
                             elif "RESIZABLE" in fenetre.properties:
                                 if fenetre.bottom_rect.collidepoint(mouse_position):
                                     Mouse.set_cursor(pygame.SYSTEM_CURSOR_SIZENS)
+                                    fenetre.mouse_over_window_draw = False
                                     Mouse.cursor_over = "BOTTOM"
                                 elif fenetre.left_rect.collidepoint(mouse_position):
                                     Mouse.set_cursor(pygame.SYSTEM_CURSOR_SIZEWE)
+                                    fenetre.mouse_over_window_draw = False
                                     Mouse.cursor_over = "LEFT"
                                 elif fenetre.right_rect.collidepoint(mouse_position):
                                     Mouse.set_cursor(pygame.SYSTEM_CURSOR_SIZEWE)
+                                    fenetre.mouse_over_window_draw = False
                                     Mouse.cursor_over = "RIGHT"
 
                             if fenetre.window_draw.collidepoint(mouse_position):
+                                if not fenetre.mouse_over_window_draw:
+                                    fenetre.mouse_over_window_draw = True
+                                    Mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
+
                                 # curseur dans la fenetre pour l'application
                                 if not fenetre.on_error:
                                     try:
@@ -1170,10 +1210,16 @@ class OperatingSystem:
 
                         else:
                             if fenetre.mouse_over:
+                                Mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
                                 fenetre.mouse_over = False
+                                fenetre.mouse_over_window_draw = False
                                 if not fenetre.on_error:
-                                    fenetre.instance.mouse_exit()
-        
+                                    try:
+                                        fenetre.instance.mouse_exit()
+                                    except Exception as erreur:
+                                        fenetre.set_error()
+                                        print("Erreur:", erreur, flush=True)
+
         if not Mouse.left_button_down:
 
             # Gestion des taches dans la barre de tache
@@ -1183,7 +1229,11 @@ class OperatingSystem:
                     if fenetre.mouse_over:
                         fenetre.mouse_over = False
                         if not fenetre.on_error:
-                            fenetre.instance.mouse_exit()
+                            try:
+                                fenetre.instance.mouse_exit()
+                            except Exception as erreur:
+                                fenetre.set_error()
+                                print("Erreur:", erreur, flush=True)
 
                 # Recherche systray sous curseur
                 if self.liste_systray:
@@ -1225,7 +1275,7 @@ class OperatingSystem:
         Mouse.set_pos(mouse_position)
 
     def mouse_enter_leave(self, check_mouse_over=True):
-        Mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
+        # Mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
         Mouse.cursor_over = None
         self.unselect_all_taches()
         for fenetre in reversed(self.liste_fenetres):
@@ -1233,7 +1283,11 @@ class OperatingSystem:
             if check_mouse_over and fenetre.mouse_over:
                 fenetre.mouse_over = False
                 if not fenetre.on_error:
-                    fenetre.instance.mouse_exit()
+                    try:
+                        fenetre.instance.mouse_exit()
+                    except Exception as erreur:
+                        fenetre.set_error()
+                        print("Erreur:", erreur, flush=True)
 
         for systray in self.liste_systray:
             systray.mouse_over = False

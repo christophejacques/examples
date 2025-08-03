@@ -3,6 +3,8 @@ import json
 
 from abc import abstractmethod, ABCMeta
 from os import path
+
+from mouse import Mouse
 # from os.path import sep as separateur
 
 
@@ -203,8 +205,8 @@ class Tools:
     def scale_image(self, image, img_width, img_height):
         return pygame.transform.scale(image, (img_width, img_height))
 
-    def line(self, couleur, *coords):
-        pygame.draw.line(self.screen, couleur, *coords)
+    def line(self, couleur, *coords, width=1):
+        pygame.draw.line(self.screen, couleur, *coords, width)
 
     def Rect(self, *coords):
         return pygame.Rect(*coords)
@@ -220,6 +222,9 @@ class Tools:
 
     def pixels3d(self):
         return pygame.surfarray.pixels3d(self.screen)
+
+    def get_rect(self):
+        return self.screen.get_rect()
 
     def get_size(self):
         return self.screen.get_size()
@@ -286,7 +291,7 @@ class SysTray(metaclass=ABCMeta):
 
 
 class Application(metaclass=ABCMeta):
-    MIN_SIZE = (200, 100)
+    MIN_SIZE = (400, 200)
     title = ""
     tools: Tools
     sound: Sound
@@ -303,6 +308,7 @@ class Application(metaclass=ABCMeta):
         self.sound = Sound()
         self.theme = Theme()
         self.registre = Registres(self.DEFAULT_CONFIG[0])
+        self.mouse = Mouse()
 
         window = Variable.window
         self.set_title = window.set_title

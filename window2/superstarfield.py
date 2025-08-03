@@ -120,4 +120,4 @@ class SuperStarfield(Application):
 
 if __name__ == '__main__':
     from exec import run
-    run(SuperStarfield)
+    run(locals())

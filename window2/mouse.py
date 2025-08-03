@@ -14,7 +14,6 @@ class Mouse:
 
     @classmethod
     def __init__(self):
-        print("init Mouse()")
         pass
 
     @classmethod
