@@ -15,6 +15,7 @@ class Box:
 
         self.backcolor = color
         self.has_mouse_on = False
+        self.keep_mouse_events = False
 
     def resize(self, parent, new_size=None, **options):
         if len(options) > 0:
@@ -24,6 +25,12 @@ class Box:
             self.rect = self.tools.Rect(new_size)
 
         self.tools = parent.tools.get_subtools((*self.rect.topleft, *self.rect.size))
+
+    def set_backcolor(self, backcolor):
+        self.backcolor = color
+
+    def set_theme(self, theme):
+        pass
 
     def get_action(self):
         return None
@@ -64,6 +71,7 @@ class Separation(Box):
 
     def __init__(self, *args):
         super().__init__(*args)
+        self.theme = args[0].theme
         self.mouse_is_clicked = False
         self.posX = 0
         self.action = None
@@ -73,6 +81,9 @@ class Separation(Box):
         action = self.action
         self.action = None
         return action
+
+    def set_theme(self, theme):
+        self.backcolor = self.theme.get("LIST_BACK_COLOR")
 
     def mouse_enter(self):
         super().mouse_enter()
@@ -93,11 +104,13 @@ class Separation(Box):
             self.set_action(position[0])
 
     def mouse_button_down(self, posX, posY, button):
+        self.keep_mouse_events = True
         self.mouse_is_clicked = True
         self.posX = posX
         # fprint("begin moving Separation")
 
     def mouse_button_up(self, posX, posY, button):
+        self.keep_mouse_events = False
         self.mouse_is_clicked = False
         self.set_action(posX)
         # fprint("end moving Separation")
@@ -250,11 +263,18 @@ class TextBox(Box):
 
     def __init__(self, parent, color, coords, texte: str):
         super().__init__(parent, color, coords)
+        self.theme = parent.theme
         self.font = self.tools.font("courier", 18)
         self.set_texte(texte)
 
     def set_texte(self, texte):
-        self.texte_font = self.font.render(texte, False, (0, 0, 0))
+        self.texte_font = self.font.render(texte, False, self.theme.get("FORE_COLOR"))
+        self.texte = texte
+
+    def set_theme(self, theme):
+        fprint("set TB theme", theme)
+        self.set_texte(self.texte)
+        self.backcolor = self.theme.get("LIST_BACK_COLOR")
 
     def draw(self):
         super().draw()
@@ -270,6 +290,7 @@ class ListDirectoryFile(Box):
         super().__init__(parent, color, coords)
         self.directory = directory
         self.font = self.tools.font("courier", 18)
+        self.theme = parent.theme
 
         self.liste: dict = dict()
         self.decal: int
@@ -372,8 +393,11 @@ class ListDirectoryFile(Box):
             self.ascenseur_is_clicked = False
         else:
             self.ascenseur_is_clicked = button == 1
+            if self.ascenseur_is_clicked:
+                self.keep_mouse_events = True
 
     def mouse_button_up(self, posX, posY, button):
+        self.keep_mouse_events = False
         self.mouse_action((posX, posY))
 
     def mouse_action(self, position):
@@ -487,6 +511,10 @@ class ListDirectoryFile(Box):
                         self.decal = self.len_dirs+self.len_files - self.MAX_FILES - 1
                         self.selected_index += decal - self.decal
 
+    def set_theme(self, theme):
+        fprint("set theme", theme)
+        self.backcolor = self.theme.get("LIST_BACK_COLOR")
+
     def draw(self):
         super().draw()
         rech_index: int = 0
@@ -494,6 +522,7 @@ class ListDirectoryFile(Box):
 
         largeur_dirfile = self.rect.width - 4 - self.largeur_ascenseur
 
+        # Affichage de l'ascenseur si besoin
         if self.ascenseur:
             ascenseur_color = (200, 200, 200)
             x = self.rect.width - self.largeur_ascenseur
@@ -514,26 +543,29 @@ class ListDirectoryFile(Box):
                 ascenseur_color = (150, 150, 150)
             self.tools.rect(ascenseur_color, (x, y1, self.largeur_ascenseur, y2-y1))
 
-
+        # affichage des repertoires et fichiers
         for dirfile in (self.liste["dirs"] + self.liste["files"]):
             if rech_index-self.decal < 0 or index > self.MAX_FILES:
                 rech_index += 1
                 continue
 
             if self.selected_index == index:
-                color = (0, 250, 0)
+                # color = (0, 250, 0)
+                color = self.theme.get("LIST_SELECTED_TEXT_COLOR")
                 self.tools.rect((100, 100, 250), (
                     2, self.BORDER_SIZE+(index)*21, largeur_dirfile, 21))
                 self.tools.rect((0, 0, 250), (
                     2, self.BORDER_SIZE+(index)*21, largeur_dirfile, 21), 1)
             elif self.index == index and not self.ascenseur_is_clicked:
-                color = (50, 50, 250)
+                # color = (50, 50, 250)
+                color = self.theme.get("LIST_MOUSEOVER_TEXT_COLOR")
                 self.tools.rect((10, 250, 250), (
                     2, self.BORDER_SIZE+(index)*21, largeur_dirfile, 21))
                 self.tools.rect((10, 200, 200), (
                     2, self.BORDER_SIZE+(index)*21, largeur_dirfile, 21), 1)
             else:
-                color = (0, 0, 0)
+                # color = (0, 0, 0)
+                color = self.theme.get("LIST_TEXT_COLOR")
 
             texte_font = self.font.render(dirfile, False, color)
             self.tools.blit(texte_font, (self.BORDER_SIZE, self.BORDER_SIZE+21*(index)))
@@ -582,12 +614,13 @@ class SelectWallpaper(Application):
         self.title = self.DEFAULT_CONFIG[0]
         self.action = ""
 
-        self.get_theme()
         nombre = self.registre.load("Utilisation", 0)
         self.registre.save("Utilisation", 1+nombre)
 
         self.ecrans = list()
         self.boutons = list()
+        self.get_theme()
+
         self.focused_bouton = None
         self.img_filename = self.registre.load("fichier", None)
         self.decal_sep_x = self.registre.load("decal_sep_x", 410)
@@ -605,7 +638,8 @@ class SelectWallpaper(Application):
         self.set_title(self.title)
         self.win_resize("CENTER", 0, 0, *self.MIN_SIZE)
 
-        couleur_fond = (220, 220, 220)
+        # couleur_fond = (220, 220, 220)
+        couleur_fond = self.theme.get("LIST_BACK_COLOR")
 
         # Definition des zones
         self.liste_dirs_files = ListDirectoryFile(
@@ -673,8 +707,16 @@ class SelectWallpaper(Application):
         self.parent.resize(self)
 
     def get_theme(self):
-        pass
-        # fprint("Theme:", self.theme.get_theme())
+        active_theme = self.theme.get_theme()
+        # fprint("Theme:", active_theme)
+
+        if active_theme == "CLAIR":
+            self.background = (100, 190, 200)
+        else:
+            self.background = (30, 55, 60)
+
+        for ecran in self.ecrans:
+            ecran.set_theme(active_theme)
 
     def mouse_enter(self, mouseX, mouseY):
         pass
@@ -688,6 +730,7 @@ class SelectWallpaper(Application):
         time.sleep(delay)
 
     def until_keyreleased(self, action):
+        # delay initial
         delay = 0.5
         self.compteur_tache += 1
         compteur = self.compteur_tache
@@ -695,6 +738,7 @@ class SelectWallpaper(Application):
             tache = Thread(target=self.set_action_keypressed, args=(action, delay))
             tache.start()
             tache.join()
+            # delay post delay initial (plus rapide)
             delay = 0.065
 
     def keypressed(self, event):
@@ -735,8 +779,19 @@ class SelectWallpaper(Application):
             fprint(event)
                 
     def mouse_move(self, mouseX, mouseY):
+
         self.focused_bouton = None
         self.focused_ecran = None
+
+        # n'execute que les mouvements sur l'ecran qui le demande
+        for ecran in self.ecrans:
+            if ecran.keep_mouse_events:
+                ecran.mouse_move((mouseX-ecran.rect.left, mouseY-ecran.rect.top))
+
+                # mise a jour de l'affichage pour la gestion du separateur
+                if ecran == self.separation:
+                    self.check_actions()
+                return
 
         for bouton in self.boutons:
             if bouton.is_visible() and bouton.collide_mouse((mouseX, mouseY)):
@@ -749,11 +804,6 @@ class SelectWallpaper(Application):
             if ecran.collide_mouse((mouseX, mouseY)):
                 ecran.mouse_move((mouseX-ecran.rect.left, mouseY-ecran.rect.top))
                 self.focused_ecran = ecran
-
-        if self.separation.mouse_is_clicked:
-            self.separation.mouse_move(
-                (mouseX-self.separation.rect.left, mouseY-self.separation.rect.top))
-            self.check_actions()
 
     def mouse_wheel(self, dx, dy):
         if dy > 0:
@@ -859,7 +909,9 @@ class SelectWallpaper(Application):
 
     def draw(self):
         # self.tools.fill((150, 170, 250))
-        self.tools.fill((100, 190, 200))
+        # self.tools.fill((100, 190, 200))
+
+        self.tools.fill(self.background)
         for ecran in self.ecrans:
             ecran.draw()
 

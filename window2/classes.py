@@ -120,7 +120,11 @@ class Theme:
             "TASK_BUTTON_BACK_COLOR": (180, 180, 180),
             "TASK_SELECTED_BUTTON_BACK_COLOR": (150, 150, 150),
             "TASK_ERROR_BUTTON_BACK_COLOR": (180, 20, 20),
-            "TASK_BAR_COLOR": (200, 200, 200, 100)
+            "TASK_BAR_COLOR": (200, 200, 200, 100),
+            "LIST_TEXT_COLOR": (0, 0, 0),
+            "LIST_SELECTED_TEXT_COLOR": (0, 250, 0),
+            "LIST_MOUSEOVER_TEXT_COLOR": (50, 50, 250),
+            "LIST_BACK_COLOR": (220, 220, 220),
 
         },
         "SOMBRE": {
@@ -137,7 +141,11 @@ class Theme:
             "TASK_BUTTON_BACK_COLOR": (80, 80, 80),
             "TASK_SELECTED_BUTTON_BACK_COLOR": (50, 50, 50),
             "TASK_ERROR_BUTTON_BACK_COLOR": (250, 50, 50),
-            "TASK_BAR_COLOR": (20, 20, 20, 100)
+            "TASK_BAR_COLOR": (20, 20, 20, 100),
+            "LIST_TEXT_COLOR": (220, 220, 220),
+            "LIST_SELECTED_TEXT_COLOR": (200, 200, 200),
+            "LIST_MOUSEOVER_TEXT_COLOR": (50, 50, 50),
+            "LIST_BACK_COLOR": (30, 30, 30),
         }    
     }
 
@@ -294,9 +302,11 @@ class Application(metaclass=ABCMeta):
     MIN_SIZE = (400, 200)
     title = ""
     tools: Tools
+    theme: Theme
     sound: Sound
     keys: Keys
     registre: Registres
+    mouse: Mouse
 
     WINDOW_PROPERTIES = ["RESIZABLE"]
     DEFAULT_CONFIG: tuple = ("?", (0, 0, 0))

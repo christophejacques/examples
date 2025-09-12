@@ -3,6 +3,10 @@ from threading import Thread
 from time import sleep
 
 
+def fprint(*args, **kwargs):
+    print(*args, **kwargs, flush=True)
+
+
 class Audio:
     AppliID: int = 0
     MAX_CHANNELS: int = 1024
@@ -11,221 +15,227 @@ class Audio:
     MUTE: bool = False
 
     @classmethod
-    def init(self, debug=False):
-        self.DEBUG = debug
-        if self.DEBUG:
-            print("Total Audio channel number =", self.MAX_CHANNELS)
-        pygame.mixer.set_num_channels(self.MAX_CHANNELS)
+    def init(cls, debug=False):
+        cls.DEBUG = debug
+        if cls.DEBUG:
+            fprint("Total Audio channel number =", cls.MAX_CHANNELS)
+
+        if not pygame.mixer.get_init():
+            pygame.mixer.init()
+            if cls.DEBUG:
+                fprint("Sound initialized:", pygame.mixer.get_init())
+            
+        pygame.mixer.set_num_channels(cls.MAX_CHANNELS)
 
     @classmethod
-    def get_reserved_channels_number(self):
+    def get_reserved_channels_number(cls):
         nombre = 0
-        for application in self.APPLI:
-            nombre += self.APPLI[application]["max_channels"]
+        for application in cls.APPLI:
+            nombre += cls.APPLI[application]["max_channels"]
         return nombre
 
     @classmethod
-    def new_application(self):
-        self.AppliID += 1
-        return f"APP{self.AppliID}"
+    def new_application(cls):
+        cls.AppliID += 1
+        return f"APP{cls.AppliID}"
 
     @classmethod
-    def init_application(self, application, max_channels=1):
-        if application not in self.APPLI:
-            max_channels = max(0, min(max_channels, self.MAX_CHANNELS-self.get_reserved_channels_number()))
-            self.APPLI[application] = {}
-            self.APPLI[application]["max_channels"] = max_channels
-            self.APPLI[application]["sound_index"] = 1
-            self.APPLI[application]["SOUNDS"] = {}
-            self.APPLI[application]["CHANNELS"] = {}
-            self.APPLI[application]["SNDMUTE"] = {}
-            if self.DEBUG:
-                print(f"Init Audio pour ({application}) avec {max_channels} canaux")
+    def init_application(cls, application, max_channels=1):
+        if application not in cls.APPLI:
+            max_channels = max(0, min(max_channels, cls.MAX_CHANNELS-cls.get_reserved_channels_number()))
+            cls.APPLI[application] = {}
+            cls.APPLI[application]["max_channels"] = max_channels
+            cls.APPLI[application]["sound_index"] = 1
+            cls.APPLI[application]["SOUNDS"] = {}
+            cls.APPLI[application]["CHANNELS"] = {}
+            cls.APPLI[application]["SNDMUTE"] = {}
+            if cls.DEBUG:
+                fprint(f"Init Audio pour ({application}) avec {max_channels} canaux")
 
     @classmethod
-    def close(self):
-        while self.APPLI:
-            application, contenu = self.APPLI.popitem()
+    def close(cls):
+        while cls.APPLI:
+            application, contenu = cls.APPLI.popitem()
             while contenu["CHANNELS"]:
                 idx, channel = contenu["CHANNELS"].popitem()
                 channel.stop()
-            if self.DEBUG:
-                print(f"Audio clos pour application '{application}'")
+            if cls.DEBUG:
+                fprint(f"Audio clos pour application '{application}'")
 
     @classmethod
-    def close_application(self, application):
-        for idx, channel in self.APPLI[application]["CHANNELS"].items():
-            if self.DEBUG:
-                print("stop channel", idx, "pour :", application)
+    def close_application(cls, application):
+        for idx, channel in cls.APPLI[application]["CHANNELS"].items():
+            if cls.DEBUG:
+                fprint("stop channel", idx, "pour :", application)
             channel.stop()
-        self.APPLI.pop(application)
-        if self.DEBUG:
-            print(f"Audio clos pour application '{application}'")
+        cls.APPLI.pop(application)
+        if cls.DEBUG:
+            fprint(f"Audio clos pour application '{application}'")
 
     @classmethod
-    def stop_all_channels_application(self, application):
-        for idx, channel in self.APPLI[application]["CHANNELS"].items():
-            if self.DEBUG:
-                print("stop channel", idx, "pour :", application)
+    def stop_all_channels_application(cls, application):
+        for idx, channel in cls.APPLI[application]["CHANNELS"].items():
+            if cls.DEBUG:
+                fprint("stop channel", idx, "pour :", application)
             channel.stop()
 
     @classmethod
-    def remove_all_unused_sound_channels(self):
-        for application in self.APPLI:
-            self.remove_appli_unused_sound_channels(application)
+    def remove_all_unused_sound_channels(cls):
+        for application in cls.APPLI:
+            cls.remove_appli_unused_sound_channels(application)
 
     @classmethod
-    def remove_appli_unused_sound_channels(self, application):
+    def remove_appli_unused_sound_channels(cls, application):
         channels_to_del = []
-        for idx, channel in self.APPLI[application]["CHANNELS"].items():
+        for idx, channel in cls.APPLI[application]["CHANNELS"].items():
             if not channel.get_busy():
                 channel.stop()
                 channels_to_del.append(idx)
-                if self.DEBUG:
-                    print("stop & remove channel", idx, "pour", application)
+                if cls.DEBUG:
+                    fprint("stop & remove channel", idx, "pour", application)
 
         for idx in channels_to_del:
-            self.APPLI[application]["CHANNELS"].pop(idx)
+            cls.APPLI[application]["CHANNELS"].pop(idx)
 
     @classmethod
-    def set_channel_volume(self, application, idx, volume):
-        if application in self.APPLI:
-            if idx in self.APPLI[application]["CHANNELS"]:
-                self.APPLI[application]["CHANNELS"][idx].set_volume(volume)
+    def set_channel_volume(cls, application, idx, volume):
+        if application in cls.APPLI:
+            if idx in cls.APPLI[application]["CHANNELS"]:
+                cls.APPLI[application]["CHANNELS"][idx].set_volume(volume)
 
     @classmethod
-    def set_sound_volume(self, application, idx, volume):
-        if application in self.APPLI:
-            if idx in self.APPLI[application]["SOUNDS"]:
-                self.APPLI[application]["SOUNDS"][idx].set_volume(volume)
+    def set_sound_volume(cls, application, idx, volume):
+        if application in cls.APPLI:
+            if idx in cls.APPLI[application]["SOUNDS"]:
+                cls.APPLI[application]["SOUNDS"][idx].set_volume(volume)
 
     @classmethod
-    def get_channel_volume(self, application, idx):
-        if application in self.APPLI:
-            if idx in self.APPLI[application]["CHANNELS"]:
-                return self.APPLI[application]["CHANNELS"][idx].get_volume()
+    def get_channel_volume(cls, application, idx):
+        if application in cls.APPLI:
+            if idx in cls.APPLI[application]["CHANNELS"]:
+                return cls.APPLI[application]["CHANNELS"][idx].get_volume()
         return 0
 
     @classmethod
-    def get_sound_volume(self, application, idx):
-        if application in self.APPLI:
-            if idx in self.APPLI[application]["SOUNDS"]:
-                return self.APPLI[application]["SOUNDS"][idx].get_volume()
+    def get_sound_volume(cls, application, idx):
+        if application in cls.APPLI:
+            if idx in cls.APPLI[application]["SOUNDS"]:
+                return cls.APPLI[application]["SOUNDS"][idx].get_volume()
         return 0
 
     @classmethod
-    def channel_fadeout(self, application, idx, time):
-        if application in self.APPLI:
-            if idx in self.APPLI[application]["CHANNELS"]:
-                self.APPLI[application]["CHANNELS"][idx].fadeout(time)
+    def channel_fadeout(cls, application, idx, time):
+        if application in cls.APPLI:
+            if idx in cls.APPLI[application]["CHANNELS"]:
+                cls.APPLI[application]["CHANNELS"][idx].fadeout(time)
 
     @classmethod
-    def mute_all_applications(self):
-        self.MUTE = True
-        for application in self.APPLI:
-            self.mute_application(application)
+    def mute_all_applications(cls):
+        cls.MUTE = True
+        for application in cls.APPLI:
+            cls.mute_application(application)
 
     @classmethod
-    def unmute_all_applications(self):
-        self.MUTE = False
-        for application in self.APPLI:
-            self.unmute_application(application)
+    def unmute_all_applications(cls):
+        cls.MUTE = False
+        for application in cls.APPLI:
+            cls.unmute_application(application)
 
     @classmethod
-    def mute_application(self, application):
-        if application in self.APPLI:
-            if len(self.APPLI[application]["SNDMUTE"]) == 0:
-                for snd_idx in self.APPLI[application]["SOUNDS"]:
-                    snd_volume = self.APPLI[application]["SOUNDS"][snd_idx].get_volume()
-                    self.APPLI[application]["SNDMUTE"][snd_idx] = snd_volume
-                    self.APPLI[application]["SOUNDS"][snd_idx].set_volume(0)
+    def mute_application(cls, application):
+        if application in cls.APPLI:
+            if len(cls.APPLI[application]["SNDMUTE"]) == 0:
+                for snd_idx in cls.APPLI[application]["SOUNDS"]:
+                    snd_volume = cls.APPLI[application]["SOUNDS"][snd_idx].get_volume()
+                    cls.APPLI[application]["SNDMUTE"][snd_idx] = snd_volume
+                    cls.APPLI[application]["SOUNDS"][snd_idx].set_volume(0)
 
     @classmethod
-    def unmute_application(self, application):
-        if application in self.APPLI:
-            for snd_idx in self.APPLI[application]["SNDMUTE"]:
-                snd_volume = self.APPLI[application]["SOUNDS"][snd_idx].get_volume()
+    def unmute_application(cls, application):
+        if application in cls.APPLI:
+            for snd_idx in cls.APPLI[application]["SNDMUTE"]:
+                snd_volume = cls.APPLI[application]["SOUNDS"][snd_idx].get_volume()
                 if snd_volume == 0:
-                    self.APPLI[application]["SOUNDS"][snd_idx].set_volume(
-                        self.APPLI[application]["SNDMUTE"].get(snd_idx, 1))
-            self.APPLI[application]["SNDMUTE"].clear()
+                    cls.APPLI[application]["SOUNDS"][snd_idx].set_volume(
+                        cls.APPLI[application]["SNDMUTE"].get(snd_idx, 1))
+            cls.APPLI[application]["SNDMUTE"].clear()
 
     @classmethod
-    def sound_fadeout(self, application, idx, time):
-        if application in self.APPLI:
-            if idx in self.APPLI[application]["SOUNDS"]:
-                self.APPLI[application]["SOUNDS"][idx].fadeout(time)
+    def sound_fadeout(cls, application, idx, time):
+        if application in cls.APPLI:
+            if idx in cls.APPLI[application]["SOUNDS"]:
+                cls.APPLI[application]["SOUNDS"][idx].fadeout(time)
 
     @classmethod
-    def unload_sound(self, application, idx):
-        if application in self.APPLI:
-            if idx in self.APPLI[application]["SOUNDS"]:
-                if self.DEBUG:
-                    print("Unloading Sound", idx, "pour", application)
-                self.APPLI[application]["SOUNDS"].pop(idx)
+    def unload_sound(cls, application, idx):
+        if application in cls.APPLI:
+            if idx in cls.APPLI[application]["SOUNDS"]:
+                if cls.DEBUG:
+                    fprint("Unloading Sound", idx, "pour", application)
+                cls.APPLI[application]["SOUNDS"].pop(idx)
 
     @classmethod
-    def load_sound(self, application, sound_file, volume=1):
-        if application in self.APPLI:
-            idx = self.APPLI[application]["sound_index"]
-            if self.DEBUG:
-                print("Loading Sound", idx, "pour", application)
+    def load_sound(cls, application, sound_file, volume=1):
+        if application in cls.APPLI:
+            idx = cls.APPLI[application]["sound_index"]
+            if cls.DEBUG:
+                fprint("Loading Sound", idx, "pour", application)
             try:
                 sound = pygame.mixer.Sound(sound_file)
                 sound.set_volume(volume)
-                self.APPLI[application]["SOUNDS"][idx] = sound
-                if self.MUTE:
+                cls.APPLI[application]["SOUNDS"][idx] = sound
+                if cls.MUTE:
                     snd_volume = sound.get_volume()
-                    self.APPLI[application]["SNDMUTE"][idx] = snd_volume
+                    cls.APPLI[application]["SNDMUTE"][idx] = snd_volume
                     sound.set_volume(0)
 
             except Exception as e:
-                print("SoundEffect Error:", e)
+                fprint("SoundEffect Error:", e)
                 return False
 
-            self.APPLI[application]["sound_index"] += 1
+            cls.APPLI[application]["sound_index"] += 1
             return idx
         return False
 
     @classmethod
-    def wait_channel(self, channel, callback):
+    def wait_channel(cls, channel, callback):
         while channel.get_busy():
             sleep(0.5)
         callback()
 
     @classmethod
-    def play_sound(self, application, idx, callback=None):
-        if application in self.APPLI:
-            if idx in self.APPLI[application]["SOUNDS"] and (
-              len(self.APPLI[application]["CHANNELS"]) < self.APPLI[application]["max_channels"]):
-                self.remove_appli_unused_sound_channels(application)
-                channel = self.APPLI[application]["SOUNDS"][idx].play()
+    def play_sound(cls, application, idx, callback=None):
+        if application in cls.APPLI:
+            if idx in cls.APPLI[application]["SOUNDS"] and (
+              len(cls.APPLI[application]["CHANNELS"]) < cls.APPLI[application]["max_channels"]):
+                cls.remove_appli_unused_sound_channels(application)
+                channel = cls.APPLI[application]["SOUNDS"][idx].play()
                 if channel:
                     channel_index = min(
-                        [x for x in range(1, 1+self.APPLI[application]["max_channels"]) if x not in self.APPLI[application]["CHANNELS"]])
-                    if self.DEBUG:
-                        print("Play Sound", idx, "pour", application, "sur channel", channel_index)
-                    self.APPLI[application]["CHANNELS"][channel_index] = channel
+                        [x for x in range(1, 1+cls.APPLI[application]["max_channels"]) if x not in cls.APPLI[application]["CHANNELS"]])
+                    if cls.DEBUG:
+                        fprint("Play Sound", idx, "pour", application, "sur channel", channel_index)
+                    cls.APPLI[application]["CHANNELS"][channel_index] = channel
                     if callback:
-                        Thread(target=self.wait_channel, args=(channel, callback)).start()
+                        Thread(target=cls.wait_channel, args=(channel, callback)).start()
                     return channel_index
 
         if callback:
             callback()
                         
     @classmethod
-    def channel_action(self, action, application, idx):
-        if application in self.APPLI:
-            if idx in self.APPLI[application]["CHANNELS"]:
+    def channel_action(cls, action, application, idx):
+        if application in cls.APPLI:
+            if idx in cls.APPLI[application]["CHANNELS"]:
                 if action.upper() == "STOP":
-                    self.APPLI[application]["CHANNELS"][idx].stop()
-                    del self.APPLI[application]["CHANNELS"][idx]
+                    cls.APPLI[application]["CHANNELS"][idx].stop()
+                    del cls.APPLI[application]["CHANNELS"][idx]
                 elif action.upper() == "PLAY":
-                    self.APPLI[application]["CHANNELS"][idx].play()
+                    cls.APPLI[application]["CHANNELS"][idx].play()
                 elif action.upper() == "PAUSE":
-                    self.APPLI[application]["CHANNELS"][idx].pause()
+                    cls.APPLI[application]["CHANNELS"][idx].pause()
                 elif action.upper() == "UNPAUSE":
-                    self.APPLI[application]["CHANNELS"][idx].unpause()
+                    cls.APPLI[application]["CHANNELS"][idx].unpause()
                 else:
                     return False
                 return True
@@ -250,14 +260,13 @@ def fin():
 
     Audio.close()
     assert len(Audio.APPLI) == 0
-    print("Nettoyage: OK !")
+    fprint("Nettoyage: OK !")
 
 
 if __name__ == "__main__":
-    print("Compilation: OK")
+    fprint("Compilation: OK")
     import os
 
-    pygame.mixer.init()
     Audio.init(debug=True)
 
     app_id = Audio.new_application()

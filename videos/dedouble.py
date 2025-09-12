@@ -16,7 +16,7 @@ movie: tuple = ("mpg", "avi", "mp4", "mkv", "wmv")
 picture: tuple = ("jpg", "jpeg", "png", "gif", "bmp", "")
 
 repertoires: list = [
-    r"E:\Videos\Japan",
+    r"F:\Videos\Japan",
     r"D:\Mes Documents\dwhelper", 
     r"D:\Mes Documents\dwhelperold", 
 ]
@@ -52,8 +52,18 @@ def scandir(repertoire) -> None:
             files[cle].append((f.stat().st_size, f.path))
 
 
+error: bool = False
+for repertoire in repertoires:
+    if not os.path.isdir(repertoire):
+        error = True
+        print(f"Repertoire inexistant: {repertoire}")
+
+if error:
+    exit()
+
 for repertoire in repertoires:
     scandir(repertoire)
+
 
 nb_doublons: int = 0
 for cle in sorted(files):
@@ -61,7 +71,7 @@ for cle in sorted(files):
         continue
     nb_doublons += 1
     print(cle)
-    for size, file in sorted(files[cle]):
+    for size, file in sorted(files[cle], key=lambda x: x[1]):
         try:
             print(f"  {human_readable_size(size):>10} -", file[:130])
         except UnicodeEncodeError:

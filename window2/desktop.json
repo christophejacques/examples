@@ -58,7 +58,7 @@
     "SelectWallpaper": {
         "libelle": "SelectWallpaper",
         "position": [
-            10,
+            140,
             450
         ]
     },
@@ -94,7 +94,7 @@
         "libelle": "Modele",
         "position": [
             10,
-            560
+            450
         ]
     }
 }

@@ -2,6 +2,8 @@ import pygame
 import json
 import traceback
 
+import pygame._sdl2.audio as sdl2_audio
+
 from audio import Audio
 from mouse import Mouse
 from keyboard import Keyboard
@@ -352,13 +354,14 @@ class Window:
         self.set_surface_color()
 
     def theme_color(self, active_color=None, inactive_color=None, check_error=False):
+        if check_error and self.on_error:
+            return self.THEME_ERROR_COLOR
+            
         if active_color is None:
             active_color = Window.THEME_ACTIVE_COLOR
         if inactive_color is None:
             inactive_color = Window.THEME_INACTIVE_COLOR
 
-        if check_error and self.on_error:
-            return self.THEME_ERROR_COLOR
         return active_color if self.active else inactive_color
 
     def last_statut(self):
@@ -614,7 +617,7 @@ class OperatingSystem:
 
         self.liste_systray.clear()
 
-    def load_systray_apps(self):
+    def load_systrays(self):
         total: int = 0
         classes: list = []
         for une_classe in get_all_classes("SysTray"):
@@ -631,7 +634,7 @@ class OperatingSystem:
                 width - total - une_classe.INITIAL_WIDTH, 0, 
                 une_classe.INITIAL_WIDTH, height)
 
-            # Initialisation dy SysTray
+            # Initialisation du SysTray
             systray = une_classe(self.barre_taches.subsurface(sysapp_rect), color)
             self.liste_systray.append(systray)
             
@@ -883,6 +886,7 @@ class OperatingSystem:
                     match action.split(":"):
                         case ["QUIT"]:
                             self.close(fenetre)
+
                         case ["SET", "WALLPAPER", filename]:
                             self.registre.save("Wallpaper", filename)
                             self.load_background_image()
@@ -1008,6 +1012,7 @@ class OperatingSystem:
                             fenetre.set_error()
                             print("Erreur:", erreur, flush=True)
                     break
+
             if not self.get_active_window():
                 Mouse.left_button_down = False
             else:
@@ -1293,48 +1298,74 @@ class OperatingSystem:
             systray.mouse_over = False
 
     def get_pygame_events(self):
-
         for event in pygame.event.get():
-            if event.type == pygame.KMOD_LGUI:
-                self.mouse_move(event.pos)
+            match event.type:
+                case pygame.KMOD_LGUI:
+                    self.mouse_move(event.pos)
 
-            elif event.type == pygame.MOUSEBUTTONDOWN:
-                if event.button != 2:
-                    self.mouse_button_down(event.pos, event.button)
+                case pygame.MOUSEBUTTONDOWN:
+                    if event.button != 2:
+                        self.mouse_button_down(event.pos, event.button)
 
-            elif event.type == pygame.MOUSEBUTTONUP:
-                self.mouse_button_up(event.pos, event.button)
+                case pygame.MOUSEBUTTONUP:
+                    self.mouse_button_up(event.pos, event.button)
 
-            elif event.type == pygame.MOUSEWHEEL:
-                self.mouse_wheel(event.x, event.y)
+                case pygame.MOUSEWHEEL:
+                    self.mouse_wheel(event.x, event.y)
 
-            elif event.type == pygame.KEYDOWN:
-                self.keypressed(event)
+                case pygame.KEYDOWN:
+                    self.keypressed(event)
 
-            elif event.type == pygame.KEYUP:
-                Keyboard.add_key_to_buffer(event.key)
-                self.keyreleased(event)
+                case pygame.KEYUP:
+                    Keyboard.add_key_to_buffer(event.key)
+                    self.keyreleased(event)
 
-            elif event.type in (pygame.AUDIO_S16, pygame.WINDOWENTER, pygame.ACTIVEEVENT):
-                self.mouse_enter_leave()
+                case (  pygame.AUDIO_S8 | 
+                        pygame.AUDIO_S16 | 
+                        pygame.WINDOWENTER | 
+                        pygame.ACTIVEEVENT):
+                    self.mouse_enter_leave()
 
-            elif event.type in (
-                    pygame.WINDOWMAXIMIZED, 
-                    pygame.WINDOWRESTORED,
-                    pygame.VIDEORESIZE):
-                self.update_screen()
+                case (  pygame.WINDOWMAXIMIZED |
+                        pygame.WINDOWRESTORED |
+                        pygame.VIDEORESIZE):
+                    self.update_screen()
 
-            elif event.type == pygame.QUIT:
-                self.running = False
+                case pygame.QUIT:
+                    self.running = False
 
-            else:
-                # print(event.type, get_pygame_const_name(event.type))
-                pass
+                case (  pygame.WINDOWSHOWN | 
+                        pygame.VIDEOEXPOSE | 
+                        pygame.WINDOWFOCUSGAINED):
+                    pass
+
+                case pygame.TEXTEDITING:
+                    pass
+
+                case pygame.JOYDEVICEADDED:
+                    pass
+
+                case pygame.AUDIODEVICEADDED:
+                    if event.which == 0:
+                        if event.iscapture == 0:
+                            print("Sorties :")
+                        else:
+                            print("Entrées :")
+
+                        devices = tuple(sdl2_audio.get_audio_device_names(event.iscapture))
+                        for device in devices:
+                            print("-", device, flush=True)
+
+
+
+                case default:
+                    print(event.type, get_pygame_const_name(event.type), flush=True)
+                    pass
 
     def run(self):
         self.load_icones()
         self.load_applications()
-        self.load_systray_apps()
+        self.load_systrays()
 
         while self.running:
             self.get_systrays_actions()
