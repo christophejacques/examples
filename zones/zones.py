@@ -38,11 +38,11 @@ class Variable:
 
 class Zone:
     parent: Optional[Zone]
+    pages: dict = dict()
 
     color: Optional[tuple]
 
     coords: list[int]
-    contenu: list[Zone]
 
     x: Optional[int]
     y: Optional[int]
@@ -60,7 +60,12 @@ class Zone:
                 raise TypeError(f"'{option}' est un argument keyword invalide pour {self.__class__.__name__}()")
 
         self.parent = None
-        self.contenu = list()
+        
+        self.current_page = "default"
+
+        self.pages = {
+            self.current_page: list()
+        }
 
         self.color = options.get("color", (255, 255, 255))
 
@@ -79,8 +84,10 @@ class Zone:
             self.set_rect([0, 0] + Screen.size)
 
     def __str__(self):
+        return f"{self.position} {self.get_rect()}".strip() 
+
         res: str = ""
-        if self.contenu:
+        if self.contenu:  # ToDo
             res = "["
             for zone in self.contenu:
                 res += f"{zone},"
@@ -268,21 +275,76 @@ class Zone:
         return debut_zone, taille_zone
 
 
-    def add(self, zone: Zone) -> Zone:
+    def add(self, zone: Zone, nom_page: Optional[str] = None) -> Zone:
         zone.parent = self
         zone.color = zone.options.get("color", self.color)
 
+        if nom_page is None:
+            nom_page = self.current_page
+
         # calcul les coordonnees a partir des options
         zone_calculee = self.calc_coords(zone)
-        self.contenu.append(zone_calculee)
+        self.pages[nom_page].append(zone_calculee)
 
         return zone_calculee
+
+    def add_page(self, nom_page: str, goto: bool = True):
+        if self.pages.get(nom_page) is not None:
+            raise Exception(f"la page '{nom_page}' existe deja.")
+
+        self.pages[nom_page] = list()
+        if goto:
+            self.goto_page(nom_page)
+
+    def rename_page(self, new_name: str):
+        if self.pages.get(new_name) is not None:
+            raise Exception(f"la page '{new_name}' existe deja.")
+
+        self.pages[new_name] = self.pages.pop(self.current_page)
+        self.current_page = new_name
+
+
+    def del_page(self, nom_page: str):
+        if self.pages.get(nom_page) is None:
+            raise Exception(f"la page '{nom_page}' n'existe pas.")
+
+        del self.pages[nom_page]
+
+    def previous_page(self):
+        liste_pages = list(self.pages)
+        index = liste_pages.index(self.current_page)
+
+        index -= 1
+        if index < 0:
+            self.current_page = liste_pages[len(liste_pages)-1]
+        else:
+            self.current_page = liste_pages[index]
+
+        fprint(self.current_page, "affichee")
+
+    def next_page(self):
+        liste_pages = list(self.pages)
+        index = liste_pages.index(self.current_page)
+
+        index += 1
+        if index >= len(liste_pages):
+            self.current_page = liste_pages[0]
+        else:
+            self.current_page = liste_pages[index]
+
+        fprint(self.current_page, "affichee")
+
+    def goto_page(self, nom_page: str):
+        if self.pages.get(nom_page) is None:
+            raise Exception(f"la page '{nom_page}' n'existe pas.")
+
+        self.current_page = nom_page
 
     def recalc_zones(self, coords: Optional[list]=None):
         if not coords is None:
             self.coords = coords
 
-        for zone in self.contenu:
+        for zone in self.pages[self.current_page]:
             # on force les valeurs a null pour toutes les recalculer
             zone.x = None
             zone.y = None
@@ -300,6 +362,21 @@ class Zone:
         # fprint("mouse_exit")
         pass
 
+    def mouse_button_up(self, mouse_position, button):
+        
+        def check_contenu(zone) -> Optional[Zone]:
+            if not zone.mouse_over:
+                return None
+
+            for z in zone.pages[zone.current_page]:
+                if z.mouse_over:
+                    return check_contenu(z)
+
+            return zone
+
+        fprint("Zone clicked:", check_contenu(self))
+
+
     def check_mouse(self, mouse_position):
         mx, my = mouse_position
         zx, zy, zw, zh = self.get_rect()
@@ -313,41 +390,93 @@ class Zone:
                 self.mouse_over = False
                 self.mouse_exit()
 
-        for zone in self.contenu:
+        for zone in self.pages[self.current_page]:
             zone.check_mouse(mouse_position)
-
-
+    
     def draw(self, screen):
         color = (255, 250, 250
             ) if self.parent and self.mouse_over and Variable.is_tick_actif() else self.color
         pygame.draw.rect(screen, color, self.get_rect(), 1)
-        for zone in self.contenu:
+        for zone in self.pages[self.current_page]:
             zone.draw(screen)
 
 
+def load_zone(page: str) -> Zone:
+
+    zone = Zone("root", color=(0, 250, 250))
+
+    match page:
+        case "accueil":
+            acc = zone.add(Zone(color=(150, 150, 0), pad=15))
+            zone.rename_page("accueil")
+            
+            zone.add_page("informations")
+            zone.add(Zone(color=(50, 100, 200), pad=25))
+
+            zone.add_page("credits")
+            zone.add(Zone(color=(50, 200, 100), pad=35))
+            
+            zone.add_page("fin")
+            zone.add(Zone(color=(200, 100, 40), pad=45))
+            
+            zone.goto_page("accueil")
+
+        case "main":
+            zone.rename_page("main")
+            top = zone.add(Zone(color=(150, 150, 0), side="top", padx=15, pady=(15, 10), relheight=0.25))
+            top.add(Zone(side="left", padx=(5, 3), pady=5, relwidth=0.25))
+            top.add(Zone(side="left", padx=(3, 22), pady=5, relx=0.25, relwidth=0.75))
+            # Ascenseur
+            top.add(Zone(color=(20, 150, 100), side="right", padx=(0, 3), pady=5, x=20, width=20))
+
+            middle = zone.add(Zone(color=(150, 150, 0), side="top", 
+                padx=15, pady=(0, 50), rely=0.25, relheight=0.75))
+
+            bottom = zone.add(Zone(color=(50, 50, 50), side="BOTTOM", pad=15, height=55, relwidth=1))
+            bottom.add(Zone(color=(20, 200, 200), relwidth=1/3, padx=(0, 5)))
+            bottom.add(Zone(color=(20, 200, 200), relx=1/3, relwidth=1/3))
+            bottom.add(Zone(color=(20, 200, 200), side="RIGHT", relwidth=1/3, padx=(5, 0)))
+
+        case "page1":
+            zone.rename_page("detail1")
+            left = zone.add(Zone(color=(50, 200, 50), relwidth=0.25, padx=(15,0), pady=15))
+            right = zone.add(Zone(color=(50, 250, 50), relx=0.25, relwidth=0.75, pad=15))
+
+        case "page2":
+            zone.rename_page("detail2")
+            left = zone.add(Zone(color=(50, 200, 50), relwidth=0.75, padx=(15,0), pady=15))
+            right = zone.add(Zone(color=(50, 250, 50), relx=0.75, relwidth=0.25, pad=15))
+
+    fprint("Zone", zone.current_page, "chargee", end=": ")
+    fprint(list(map(lambda z: z.coords, zone.pages[zone.current_page])))
+
+    return zone
+
+
+def next_page(page: str) -> str:
+
+    match [page[:4], page[4:]]:
+        case ["accu", _]:
+            page = "main"
+
+        case ["main", _]:
+            page = "page1"
+
+        case ["page", x]:
+            if x == "2":
+                page = "accueil"
+            else:
+                page = "page" + str(1+int(x))
+
+    return page
+
+
 def main():
+    page_str: str = "accueil"
+    mouse_position_save: tuple = (-1, -1)
+    page = load_zone(page_str)
 
-    root = Zone("root", color=(0, 250, 250))
-    fprint(0, root)
-
-    top = root.add(Zone(color=(150, 150, 0), side="top", padx=15, pady=(15, 10), relheight=0.25))
-    top.add(Zone(side="left", padx=(5, 3), pady=5, relwidth=0.25))
-    top.add(Zone(side="left", padx=(3, 22), pady=5, relx=0.25, relwidth=0.75))
-    # Ascenseur
-    top.add(Zone(color=(20, 150, 100), side="right", padx=(0, 3), pady=5, x=20, width=20))
-    fprint(1, root)
-
-    middle = root.add(Zone(color=(150, 150, 0), side="top", 
-        padx=15, pady=(0, 50), rely=0.25, relheight=0.75))
-    fprint(2, root)
-
-    bottom = root.add(Zone(color=(50, 50, 50), side="BOTTOM", pad=15, height=55, relwidth=1))
-    bottom.add(Zone(color=(20, 200, 200), relwidth=1/3, padx=(0, 5)))
-    bottom.add(Zone(color=(20, 200, 200), relx=1/3, relwidth=1/3))
-    bottom.add(Zone(color=(20, 200, 200), side="RIGHT", relwidth=1/3, padx=(5, 0)))
-    # fprint(3, root)
-
-    screen = pygame.display.set_mode(root.get_size(), pygame.RESIZABLE, 24)
+    screen = pygame.display.set_mode(page.get_size(), pygame.RESIZABLE, 24)
     clock = pygame.time.Clock()
 
     running = True
@@ -357,21 +486,37 @@ def main():
                 case pygame.KEYUP:
                     running = not event.key == 27
 
+                    if event.key in (pygame.K_PAGEDOWN, pygame.K_PAGEUP):
+                        page.next_page()
+
+                    elif event.key in (pygame.K_BACKSPACE, ):
+                        page.previous_page()
+
+                    elif event.key in (pygame.K_RETURN, pygame.K_KP_ENTER):
+                        page_str = next_page(page_str)
+                        page = load_zone(page_str)
+                        page.check_mouse(mouse_position_save)
+
                 case pygame.KMOD_LGUI:
-                    root.check_mouse(event.pos)
+                    page.check_mouse(event.pos)
+                    mouse_position_save = event.pos
+
+                case pygame.MOUSEBUTTONUP:
+                    page.mouse_button_up(event.pos, event.button)
 
                 case pygame.QUIT:
                     running = False
 
                 case pygame.VIDEORESIZE:
-                    root.recalc_zones([0, 0, event.w, event.h])
+                    page.recalc_zones([0, 0, event.w, event.h])
 
                 case default:
                     pass
                     # fprint("event:", default)
 
 
-        root.draw(screen)
+        screen.fill(0)
+        page.draw(screen)
         pygame.display.update()
 
         clock.tick(60)
@@ -385,4 +530,5 @@ if __name__ == "__main__":
         main()
     finally:
         pygame.quit()
+        fprint("Fin")
 
