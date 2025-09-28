@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Optional
+from typing import Optional, Self
 
 import pygame
 
@@ -37,62 +37,282 @@ class Variable:
 
 
 class Page:
+    parent: Optional[Pages]
     nom: str
-    zone: Zone
+    current: Optional[str]
+    contenu: list[Pages]
+    coords: list
 
-    def __init__(self, nom: str, zone: Zone): 
+    x: Optional[int]
+    y: Optional[int]
+    width: Optional[int]
+    height: Optional[int]
+
+    mouse_over: bool
+
+    def __init__(self, 
+        nom: str, 
+        position: str="", 
+        coords: list[int]=list(),
+        **options): 
+
+        self.current = None
+        self.parent = None
         self.nom = nom
-        self.zone = zone
+        self.position = position
+        self.contenu = list()
 
-    def rename(self, nom: str): 
-        self.nom = nom
+        if options.get("root", False):
+            self.set_rect([0, 0] + Screen.size)
+        else:
+            self.set_rect(coords)
 
+        self.mouse_over = False
+        self.options = options
 
-class Pages:
-    current: str
-    liste: list[Page]
+    def __str__(self) -> str:
+        ctn: str = ""
+        for p in self.contenu:
+            ctn += ", " + str(p)
+        ctn = ctn[2:]
+        return f"{self.nom} {self.coords} [{ctn}]"
 
-    def __init__(self, current: str): 
-        self.current = current
-        self.liste = list()
-
-    def __iter__(self):
+    def __iter__(self) -> Self:
         self.__index = -1
         return self
 
-    def __next__(self):
+    def __next__(self) -> Pages:
+        self.__index += 1
+        if self.__index >= len(self.contenu):
+            raise StopIteration()
+
+        return self.contenu[self.__index]
+
+    def __call__(self, nom_pages: Optional[str] = None) -> Pages:
+        return self.get(nom_pages)
+
+    def set_rect(self, coords: list[int]) -> None:
+        self.coords = coords.copy()
+        if coords:
+            self.x, self.y, self.width, self.height = self.coords
+
+    def create_group(self, nom_pages: str) -> Pages: 
+        pages = Pages(nom_pages)
+        pages.parent = self
+
+        self.contenu.append(pages)
+        self.current = nom_pages
+
+        return pages
+
+    def has_pages(self) -> bool:
+        return len(self.contenu) > 0
+
+    def add(self, page: Page, nom_pages: Optional[str]=None) -> None:
+        if nom_pages is None:
+            nom_pages = self.current
+
+        pages: Pages = self.get(nom_pages)
+        page.parent = pages
+        pages.add(page)
+
+    def delete(self) -> None:
+        if not self.parent:
+            return
+
+        pages = self.parent
+        for page in pages.liste:
+            if self.nom != page.nom:
+                continue
+
+            pages.liste.remove(page)
+            if len(pages.liste) == 0:
+                self.current = ""
+            else:
+                self.current = pages.liste[0].nom
+            break
+
+    def delete_pages(self, nom_pages: str) -> None:
+        for pages in self.contenu:
+            if pages.nom == nom_pages:
+                self.contenu.remove(pages)
+
+                if self.current == nom_pages:                    
+                    if len(self.contenu) == 0:
+                        self.current = ""
+                    else:
+                        self.current = self.contenu[0].nom
+                return
+
+    def rename(self, nom_page: str) -> None: 
+        self.nom = nom_page
+
+    def get(self, nom_pages: Optional[str] = None) -> Pages:
+        if nom_pages is None:
+            nom_pages = self.current
+
+        for pages in self.contenu:
+            if pages.nom == nom_pages:
+                return pages
+
+        raise Exception(f"Le groupe de pages {nom_pages!r} n'existe pas.")
+
+    def activate_pages(self, nom_pages: str) -> Pages:
+        for pages in self.contenu:
+            if pages.nom == nom_pages:
+                self.current = pages.nom
+                return pages
+
+        raise IndexError(f"Le groupe de pages {nom_pages!r} n'existe pas.")
+
+    def goto_previous_pages(self) -> None:
+        previous_nom: str = self.contenu[-1].nom
+
+        for pages in self.contenu:
+            if self.current == pages.nom:
+                self.current = previous_nom
+                return
+
+            previous_nom = pages.nom
+
+    def goto_next_pages(self) -> None:
+        trouve: bool = False
+        updated: bool = False
+        for pages in self.contenu:
+            if trouve:
+                self.current = pages.nom
+                updated = True
+                break
+
+            if self.current == pages.nom:
+                trouve = True
+
+        if not updated:
+            self.current = self.contenu[0].nom
+
+    def draw(self) -> None:
+        if len(self.contenu) > 0:
+            print(self.nom, self.get())
+        else:
+            print(self)
+
+
+class Pages:
+    parent: Optional[Page]
+    nom: str
+    current: str
+    liste: list[Page]
+
+    def __init__(self, nom: str): 
+        self.parent = None
+        self.current = ""
+        self.nom = nom
+        self.liste = list()
+
+    def __iter__(self) -> Self:
+        self.__index = -1
+        return self
+
+    def __next__(self) -> Page:
         self.__index += 1
         if self.__index >= len(self.liste):
             raise StopIteration()
 
+        return self.liste[self.__index]
+
         nom = self.liste[self.__index].nom
-        zone = self.liste[self.__index].zone
-        return nom, zone
+        page = self.liste[self.__index]
 
-    def add(self, page: Page): 
+        return nom, page
+
+    def __str__(self) -> str:
+        ctn: str = ""
+        for p in self.liste:
+            ctn += ", " + str(p)
+        ctn = ctn[2:]
+        return f"{self.nom} ({ctn})"
+
+    def __call__(self, nom_page: Optional[str] = None) -> Page:
+        return self.get(nom_page)
+
+    def has_page(self) -> bool:
+        return len(self.liste) > 0
+
+    def add(self, page: Page) -> None: 
+        page.parent = self
         self.liste.append(page)
+        self.current = page.nom
+        if self.parent is None:
+            return
 
-    def get(self, nom: Optional[str] = None) -> Page:
-        if nom is None:
-            nom = self.current
+        fprint("calcul coords", self.parent.coords, page.options)
+        if page.position == "Gauche":
+            page.set_rect(self.parent.coords[:2])
 
-        return list(filter(lambda p: p.nom == nom, self.liste))[0]
+    def get(self, nom_page: Optional[str] = None) -> Page:
+        if nom_page is None:
+            nom_page = self.current
 
-    def delete(self, page_str: str):
         for page in self.liste:
-            if page.nom == page_str:
+            if page.nom == nom_page:
+                return page
+
+        raise Exception(f"La page {nom_page!r} n'existe pas.")
+
+    def delete(self, nom_pages: str) -> bool:
+        for page in self.liste:
+            if page.nom == nom_pages:
                 self.liste.remove(page)
+                if self.current == nom_pages:                    
+                    if len(self.liste) == 0:
+                        self.current = ""
+                    else:
+                        self.current = self.liste[0].nom
+
                 return True
 
         return False
 
+    def draw(self) -> None:
+        for page in self.liste:
+            page.draw()
+
+
+pr = Page("root", root=True)
+# print(pr)
+
+h = pr.create_group("Horizontal")
+h.add(Page("Gauche", pad=(15, 0)))
+h.add(Page("Droite", pad=(0, 15)))
+# h.add(Page("Right", pad=(0, 15)))
+# h.delete("Right")
+
+# for pages in pr:
+#     for page in pages:
+#         print(pages.nom, page)
+
+# pr.create_group("Vertical")
+# pr.add(Page("Haut"))
+# pr.add(Page("Bas"))
+# print(pr)
+
+# unique = pr.create_group("Unique")
+# pr.add(Page("Centre"))
+# unique.add(Page("Cotés"))
+# print(pr)
+
+# pr.delete_pages("Vertical")
+print(pr)
+
+
+exit()
+
 
 class Zone:
-    parent: Optional[Zone]
+    nom: str
 
-    # test
-    pages: dict = dict()
-    # pages: list[Page]
+    parent: Optional[Zone]
+    pages: Pages
 
     color: Optional[tuple]
 
@@ -106,20 +326,19 @@ class Zone:
     mouse_over: bool
 
     def __init__(self, 
-        position: str="", 
+        nom: str = "",
+        position: str = "", 
         **options):
 
         for option in options:
             if option not in OPTIONS:
                 raise TypeError(f"'{option}' est un argument keyword invalide pour {self.__class__.__name__}()")
 
+        self.nom = nom
         self.parent = None
         
-        self.current_page = "default"
-
-        # test
-        self.pages = { self.current_page: list() }
-        # self.pages = list()
+        self.current_zone = "default"
+        self.pages = Pages()
 
         self.color = options.get("color", (255, 255, 255))
 
@@ -334,14 +553,12 @@ class Zone:
         zone.color = zone.options.get("color", self.color)
 
         if nom_page is None:
-            nom_page = self.current_page
+            nom_page = self.current_zone
 
         # calcul les coordonnees a partir des options
         zone_calculee = self.calc_coords(zone)
 
-        # test
-        self.pages[nom_page].append(zone_calculee)
-        # self.pages.append(Page(nom_page, zone_calculee))
+        self.pages.add(Page(nom_page, zone_calculee))
 
         return zone_calculee
 
@@ -357,8 +574,8 @@ class Zone:
         if self.pages.get(new_name) is not None:
             raise Exception(f"la page '{new_name}' existe deja.")
 
-        self.pages[new_name] = self.pages.pop(self.current_page)
-        self.current_page = new_name
+        self.pages[new_name] = self.pages.pop(self.current_zone)
+        self.current_zone = new_name
 
 
     def del_page(self, nom_page: str):
@@ -369,33 +586,33 @@ class Zone:
 
     def previous_page(self):
         liste_pages = list(self.pages)
-        index = liste_pages.index(self.current_page)
+        index = liste_pages.index(self.current_zone)
 
         index -= 1
         if index < 0:
-            self.current_page = liste_pages[len(liste_pages)-1]
+            self.current_zone = liste_pages[len(liste_pages)-1]
         else:
-            self.current_page = liste_pages[index]
+            self.current_zone = liste_pages[index]
 
-        fprint(self.current_page, "affichee")
+        fprint(self.current_zone, "affichee")
 
     def next_page(self):
         liste_pages = list(self.pages)
-        index = liste_pages.index(self.current_page)
+        index = liste_pages.index(self.current_zone)
 
         index += 1
         if index >= len(liste_pages):
-            self.current_page = liste_pages[0]
+            self.current_zone = liste_pages[0]
         else:
-            self.current_page = liste_pages[index]
+            self.current_zone = liste_pages[index]
 
-        fprint(self.current_page, "affichee")
+        fprint(self.current_zone, "affichee")
 
     def goto_page(self, nom_page: str):
         if self.pages.get(nom_page) is None:
             raise Exception(f"la page '{nom_page}' n'existe pas.")
 
-        self.current_page = nom_page
+        self.current_zone = nom_page
 
     def recalc_zones(self, coords: Optional[list]=None):
         if not coords is None:
@@ -426,7 +643,7 @@ class Zone:
             if not zone.mouse_over:
                 return None
 
-            for z in zone.pages[zone.current_page]:
+            for z in zone.pages[zone.current_zone]:
                 if z.mouse_over:
                     return check_contenu(z)
 
@@ -455,14 +672,14 @@ class Zone:
                 self.mouse_over = False
                 self.mouse_exit()
 
-        for zone in self.pages[self.current_page]:
+        for zone in self.pages[self.current_zone]:
             zone.check_mouse(mouse_position)
     
     def draw(self, screen):
         color = (255, 250, 250
             ) if self.parent and self.mouse_over and Variable.is_tick_actif() else self.color
         pygame.draw.rect(screen, color, self.get_rect(), 1)
-        for zone in self.pages[self.current_page]:
+        for zone in self.pages[self.current_zone]:
             zone.draw(screen)
 
 
@@ -516,8 +733,8 @@ def load_zone(page: str) -> Zone:
             left = zone.add(Zone(color=(50, 200, 50), relwidth=0.75, padx=(15,0), pady=15))
             right = zone.add(Zone(color=(50, 250, 50), relx=0.75, relwidth=0.25, pad=15))
 
-    fprint("Zone", zone.current_page, "chargee", end=": ")
-    fprint(list(map(lambda z: z.coords, zone.pages[zone.current_page])))
+    fprint("Zone", zone.current_zone, "chargee", end=": ")
+    fprint(list(map(lambda z: z.coords, zone.pages[zone.current_zone])))
 
     return zone
 
