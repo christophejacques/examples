@@ -573,10 +573,10 @@ class OperatingSystem:
             *_, img_width, img_height = image.get_rect()
 
             # print(self.width, self.height, img_width, img_height, flush=True)
-            if self.width > img_width:
+            if self.width < img_width:
                 self.background = pygame.transform.scale(image, (self.width, self.width*img_height//img_width))
             else:
-                self.background = pygame.transform.scale(image, (img_width, img_height))
+                self.background = pygame.transform.scale(image, (self.width, self.width*img_height//img_width))
 
         except Exception as e:
             print("Error loading background:", e)
