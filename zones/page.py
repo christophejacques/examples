@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Optional, Self
+from typing import Optional, Self, Any
 
 import pygame
 
@@ -70,9 +70,9 @@ class Page:
 
     def __init__(self, 
         nom: str, 
-        position: str="", 
-        coords: list[int]=list(),
-        **options): 
+        position: str = "", 
+        coords: list[int] = list(),
+          **options): 
 
         self.current = None
         self.parent = None
@@ -142,8 +142,8 @@ class Page:
         if coords:
             self.x, self.y, self.width, self.height = self.coords
 
-    def recalc_zones(self, coords: Optional[list]=None):
-        if not coords is None:
+    def recalc_zones(self, coords: Optional[list] = None):
+        if coords is not None:
             self.set_rect(coords)
 
         for pages in self.contenu:
@@ -165,7 +165,7 @@ class Page:
     def has_pages(self) -> bool:
         return len(self.contenu) > 0
 
-    def add(self, page: Page, nom_pages: Optional[str]=None) -> Page:
+    def add(self, page: Page, nom_pages: Optional[str] = None) -> Page:
         if nom_pages is None:
             if self.current is None:
                 # fprint(f"Add group: {page.nom} -> [{self.nom}]")
@@ -198,10 +198,9 @@ class Page:
                     self.current = pages.liste[0].nom
 
             else:
-                page.index -= 1
-                
+                page.index -= 1                
 
-    def delete_pages(self, nom_pages: Optional[str]=None) -> None:
+    def delete_pages(self, nom_pages: Optional[str] = None) -> None:
         if nom_pages is None:
             self.contenu.clear()
             self.current = None
@@ -310,7 +309,6 @@ class Page:
             if self.mouse_over:
                 self.mouse_over = False
                 self.mouse_exit()
-
         
         if not self.has_pages():
             return
@@ -381,11 +379,11 @@ class Pages:
 
     @staticmethod
     def update_size(
-        option_str, 
-        debut_zone, taille_zone, 
-        ref_debut, ref_size, 
-        side, direction, 
-        options) -> tuple[int, int]:
+      option_str, 
+      debut_zone, taille_zone, 
+      ref_debut, ref_size, 
+      side, direction, 
+      options) -> tuple[int, int]:
 
         if taille_zone is None:
             relwidth = options.get("rel" + option_str, 1)
@@ -412,13 +410,13 @@ class Pages:
 
     @staticmethod
     def update_padding(
-        pad_str, 
-        debut_zone, taille_zone, 
-        side, direction, 
-        ref_size, ref_debut, 
-        options) -> tuple[int, int]:
+      pad_str, 
+      debut_zone, taille_zone, 
+      side, direction, 
+      ref_size, ref_debut, 
+      options) -> tuple[int, int]:
 
-        padding: tuple[int, int]
+        padding: tuple[Any, ...]
 
         valeur = options.get(pad_str, 0)
         if isinstance(valeur, tuple):
@@ -451,7 +449,7 @@ class Pages:
 
         px, py, pwidth, pheight = pcoords
         side = page.position
-        fprint(side, page.options, pcoords, end= "")
+        fprint(side, page.options, pcoords, end="")
 
         for option in page.options:
             match option:
@@ -530,7 +528,7 @@ class Pages:
 
                     page.height = page.options.get(option, 0)
 
-                case default:
+                case _:
                     pass
 
         if update_options:
@@ -548,28 +546,28 @@ class Pages:
         match side:
             case "UNDER":
                 page.y = zi(self.liste[page.index-2].y) + zi(self.liste[page.index-2].height) + \
-                    self.liste[page.index-2].options.get("pady",(0, 0))[1]
+                    self.liste[page.index-2].options.get("pady", (0, 0))[1]
 
             case "OVER":
                 page.y = zi(self.liste[page.index-2].y) - page.height - \
-                    self.liste[page.index-2].options.get("pady",(0, 0))[0]
+                    self.liste[page.index-2].options.get("pady", (0, 0))[0]
 
             case "RIGHTTO":
                 page.x = zi(self.liste[page.index-2].x) + zi(self.liste[page.index-2].width) + \
-                    self.liste[page.index-2].options.get("padx",(0, 0))[1]
+                    self.liste[page.index-2].options.get("padx", (0, 0))[1]
 
             case "LEFTTO":
                 page.x = zi(self.liste[page.index-2].x) - page.width - \
-                    self.liste[page.index-2].options.get("padx",(0, 0))[0]
+                    self.liste[page.index-2].options.get("padx", (0, 0))[0]
 
         page.width = self.update_to_end("width", page.x, page.width, px, pwidth, page.options)
         page.height = self.update_to_end("height", page.y, page.height, py, pheight, page.options)
 
-        page.x, page.width = self.update_padding( "padx", 
+        page.x, page.width = self.update_padding("padx", 
             page.x, page.width, side, "RIGHT",
             pwidth, px, page.options)
 
-        page.y, page.height = self.update_padding( "pady", 
+        page.y, page.height = self.update_padding("pady", 
             page.y, page.height, side, "BOTTOM",
             pheight, py, page.options)
 
@@ -585,7 +583,7 @@ class Pages:
         page.index = len(self.liste)
 
         # calcul les coordonnees a partir des options
-        zone_calculee = self.calc_coords(page)
+        self.calc_coords(page)
 
     def get(self, nom_page: Optional[str] = None) -> Page:
         if nom_page is None:
@@ -679,21 +677,21 @@ def initialize_test():
     page = Page("root", "ROOT", color=(0, 250, 250), root=True, drawbg=False)
     menu = page.add(Page("Menu", "TOP", color=(150, 50, 0), height=30, pad=2, drawbg=False))
 
-    menu.add(Page("File", "RIGHT", color=(50, 250, 0), width=80, padx=(dx,0), 
+    menu.add(Page("File", "RIGHT", color=(50, 250, 0), width=80, padx=(dx, 0), 
         mouse_enter="print_name"))
-    menu.add(Page("Edit", "LEFTTO", color=(50, 50, 0), width=80, padx=(dx,0), 
+    menu.add(Page("Edit", "LEFTTO", color=(50, 50, 0), width=80, padx=(dx, 0), 
         mouse_enter="print_name"))
-    menu.add(Page("Selection", "LEFTTO", color=(250, 50, 0), relwidth=0.05, padx=(dx,0), 
+    menu.add(Page("Selection", "LEFTTO", color=(250, 50, 0), relwidth=0.05, padx=(dx, 0), 
         mouse_enter="print_name"))
-    menu.add(Page("Find", "LEFTTO", color=(150, 150, 250), width=80, padx=(dx,0), mouse_enter="print_name"))
-    menu.add(Page("View", "LEFTTO", color=(50, 150, 0), width=80, padx=(dx,0), mouse_enter="print_name"))
-    menu.add(Page("Goto", "LEFTTO", color=(50, 250, 0), width=80, padx=(dx,0), mouse_enter="print_name"))
-    menu.add(Page("Tools", "LEFTTO", color=(50, 150, 0), width=80, padx=(dx,0), mouse_enter="print_name"))
-    menu.add(Page("Project", "LEFTTO", color=(50, 250, 0), width=80, padx=(dx,0), 
+    menu.add(Page("Find", "LEFTTO", color=(150, 150, 250), width=80, padx=(dx, 0), mouse_enter="print_name"))
+    menu.add(Page("View", "LEFTTO", color=(50, 150, 0), width=80, padx=(dx, 0), mouse_enter="print_name"))
+    menu.add(Page("Goto", "LEFTTO", color=(50, 250, 0), width=80, padx=(dx, 0), mouse_enter="print_name"))
+    menu.add(Page("Tools", "LEFTTO", color=(50, 150, 0), width=80, padx=(dx, 0), mouse_enter="print_name"))
+    menu.add(Page("Project", "LEFTTO", color=(50, 250, 0), width=80, padx=(dx, 0), 
         mouse_enter="print_name"))
-    menu.add(Page("Preferences", "LEFTTO", color=(50, 150, 0), width=100, padx=(dx,0), 
+    menu.add(Page("Preferences", "LEFTTO", color=(50, 150, 0), width=100, padx=(dx, 0), 
         mouse_enter="print_name"))
-    menu.add(Page("Help", "LEFTTO", color=(50, 250, 0), width=80, padx=(dx,0), mouse_enter="print_name"))
+    menu.add(Page("Help", "LEFTTO", color=(50, 250, 0), width=80, padx=(dx, 0), mouse_enter="print_name"))
 
     content = page.add(Page("Contenu", "UNDER", color=(150, 50, 0), 
         relheight=0.8, drawbg=False, endheight=True))
@@ -751,7 +749,7 @@ def initialize():
     top.add(Page("Ascenseur", "RIGHT", color=(20, 150, 100), padx=(0, 3), pady=5, x=20, width=20))
 
     # Middle
-    middle = page.add(Page("Middle", "TOP", color=(150, 150, 0), 
+    page.add(Page("Middle", "TOP", color=(150, 150, 0), 
         padx=15, pady=(0, 50), rely=0.25, relheight=0.75))
 
     # Bottom
@@ -764,11 +762,11 @@ def initialize():
     # Page 3
     page = Page("root", "ROOT", color=(0, 250, 250), root=True)
     page.create_group("boite_outil")
-    page.add(Page("Gauche", "", color=(50, 20, 200), relwidth=0.25, padx=(15,0), pady=15))
+    page.add(Page("Gauche", "", color=(50, 20, 200), relwidth=0.25, padx=(15, 0), pady=15))
     page.add(Page("Droite", "RIGHT", color=(50, 50, 250), relwidth=0.75, pad=15))
 
     page.create_group("detail")
-    page.add(Page("35w", "", color=(50, 20, 250), width=35, padx=(15,0), pady=15))
+    page.add(Page("35w", "", color=(50, 20, 250), width=35, padx=(15, 0), pady=15))
     page.add(Page("50p", "", color=(50, 50, 250), padx=(50, 15), pady=15))
 
     page.goto_pages("boite_outil")
@@ -777,18 +775,18 @@ def initialize():
     # Page 4
     page = Page("root", "ROOT", color=(0, 250, 250), root=True)
     page.create_group("boite_outil2")
-    page.add(Page("75w", "", color=(50, 20, 250), relwidth=0.75, padx=(15,0), pady=15))
+    page.add(Page("75w", "", color=(50, 20, 250), relwidth=0.75, padx=(15, 0), pady=15))
     page.add(Page("75p", "RIGHT", color=(50, 50, 250), relwidth=0.25, pad=15))
 
     page.create_group("detail2")
-    page.add(Page("75w", "", color=(50, 20, 250), padx=(15,50), pady=15))
+    page.add(Page("75w", "", color=(50, 20, 250), padx=(15, 50), pady=15))
     page.add(Page("75p", "RIGHT", color=(50, 50, 250), width=35, padx=(15, 0), pady=15))
 
     page.goto_pages("boite_outil2")
     Ecrans.add_ecran(page)
 
 
-def main():
+def main() -> None:
     # initialize()
     initialize_test()
 
@@ -860,10 +858,9 @@ def main():
                 case pygame.QUIT:
                     running = False
 
-                case default:
+                case _:
                     pass
                     # fprint("event:", get_pygame_const_name(default))
-
 
         Page.screen.fill(0)
         page.draw()
@@ -880,4 +877,3 @@ if __name__ == "__main__":
     finally:
         pygame.quit()
         fprint("Fin")
-
