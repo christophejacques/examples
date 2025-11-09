@@ -107,18 +107,15 @@ class Separation(Box):
         self.keep_mouse_events = True
         self.mouse_is_clicked = True
         self.posX = posX
-        # fprint("begin moving Separation")
 
     def mouse_button_up(self, posX, posY, button):
         self.keep_mouse_events = False
         self.mouse_is_clicked = False
         self.set_action(posX)
-        # fprint("end moving Separation")
 
     def draw(self):
-        # self.tools.fill("lightblue")
-        # self.tools.line(self.backcolor, (self.cx-1, 0), (self.cx-1, self.rect.height), width=3)
         self.tools.line(self.backcolor, (self.cx, 0), (self.cx, self.rect.height), width=3)
+
 
 class Bouton(Box):
     BORDER_SIZE: int = 2
@@ -337,15 +334,20 @@ class ListDirectoryFile(Box):
         self.recalc_size()
 
     def recalc_size(self):
-        new_max = -1 + (self.tools.screen.get_size()[1] - 2 * self.BORDER_SIZE) // 21
+        new_max = -1 + (self.tools.get_size()[1] - 2 * self.BORDER_SIZE) // 21
         self.MAX_FILES = new_max
 
-        self.ascenseur = self.len_dirs+self.len_files > self.MAX_FILES
-        self.largeur_ascenseur = 10 if self.ascenseur else 0
-        self.hauteur_ascenseur = int(self.rect.height * self.MAX_FILES / (self.len_dirs+self.len_files))
+        nombre_total = self.len_dirs + self.len_files
 
-        if (self.len_dirs+self.len_files) - self.decal < self.MAX_FILES:
-            self.decal -= self.MAX_FILES - (self.len_dirs+self.len_files) + self.decal + 1
+        self.ascenseur = nombre_total > self.MAX_FILES
+        self.largeur_ascenseur = 10 if self.ascenseur else 0
+        if nombre_total > 0:
+            self.hauteur_ascenseur = int(self.rect.height * self.MAX_FILES / nombre_total)
+        else:
+            self.hauteur_ascenseur = 0
+
+        if nombre_total - self.decal < self.MAX_FILES:
+            self.decal -= self.MAX_FILES - nombre_total + self.decal + 1
             if self.decal < 0:
                 self.decal = 0
 
@@ -652,7 +654,7 @@ class SelectWallpaper(Application):
         self.textDirectory = TextBox(self, couleur_fond, (55, 10, self.decal_sep_x-55, 40), "")
         self.ecrans.append(self.textDirectory)
 
-        self.width, self.height = self.tools.screen.get_size()
+        self.width, self.height = self.tools.get_size()
         self.check_actions()
 
 
@@ -794,13 +796,12 @@ class SelectWallpaper(Application):
                 return
 
         for bouton in self.boutons:
+            # activation des events enter & exit
             if bouton.is_visible() and bouton.collide_mouse((mouseX, mouseY)):
                 self.focused_bouton = bouton
 
-        if self.focused_bouton:
-            return
-
         for ecran in self.ecrans:
+            # activation des events enter & exit
             if ecran.collide_mouse((mouseX, mouseY)):
                 ecran.mouse_move((mouseX-ecran.rect.left, mouseY-ecran.rect.top))
                 self.focused_ecran = ecran
@@ -908,9 +909,6 @@ class SelectWallpaper(Application):
         pass
 
     def draw(self):
-        # self.tools.fill((150, 170, 250))
-        # self.tools.fill((100, 190, 200))
-
         self.tools.fill(self.background)
         for ecran in self.ecrans:
             ecran.draw()

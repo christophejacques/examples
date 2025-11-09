@@ -284,7 +284,8 @@ class Window:
             self.set_error()
             print("Erreur:", erreur, flush=True)
 
-    def search_for_in(self, value, liste):
+    @staticmethod
+    def search_for_in(value, liste):
         for val in liste:
             if value in val:
                 return val
@@ -669,6 +670,10 @@ class OperatingSystem:
         if "UNIQUE" in app.WINDOW_PROPERTIES:
             for fenetre in self.liste_fenetres:
                 if fenetre.app == app:
+                    if fenetre.last_statut() == "MINIMIZED":
+                        # Affiche la fenetre si elle est minimisee
+                        fenetre.statut.pop()
+                        
                     self.activate_window(fenetre)
                     return
 

@@ -398,7 +398,7 @@ class Pages:
         return debut_zone, taille_zone
 
     @staticmethod
-    def update_to_end(option_str, debut_zone, taille_zone, ref_debut, ref_size, options) -> tuple[int, int]:
+    def update_begin_end(option_str, debut_zone, taille_zone, ref_debut, ref_size, options) -> tuple[int, int]:
 
         beginsize = options.get("begin" + option_str, False)
         if beginsize:
@@ -452,7 +452,7 @@ class Pages:
 
         px, py, pwidth, pheight = pcoords
         side = page.position
-        fprint(side, page.options, pcoords, end="")
+        # fprint(side, page.options, pcoords, end=" ")
 
         for option in page.options:
             match option:
@@ -563,8 +563,10 @@ class Pages:
                 page.x = zi(self.liste[page.index-2].x) - page.width - \
                     self.liste[page.index-2].options.get("padx", (0, 0))[0]
 
-        page.x, page.width = self.update_to_end("width", page.x, page.width, px, pwidth, page.options)
-        page.y, page.height = self.update_to_end("height", page.y, page.height, py, pheight, page.options)
+        page.x, page.width = self.update_begin_end("width", 
+            page.x, page.width, px, pwidth, page.options)
+        page.y, page.height = self.update_begin_end("height", 
+            page.y, page.height, py, pheight, page.options)
 
         page.x, page.width = self.update_padding("padx", 
             page.x, page.width, side, "RIGHT",
@@ -576,7 +578,7 @@ class Pages:
 
         page.coords = [page.x, page.y, page.width, page.height]
 
-        fprint(" => Result:", page.coords)
+        # fprint(" => Result:", page.coords)
         return page
 
     def add(self, page: Page) -> None: 
@@ -619,24 +621,24 @@ class Ecrans:
     index: int = -1
 
     @classmethod
-    def clear(cls):
+    def clear(cls) -> None:
         cls.ecrans.clear()
         cls.total = 0
         cls.index = -1
 
     @classmethod
-    def resize(cls, size: list[int]):
+    def resize(cls, size: list[int]) -> None:
         Screen.size = size
         for page in cls.ecrans:
             page.recalc_zones([0, 0, *size])
 
     @classmethod
-    def add_ecran(cls, ecran: Page):
+    def add_ecran(cls, ecran: Page) -> None:
         cls.ecrans.append(ecran)
         cls.total += 1
 
     @classmethod
-    def previous_ecran(cls):
+    def previous_ecran(cls) -> Page:
         cls.index -= 1
         if cls.index < 0:
             cls.index = cls.total - 1
@@ -644,42 +646,43 @@ class Ecrans:
         return cls.ecrans[cls.index]
 
     @classmethod
-    def next_ecran(cls):
+    def next_ecran(cls) -> Page:
         cls.index += 1
         if cls.index >= cls.total:
             cls.index = 0
 
-        return cls.ecrans[cls.index]
+        page = cls.ecrans[cls.index]
+        fprint(page.nom, f"({page.current})")
+        return page
 
 
 def initialize_test():
     dx = 2
-    if True:
-        page = Page("Page1", "ROOT", color=(0, 250, 250), root=True, drawbg=False)
-        menu = page.add(Page("Menu", "TOP", color=(150, 50, 0), height=30, pad=2, drawbg=False))
+    page = Page("Page1", "ROOT", color=(0, 250, 250), root=True, drawbg=False)
+    menu = page.add(Page("Menu", "TOP", color=(150, 50, 0), height=30, pad=2, drawbg=False))
 
-        menu.add(Page("File", "LEFT", color=(50, 250, 0), width=80, padx=(dx,0), 
-            mouse_enter="print_name"))
-        menu.add(Page("Edit", "RIGHTTO", color=(50, 50, 0), width=80, padx=(dx,0), 
-            mouse_enter="print_name"))
-        menu.add(Page("Selection", "RIGHTTO", color=(250, 50, 0), relwidth=0.05, padx=(dx,0), 
-            mouse_enter="print_name"))
-        menu.add(Page("Find", "RIGHTTO", color=(150, 150, 250), width=80, padx=(dx,0), mouse_enter="print_name"))
-        menu.add(Page("View", "RIGHTTO", color=(50, 150, 0), width=80, padx=(dx,0), mouse_enter="print_name"))
-        menu.add(Page("Goto", "RIGHTTO", color=(50, 250, 0), width=80, padx=(dx,0), mouse_enter="print_name"))
-        menu.add(Page("Tools", "RIGHTTO", color=(50, 150, 0), width=80, padx=(dx,0), mouse_enter="print_name"))
-        menu.add(Page("Project", "RIGHTTO", color=(50, 250, 0), width=80, padx=(dx,0), 
-            mouse_enter="print_name"))
-        menu.add(Page("Preferences", "RIGHTTO", color=(50, 150, 0), width=100, padx=(dx,0), 
-            mouse_enter="print_name"))
-        menu.add(Page("Help", "RIGHTTO", color=(50, 250, 0), width=80, padx=(dx,0), mouse_enter="print_name"))
+    menu.add(Page("File", "LEFT", color=(50, 250, 0), width=80, padx=(dx,0), 
+        mouse_enter="print_name"))
+    menu.add(Page("Edit", "RIGHTTO", color=(50, 50, 0), width=80, padx=(dx,0), 
+        mouse_enter="print_name"))
+    menu.add(Page("Selection", "RIGHTTO", color=(250, 50, 0), relwidth=0.05, padx=(dx,0), 
+        mouse_enter="print_name"))
+    menu.add(Page("Find", "RIGHTTO", color=(150, 150, 250), width=80, padx=(dx,0), mouse_enter="print_name"))
+    menu.add(Page("View", "RIGHTTO", color=(50, 150, 0), width=80, padx=(dx,0), mouse_enter="print_name"))
+    menu.add(Page("Goto", "RIGHTTO", color=(50, 250, 0), width=80, padx=(dx,0), mouse_enter="print_name"))
+    menu.add(Page("Tools", "RIGHTTO", color=(50, 150, 0), width=80, padx=(dx,0), mouse_enter="print_name"))
+    menu.add(Page("Project", "RIGHTTO", color=(50, 250, 0), width=80, padx=(dx,0), 
+        mouse_enter="print_name"))
+    menu.add(Page("Preferences", "RIGHTTO", color=(50, 150, 0), width=100, padx=(dx,0), 
+        mouse_enter="print_name"))
+    menu.add(Page("Help", "RIGHTTO", color=(50, 250, 0), width=80, padx=(dx,0), mouse_enter="print_name"))
 
-        content = page.add(Page("Contenu", "UNDER", color=(150, 50, 0), 
-            drawbg=False, endheight=True))
-        content.add(Page("Left1", "LEFT", color=(150, 150, 0), width=100, pad=10))
-        content.add(Page("Left2", "RIGHTTO", color=(150, 150, 0), width=200, pady=10))
-        content.add(Page("Left3", "RIGHTTO", color=(150, 150, 0), endwidth=True, pad=10))
-        Ecrans.add_ecran(page)
+    content = page.add(Page("Contenu", "UNDER", color=(150, 50, 0), 
+        drawbg=False, endheight=True))
+    content.add(Page("Left1", "LEFT", color=(150, 150, 0), width=100, pad=10))
+    content.add(Page("Left2", "RIGHTTO", color=(150, 150, 0), width=200, pady=10))
+    content.add(Page("Left3", "RIGHTTO", color=(150, 150, 0), endwidth=True, pad=10))
+    Ecrans.add_ecran(page)
 
     page = Page("Page2", "ROOT", color=(0, 250, 250), root=True, drawbg=False)
     menu = page.add(Page("Menu", "TOP", color=(150, 50, 0), height=30, pad=2, drawbg=False))
@@ -724,29 +727,31 @@ def initialize_test():
     page.add(Page("Line2", "OVER", color=(150, 150, 0), height=200, padx=15))
     page.add(Page("Line3", "OVER", color=(150, 150, 0), beginheight=True, pad=15))
     Ecrans.add_ecran(page)
-    # Ecrans.index = 1
 
 
 def initialize():
     # Page 1
     page = Page("root", "ROOT", color=(0, 250, 250), root=True, drawbg=False)
     page.create_group("accueil")
-    page.add(Page("Accueil", "FULL", color=(150, 150, 0), pad=15))
+    page.add(Page("Accueil", "FULL", color=(150, 250, 0), pad=15))
 
     page.create_group("informations")
-    page.add(Page("Informations", "FULL", color=(50, 100, 200), pad=25))
+    page.add(Page("Informations", "FULL", color=(150, 200, 100), pad=25))
 
     page.create_group("credits")
-    page.add(Page("Credits", "FULL", color=(50, 200, 100), pad=35))
+    page.add(Page("Credits", "FULL", color=(150, 150, 80), pad=35))
 
     page.create_group("route")
-    page.add(Page("Fin", "FULL", color=(150, 100, 40), pad=45))
+    page.add(Page("Fin", "FULL", color=(150, 100, 60), pad=45))
 
     page.create_group("about")
-    page.add(Page("Fin", "FULL", color=(200, 100, 40), pad=65))
+    page.add(Page("Fin", "FULL", color=(250, 100, 40), pad=65))
+
+    page.create_group("avantfin")
+    page.add(Page("Fin", "FULL", color=(250, 50, 0), pad=85))
 
     page.create_group("fin")
-    page.add(Page("Fin", "FULL", color=(250, 80, 20), pad=85))
+    page.add(Page("Fin", "FULL", color=(250, 0, 0), pad=105))
 
     page.goto_pages("accueil")
     Ecrans.add_ecran(page)
