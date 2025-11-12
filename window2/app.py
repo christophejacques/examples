@@ -8,7 +8,9 @@ from audio import Audio
 from mouse import Mouse
 from keyboard import Keyboard
 from colors import Colors
-from classes import Variable, Tools, get_all_classes, Theme, Registres
+from classes import Variable, Tools, get_all_classes, Theme, Registres, fprint
+
+from typing import Tuple, Optional
 
 
 def get_pygame_const_name(index):
@@ -285,13 +287,13 @@ class Window:
             print("Erreur:", erreur, flush=True)
 
     @staticmethod
-    def search_for_in(value, liste):
+    def search_for_in(value, liste) -> object:
         for val in liste:
             if value in val:
                 return val
         return False
 
-    def load_sound(self, fichier, volume):
+    def load_sound(self, fichier, volume) -> Optional[int]:
         if not self.sound_id:
             return False
         return Audio.load_sound(self.sound_id, fichier, volume)
@@ -309,7 +311,7 @@ class Window:
         if self.sound_id:
             Audio.stop_all_channels_application(self.sound_id)
 
-    def get_mouse_pos(self):
+    def get_mouse_pos(self) -> Tuple[int, int]:
         mouseX, mouseY = Mouse.get_pos()
         x, y = self.window.topleft
         mouseX -= x + self.border_size
@@ -365,7 +367,7 @@ class Window:
 
         return active_color if self.active else inactive_color
 
-    def last_statut(self):
+    def last_statut(self) -> Optional[str]:
         if self.statut:
             return self.statut[-1]
         return None
@@ -886,15 +888,18 @@ class OperatingSystem:
 
     def get_windows_actions(self):
         for fenetre in self.liste_fenetres:
-            if not fenetre.on_error and fenetre.instance.get_action() is not None:
-                for action in fenetre.instance.get_action().split(";"):
-                    match action.split(":"):
-                        case ["QUIT"]:
-                            self.close(fenetre)
+            fenetre_action = fenetre.instance.get_action()
+            if fenetre.on_error or fenetre_action is None:
+                continue
+                
+            for action in fenetre_action.split(";"):
+                match action.split(":"):
+                    case ["QUIT"]:
+                        self.close(fenetre)
 
-                        case ["SET", "WALLPAPER", filename]:
-                            self.registre.save("Wallpaper", filename)
-                            self.load_background_image()
+                    case ["SET", "WALLPAPER", filename]:
+                        self.registre.save("Wallpaper", filename)
+                        self.load_background_image()
 
     def check_keyboard_events(self):
         return
@@ -1353,18 +1358,16 @@ class OperatingSystem:
                 case pygame.AUDIODEVICEADDED:
                     if event.which == 0:
                         if event.iscapture == 0:
-                            print("Sorties :")
+                            fprint("Sorties :")
                         else:
-                            print("Entrées :")
+                            fprint("Entrées :")
 
                         devices = tuple(sdl2_audio.get_audio_device_names(event.iscapture))
                         for device in devices:
-                            print("-", device, flush=True)
-
-
+                            fprint("-", device)
 
                 case default:
-                    print(event.type, get_pygame_const_name(event.type), flush=True)
+                    fprint(event.type, get_pygame_const_name(event.type))
                     pass
 
     def run(self):

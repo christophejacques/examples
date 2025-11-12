@@ -29,7 +29,7 @@ class Keyboard:
             return None
 
     @classmethod
-    def keypressed(self):
+    def keypressed(self) -> bool:
         return len(self.buffer) > 0
 
     @classmethod

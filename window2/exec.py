@@ -227,11 +227,13 @@ def run(application=None):
         instance.update()
         instance.draw()
 
-        for action in instance.get_action().split(";"):
-            match action:
-                case "QUIT":
-                    instance.registre.save_file()
-                    running = False
+        all_actions = instance.get_action()
+        if not (all_actions is None or all_actions == ""):
+            for action in all_actions.split(";"):
+                match action:
+                    case "QUIT":
+                        instance.registre.save_file()
+                        running = False
 
         pygame.display.update()
         for event in pygame.event.get():

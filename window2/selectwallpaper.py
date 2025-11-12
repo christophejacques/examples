@@ -16,6 +16,7 @@ class Box:
         self.backcolor = color
         self.has_mouse_on = False
         self.keep_mouse_events = False
+        self.action = None
 
     def resize(self, parent, new_size=None, **options):
         if len(options) > 0:
@@ -33,7 +34,9 @@ class Box:
         pass
 
     def get_action(self):
-        return None
+        action = self.action
+        self.action = None
+        return action
 
     def mouse_move(self, position):
         pass
@@ -74,13 +77,7 @@ class Separation(Box):
         self.theme = args[0].theme
         self.mouse_is_clicked = False
         self.posX = 0
-        self.action = None
         self.cx = self.rect.width // 2
-
-    def get_action(self):
-        action = self.action
-        self.action = None
-        return action
 
     def set_theme(self, theme):
         self.backcolor = self.theme.get("LIST_BACK_COLOR")
@@ -274,7 +271,9 @@ class TextBox(Box):
         self.backcolor = self.theme.get("LIST_BACK_COLOR")
 
     def draw(self):
-        super().draw()
+        if self.backcolor:
+            super().draw()
+
         self.tools.blit(self.texte_font, (10, 10))
 
 
@@ -340,7 +339,7 @@ class ListDirectoryFile(Box):
         nombre_total = self.len_dirs + self.len_files
 
         self.ascenseur = nombre_total > self.MAX_FILES
-        self.largeur_ascenseur = 10 if self.ascenseur else 0
+        self.largeur_ascenseur = 12 if self.ascenseur else 0
         if nombre_total > 0:
             self.hauteur_ascenseur = int(self.rect.height * self.MAX_FILES / nombre_total)
         else:
@@ -420,11 +419,6 @@ class ListDirectoryFile(Box):
             os.path.join(
                 self.directory,
                 self.liste["files"][self.decal + self.index - self.len_dirs]))
-
-    def get_action(self) -> str:
-        action = self.action
-        self.action = None
-        return action
 
     def set_action(self, action):
         match action:
@@ -522,28 +516,7 @@ class ListDirectoryFile(Box):
         rech_index: int = 0
         index: int = 0
 
-        largeur_dirfile = self.rect.width - 4 - self.largeur_ascenseur
-
-        # Affichage de l'ascenseur si besoin
-        if self.ascenseur:
-            ascenseur_color = (200, 200, 200)
-            x = self.rect.width - self.largeur_ascenseur
-            x2 = self.rect.width-2
-
-            # cadre de l'ascenseur
-            self.tools.rect(ascenseur_color, (x, 0, self.largeur_ascenseur, self.rect.height))
-
-            total = self.len_dirs+self.len_files
-            diff = self.rect.height
-            y1 = 2 + (diff * self.decal) // total
-            y2 = min(self.rect.height-2, y1 + (diff * self.MAX_FILES) // total)
-            
-            # Ascenseur
-            if self.ascenseur_is_clicked or self.mouse_over_ascenseur:
-                ascenseur_color = (100, 100, 100)
-            else:
-                ascenseur_color = (150, 150, 150)
-            self.tools.rect(ascenseur_color, (x, y1, self.largeur_ascenseur, y2-y1))
+        largeur_dirfile: int = self.rect.width - 4 - self.largeur_ascenseur
 
         # affichage des repertoires et fichiers
         for dirfile in (self.liste["dirs"] + self.liste["files"]):
@@ -552,34 +525,57 @@ class ListDirectoryFile(Box):
                 continue
 
             if self.selected_index == index:
-                # color = (0, 250, 0)
                 color = self.theme.get("LIST_SELECTED_TEXT_COLOR")
                 self.tools.rect((100, 100, 250), (
                     2, self.BORDER_SIZE+(index)*21, largeur_dirfile, 21))
                 self.tools.rect((0, 0, 250), (
                     2, self.BORDER_SIZE+(index)*21, largeur_dirfile, 21), 1)
+
             elif self.index == index and not self.ascenseur_is_clicked:
-                # color = (50, 50, 250)
                 color = self.theme.get("LIST_MOUSEOVER_TEXT_COLOR")
                 self.tools.rect((10, 250, 250), (
                     2, self.BORDER_SIZE+(index)*21, largeur_dirfile, 21))
                 self.tools.rect((10, 200, 200), (
                     2, self.BORDER_SIZE+(index)*21, largeur_dirfile, 21), 1)
+
             else:
-                # color = (0, 0, 0)
                 color = self.theme.get("LIST_TEXT_COLOR")
 
             texte_font = self.font.render(dirfile, False, color)
             self.tools.blit(texte_font, (self.BORDER_SIZE, self.BORDER_SIZE+21*(index)))
             index += 1
 
+        # Affichage de l'ascenseur si besoin
+        if self.ascenseur:
+            ascenseur_color: tuple = (200, 200, 200)
+            x1: int = self.rect.width - self.largeur_ascenseur
+            x2: int = self.rect.width-2
+
+            # cadre de l'ascenseur
+            self.tools.rect(ascenseur_color, (x1, 0, self.largeur_ascenseur, self.rect.height))
+
+            total: int = self.len_dirs+self.len_files
+            diff: int = self.rect.height
+            y1: int = 2 + (diff * self.decal) // total
+            y2: int = min(self.rect.height-2, y1 + (diff * self.MAX_FILES) // total)
+            
+            # Ascenseur
+            if self.ascenseur_is_clicked or self.mouse_over_ascenseur:
+                ascenseur_color = (100, 100, 100)
+            else:
+                ascenseur_color = (150, 150, 150)
+            self.tools.rect(ascenseur_color, (x1, y1, self.largeur_ascenseur, y2-y1))
+
 
 class Image(Box):
 
     def __init__(self, parent, color, coords, filename: str):
         super().__init__(parent, color, coords)
+        self.w = 0
+        self.h = 0
         self.size = self.tools.get_size()
         self.set_filename(filename)
+        self.FONT = self.tools.font("comicsans", 18)
 
     def resize(self, *args, **options):
         super().resize(*args, **options)
@@ -589,7 +585,22 @@ class Image(Box):
         else:
             self.size = tuple(args[1][2:])
 
-        self.image = self.tools.scale_image(self.img, *self.size)
+        self.calc_rapport()
+        self.image = self.tools.scale_image(self.img, *self.img_size)
+
+    def calc_rapport(self):
+        self.w, self.h = self.img.get_size()
+        rap_img = self.w / self.h
+        rap_ref = self.size[0] / self.size[1]
+
+        if rap_img < rap_ref:
+            img_w = self.size[0] * rap_img / rap_ref
+            img_h = self.size[1]
+        else:
+            img_w = self.size[0] 
+            img_h = self.size[1] * rap_ref / rap_img
+
+        self.img_size = img_w, img_h
 
     def set_filename(self, filename):
         if filename is None:
@@ -597,12 +608,22 @@ class Image(Box):
             return
 
         self.img = self.tools.load_image(filename)
-        self.image = self.tools.scale_image(self.img, *self.size)
+        self.calc_rapport()
+        self.image = self.tools.scale_image(self.img, *self.img_size)
 
     def draw(self):
         super().draw()
         if self.image:
             self.tools.blit(self.image, (0, 0))
+            ombre = self.FONT.render(f"{self.w}x{self.h}", False, (5, 5, 5))
+            texte = self.FONT.render(f"{self.w}x{self.h}", False, (20, 255, 20))
+            self.tools.blit(ombre, [9, 1])
+            self.tools.blit(ombre, [9, 3])
+            self.tools.blit(ombre, [11, 1])
+            self.tools.blit(ombre, [11, 3])
+            self.tools.blit(ombre, [9, 2])
+            self.tools.blit(ombre, [11, 2])
+            self.tools.blit(texte, [10, 2])
 
 
 class SelectWallpaper(Application):
@@ -710,7 +731,6 @@ class SelectWallpaper(Application):
 
     def get_theme(self):
         active_theme = self.theme.get_theme()
-        # fprint("Theme:", active_theme)
 
         if active_theme == "CLAIR":
             self.background = (100, 190, 200)
@@ -741,7 +761,7 @@ class SelectWallpaper(Application):
             tache.start()
             tache.join()
             # delay post delay initial (plus rapide)
-            delay = 0.065
+            delay = 0.05
 
     def keypressed(self, event):
         touche = self.keys.get_key()
@@ -903,7 +923,9 @@ class SelectWallpaper(Application):
             self.registre.save("decal_sep_x", self.separation.rect.x)
 
     def get_action(self):
-        return self.action
+        action = self.action
+        self.action = None
+        return action
 
     def update(self):
         pass
