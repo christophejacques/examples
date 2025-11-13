@@ -3,7 +3,7 @@ from html.parser import HTMLParser
 from typing import Tuple
 
 
-DEBUG = False
+DEBUG = True
 MY_HEADER: dict = {
       'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:132.0) Gecko/20100101 Firefox/132.0',
       'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
@@ -19,29 +19,6 @@ def dprint(*args, **kwargs):
         print(*args, **kwargs)
 
 
-def attributs_contient_classes(
-        attributs_actuels: list, 
-        classes_recherchees: list) -> bool:
-
-    trouve: bool = len(classes_recherchees[-1]) == 0
-
-    # recherche si un des attributs est "classe""
-    for attribut, valeurs in attributs_actuels:
-        if attribut == "class":
-            trouve = True
-
-            # recherche dans l'attribut "classe" trouvé
-            # s'il contient toutes les classes demandées
-            for une_classe in classes_recherchees[-1]:
-                if une_classe not in valeurs.split():
-                    # une des classes n'est pas trouvée
-                    # le résultat est donc faux
-                    trouve = False
-                    break
-
-    return trouve
-
-
 class Directory:
 
     def __init__(self, recorded: bool, attrs: list):
@@ -50,15 +27,97 @@ class Directory:
 
 
 class MyHTMLParser(HTMLParser):
+
     def __init__(self):
         super().__init__()
+        self.session: Session = Session()
+
         self.level: int = 0
         self.path: str = ""
         self.result: list = list()
         self.liste_recherche = list()
         self.datas: list = list()
+        self.classes: list = list()
+        self.ident: list = list()
         self.has_data: bool = False
         self.skip_branch: bool = False
+
+    @staticmethod
+    def attributs_match_class(attributs_actuels: list, data_attrs: list) -> bool:
+        trouve = False
+
+        # recherche si un des attributs est "classe""
+        for attribut, valeurs in attributs_actuels:
+            if attribut == "class":
+                trouve = True
+
+                # recherche dans l'attribut "classe" trouvé
+                # s'il contient toutes les classes demandées
+                for une_classe in data_attrs:
+                    if une_classe not in valeurs.split():
+                        # une des classes n'est pas trouvée
+                        # le résultat est donc faux
+                        return False
+
+        return trouve
+
+    @staticmethod
+    def attributs_match_ident(attributs_actuels: list, data_attrs: list) -> bool:
+        trouve = False
+
+        # recherche si un des attributs est "classe""
+        for attribut, valeurs in attributs_actuels:
+            if attribut == "id":
+                trouve = True
+
+                # recherche dans l'attribut "id" trouvé
+                # s'il contient l'identifiant demandé
+                for un_id in data_attrs:
+                    if un_id not in valeurs.split():
+                        # une des classes n'est pas trouvée
+                        # le résultat est donc faux
+                        return False
+
+        return trouve
+
+    def attributs_match_path(self) -> bool:
+        look_for_classes: bool 
+        look_for_identif: bool 
+
+        dprint("reche:", self.recherche, "|", self.path)
+        dprint("attrs:", [d.attrs for d in self.datas])
+
+        trouve: bool = True
+        nb_items = len(self.recherche.split())
+        for i in range(nb_items, 0, -1):
+            trouve = False
+            dprint(" * check:", self.classes[-i], self.ident[-i], "/", self.datas[-i].attrs, end= " -> ")
+
+            look_for_classes = len(self.classes[-i]) > 0
+            look_for_identif = len(self.ident[-i]) > 0
+
+            if not (look_for_classes or look_for_identif):
+                dprint("Vrai")
+                trouve = True
+                continue
+
+            if look_for_classes:
+                dprint(" CC ", end="")
+                trouve = self.attributs_match_class(self.datas[-i].attrs, self.classes[-i])
+                if not trouve:
+                    dprint("Faux(c)")
+                    break
+
+            elif look_for_identif:
+                dprint(" CI ", end="")
+                trouve = self.attributs_match_ident(self.datas[-i].attrs, self.ident[-i])
+                if not trouve:
+                    dprint("Faux(i)")
+                    break
+
+            dprint(trouve)
+
+        return trouve
 
     def handle_startendtag(self, tag, attrs):
         if self.finish:
@@ -70,9 +129,8 @@ class MyHTMLParser(HTMLParser):
         debut = path.find(self.recherche)
         if debut >= 0:
             if path[debut:] == self.recherche:
-                trouve = attributs_contient_classes(attrs, self.classes)
+                trouve = self.attributs_match_path()
                 if trouve:
-                    # self.found = True
                     dprint(f"- start-add end: {self.path} {attrs}")
                     self.result.append({
                         "path": path,
@@ -87,13 +145,22 @@ class MyHTMLParser(HTMLParser):
         if self.finish:
             return
 
+        if tag in ("br", "link", "meta"):
+            return 
+        
+        self.level += 1 
         self.has_data = False            
         path = self.path + (" " if self.path else "") + tag
+        self.path = path
+        self.attrs = attrs
+        self.datas.append(Directory(False, attrs))
         
+        dprint(f"Start: {path} {attrs}")
+
         debut = path.find(self.recherche)
         if debut >= 0:
             if path[debut:] == self.recherche:
-                trouve = attributs_contient_classes(attrs, self.classes)
+                trouve = self.attributs_match_path()
                 if trouve:
                     self.found = True
                 else:
@@ -102,14 +169,6 @@ class MyHTMLParser(HTMLParser):
         elif self.found and not self.tout:
             self.findnext()
 
-        if tag in ("br", "link", "meta"):
-            return 
-        
-        self.path = path
-        self.attrs = attrs
-        self.datas.append(Directory(False, attrs))
-        self.level += 1 
-        dprint(f"Start: {self.path} {attrs} {[d.recorded for d in self.datas]}")
 
     def handle_endtag(self, tag):
         if self.finish:
@@ -118,7 +177,7 @@ class MyHTMLParser(HTMLParser):
         debut = self.path.find(self.recherche)
         # print(f"check end: {self.path}", "/", self.recherche)
         if self.found and debut >= 0 and not self.datas[-1].recorded:
-            dprint(f"- add end: {self.path} {self.datas[-1].attrs} {[d.recorded for d in self.datas]}")
+            dprint(f"- add end: {self.path} {self.datas[-1].attrs}")
             self.result.append({
                 "path": self.path,
                 "attrs": self.datas[-1].attrs,
@@ -129,16 +188,17 @@ class MyHTMLParser(HTMLParser):
         if self.found and debut >= 0 and self.path[debut:] == self.recherche and not self.tout:
             self.findnext()
 
+        while self.path.split(" ")[-1] != tag:
+            self.pop()
+
+        self.pop()
+                
+    def pop(self):
+        self.path = " ".join(self.path.split(" ")[:-1])
         self.level -= 1
         if self.datas:
             self.datas.pop()
-        
-        while self.path.split(" ")[-1] != tag:
-            self.path = " ".join(self.path.split(" ")[:-1])
 
-        self.path = " ".join(self.path.split(" ")[:-1])
-        # dprint(f"Pop ({tag}): {self.path} {[d.recorded for d in self.datas]}")
-        
     def handle_data(self, data):
         if self.finish or not self.found:
             return
@@ -149,7 +209,7 @@ class MyHTMLParser(HTMLParser):
 
         if link_text and self.recherche in self.path:
             self.datas[-1].recorded = True
-            dprint("- add data:", self.path, self.datas[-1].attrs, [d.recorded for d in self.datas])
+            dprint("- add data:", self.path, self.datas[-1].attrs)
             self.result.append({
                 "path": self.path,
                 "attrs": self.datas[-1].attrs,
@@ -161,8 +221,10 @@ class MyHTMLParser(HTMLParser):
         return True, "loaded"
 
     def load_url(self, url: str) -> Tuple[bool, str]:
-        session: Session = Session()
-        reponse: Response = session.get(url, timeout=(5, 15), headers=MY_HEADER)
+        try:
+            reponse: Response = self.session.get(url, timeout=(5, 15), headers=MY_HEADER)
+        except Exception as erreur:
+            return False, f"{erreur}"
 
         if not reponse.ok:
             return False, f"{reponse}: {reponse.url}"
@@ -175,22 +237,30 @@ class MyHTMLParser(HTMLParser):
         return self.load_str(reponse.text)
 
 
-    def init_find(self, recherche):
+    def init_find(self, recherche: str):
         self.found = False
         self.classes = list()
+        self.ident = list()
+
         for selector in recherche.split():
             self.classes.append(selector.split(".")[1:])
         print("classes:", self.classes)
-
         self.recherche = " ".join([t.split(".")[0] for t in recherche.split()])
+
+        for selector in self.recherche.split():
+            self.ident.append(selector.split("#")[1:])
+        print("ident:", self.ident)
+        self.recherche = " ".join([t.split("#")[0] for t in self.recherche.split()])
+
         print("recherche:", self.recherche)
         dprint()
 
-    def find(self, recherche: str, tout: bool=False):
+    def find(self, recherche: str, tout: bool=False, exact: bool=False):
         self.datas = list()
         self.init_find(recherche)
 
         self.tout = tout
+        self.exact = exact
         self.finish = False
         self.result.clear()
         self.level = 0
@@ -215,35 +285,25 @@ class MyHTMLParser(HTMLParser):
     def get_result(self):
         return self.result
 
+    def print(self): 
+        print()
+        for res in self.get_result():
+            print(res)
+        print("\nend level:", parser.level)
 
 
 if __name__ == "__main__":
 
-    result = """
+    result2 = """
     <html>
-        <head>
-            <title>Titre de la fenetre</title>
-            <meta content="html/text" />
-        </head>
-        <body>
-            <div>Fausse alerte</div>
-            <div class="tip tup top">trouvé</div>
-            <div class="no-data"></div>
-        </body>
-        <script>
-            document.write('He ho !');
-        </script>
-    </html>
-    """
-
-    result = """
-    <html>
-        <body>
+        <body class="bg">
             <div>Erreur1</div>
             <div class="tip tup top">
-                <span class="gras"></span>
+                <span id="gras" class="gras"></span>
+                <span id="gris" class="gris"></span>
+                <span id="gros" class="gros"></span>
             </div>
-            <div>Erreur2</div>
+            <div id="erreur">Erreur2</div>
             <div class="box" />
             <div>Erreur3</div>
         </body>
@@ -253,22 +313,30 @@ if __name__ == "__main__":
 
     parser = MyHTMLParser()
 
-    # ok, result = parser.loadstr(result)
-    ok, result = parser.load_url(url)
+    # ok, result = parser.load_url(url)
+    # if not ok:
+    #     print(result)
+    #     exit()
+
+    # parser.findall("html body div div div section div div h2")
+    # parser.findall("html body div div div section div div h2.widget-title span")
+    # parser.findall("html body div div div section div div.small-widget p a")
+    # parser.findall("img.python-logo")
+    # parser.print()
+
+
+    ok, result = parser.load_str(result2)
     if not ok:
+        print(result)
         exit()
 
-    # parser.findall("div.top")
-    # parser.findall("html body div div div section div div h2 span")
-    parser.findall("html body div div div section div div.small-widget p a")
-    # parser.findall("img.python-logo")
+    parser.findall("body.bg div#erreur")
+    # parser.findall("span")
+    # parser.findall("div.top span#gris")
 
     # parser.findsequence([
     #     "span.icon-get-started", 
     #     "span.icon-documentation"])
-    parser.close()
 
-    print()
-    for res in parser.get_result():
-        print(res)
-    print("\nend level:", parser.level)
+    parser.print()
+    parser.close()
