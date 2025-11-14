@@ -1,9 +1,12 @@
+import json
+
 from requests import Session, Response, codes
 from html.parser import HTMLParser
-from typing import Tuple
+from typing import Tuple, Optional
 
 
-DEBUG = True
+
+DEBUG = False
 MY_HEADER: dict = {
       'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:132.0) Gecko/20100101 Firefox/132.0',
       'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
@@ -30,7 +33,7 @@ class MyHTMLParser(HTMLParser):
 
     def __init__(self):
         super().__init__()
-        self.session: Session = Session()
+        self.session: Optional[Session] = None
 
         self.level: int = 0
         self.path: str = ""
@@ -40,7 +43,6 @@ class MyHTMLParser(HTMLParser):
         self.classes: list = list()
         self.ident: list = list()
         self.has_data: bool = False
-        self.skip_branch: bool = False
 
     @staticmethod
     def attributs_match_class(attributs_actuels: list, data_attrs: list) -> bool:
@@ -220,7 +222,12 @@ class MyHTMLParser(HTMLParser):
         self.document = document
         return True, "loaded"
 
-    def load_url(self, url: str) -> Tuple[bool, str]:
+    def load_url(self, url: str) -> Tuple[bool, str]:        
+        if self.session is None:
+            self.session = Session()
+
+        print("Load:", url)
+
         try:
             reponse: Response = self.session.get(url, timeout=(5, 15), headers=MY_HEADER)
         except Exception as erreur:
@@ -244,18 +251,31 @@ class MyHTMLParser(HTMLParser):
 
         for selector in recherche.split():
             self.classes.append(selector.split(".")[1:])
-        print("classes:", self.classes)
+        dprint("classes:", self.classes)
         self.recherche = " ".join([t.split(".")[0] for t in recherche.split()])
 
         for selector in self.recherche.split():
             self.ident.append(selector.split("#")[1:])
-        print("ident:", self.ident)
+        dprint("ident:", self.ident)
         self.recherche = " ".join([t.split("#")[0] for t in self.recherche.split()])
 
-        print("recherche:", self.recherche)
+        dprint("recherche:", recherche)
         dprint()
 
     def find(self, recherche: str, tout: bool=False, exact: bool=False):
+        # Parametres :
+        # 
+        # @recherche : chemin au format css
+        # "." indique de filtrer sur la classe de l'element
+        # "#" indique de filtrer sur l'identifiant l'element
+        # 
+        # @tout : ne s'arrete pas apres avoir trouve une occurrence
+        #    mais les recherches toutes jusqu'a la fin de la page
+        # 
+        # @exact : ne recherche que les correspondances exactes
+        #    au format css recherche (sans rechercher ses fils)
+        # 
+        self.path = ""
         self.datas = list()
         self.init_find(recherche)
 
@@ -270,7 +290,7 @@ class MyHTMLParser(HTMLParser):
         if self.liste_recherche:
             dprint("find next")
             self.init_find(self.liste_recherche.pop(0))
-            self.skip = False
+
         else:
             dprint("finish")
             self.finish = True
@@ -285,6 +305,14 @@ class MyHTMLParser(HTMLParser):
     def get_result(self):
         return self.result
 
+    def test_nb_results(self, nombre: int) -> bool:
+        nb_result: int = len(self.result)
+        if nb_result == nombre:
+            return True
+
+        print(f"Le nombre de résultat '{nb_result}' ne correspond pas à l'attendu '{nombre}'.")
+        return False
+
     def print(self): 
         print()
         for res in self.get_result():
@@ -294,49 +322,84 @@ class MyHTMLParser(HTMLParser):
 
 if __name__ == "__main__":
 
-    result2 = """
-    <html>
-        <body class="bg">
-            <div>Erreur1</div>
-            <div class="tip tup top">
-                <span id="gras" class="gras"></span>
-                <span id="gris" class="gris"></span>
-                <span id="gros" class="gros"></span>
-            </div>
-            <div id="erreur">Erreur2</div>
-            <div class="box" />
-            <div>Erreur3</div>
-        </body>
-    </html>
-    """
-    url: str = "https://www.python.org/"
+    scheme: str = "http"
+    user: str = "admin"
+    passwd: str = "admin"
+
+    host: str = "172.27.207.196"
+    port: str = "8161"
+
+    browse_path: str = "/admin/browse.jsp"
+    message_path: str = "/admin/message.jsp"
+
+    queue: str = "ActiveMQ.queue.cja"
+
+    auth: str = f"{user}:{passwd}"
+    adresse: str = f"{host}:{port}"
+
+    browse_css_selector: str = "table#messages tbody tr td a"
+    msg_css_selector: str = "table tbody tr td div.message pre.prettyprint"
 
     parser = MyHTMLParser()
 
-    # ok, result = parser.load_url(url)
-    # if not ok:
-    #     print(result)
-    #     exit()
+    url: str = f"{scheme}://{auth}@{adresse}{browse_path}?JMSDestination={queue}"
 
-    # parser.findall("html body div div div section div div h2")
-    # parser.findall("html body div div div section div div h2.widget-title span")
-    # parser.findall("html body div div div section div div.small-widget p a")
-    # parser.findall("img.python-logo")
-    # parser.print()
-
-
-    ok, result = parser.load_str(result2)
+    ok, result = parser.load_url(url)
     if not ok:
         print(result)
         exit()
 
-    parser.findall("body.bg div#erreur")
-    # parser.findall("span")
-    # parser.findall("div.top span#gris")
+    parser.findall(browse_css_selector)
+    messages: list = list(
+        filter(lambda r: r["attrs"][0][1].startswith("message.jsp"), 
+            parser.result.copy()))
 
-    # parser.findsequence([
-    #     "span.icon-get-started", 
-    #     "span.icon-documentation"])
+    print(len(messages), "message(s) trouvé(s).\n")
 
-    parser.print()
+    for parsed_html in messages:
+        # filtre sur l'attribut href
+        for attrs in parsed_html["attrs"]:
+            if attrs[0] == "href":
+                href = attrs[1]
+                break
+
+        # filtre sur les parametres du href
+        for extract_params in href.split("?"):
+            if extract_params[0] == "href":
+                break
+
+        # filtre sur le parametre "id="
+        for un_param in extract_params.split("&"):
+            if un_param.startswith("id="):
+                break
+
+        # filtre sur la valeur du parametre 
+        for valeur_param in un_param.split("="):
+            if valeur_param != "id":
+                id_message = valeur_param
+                break
+
+
+        parametres : list = [
+            f"JMSDestination={queue}",
+            f"id={id_message}"
+        ]
+
+        # map(lambda p: p.replace(":", "%3a"), parametres)
+        params = "&".join(parametres)
+
+        url = f"{scheme}://{auth}@{adresse}{message_path}?{params}"
+
+        ok, result = parser.load_url(url)
+        if not ok:
+            print(result)
+            exit()
+
+        parser.find(msg_css_selector)
+        for ligne in parser.result:
+            variable = json.loads(ligne["text"].replace("\r", ""))
+            print(variable)
+
+        print()
+
     parser.close()
