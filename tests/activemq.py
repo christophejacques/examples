@@ -1,20 +1,68 @@
 import json
+import base64
+import requests.utils as requti
+import datetime
+import time
 
+from datetime import datetime as dt
 from requests import Session, Response, codes
 from html.parser import HTMLParser
 from typing import Tuple, Optional
 
 
+print("DEBUT", flush=True)
+heure_debut = time.perf_counter()
 
 DEBUG = False
 MY_HEADER: dict = {
-      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:132.0) Gecko/20100101 Firefox/132.0',
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0',
       'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
       'Accept-Charset': 'ISO-8859-1,utf-8;q=0.7,*;q=0.3',
       'Accept-Encoding': 'none',
       'Accept-Language': 'fr,fr-FR;q=0.8,en-US;q=0.5,en;q=0.3',
       'Connection': 'keep-alive',
       }
+
+DOCUMENT: dict = {
+      "idDemandeAide": "CHRIS0026",
+      "codeEnvoi": 2,
+      "horodatageSIGestion": "2025-11-15T08:24:01.325741+0100",
+      "codePartenaire": "CVL",
+      "listeDossiers": {
+        "idDossiersPartenaire": ["CJA0002"]
+      }
+    }
+
+
+def to_string(texte) -> str:
+    if isinstance(texte, dict):
+        return json.dumps(texte)
+
+    return str(texte).replace("'", '"')
+
+
+def maintenant() -> str:
+    tz = datetime.timezone(datetime.timedelta(hours=1))
+    return dt.isoformat(dt.now(tz))
+
+
+def urlquote(texte: str) -> str:
+    return requti.quote(texte)  # type: ignore[attr-defined]
+
+
+def urlunquote(texte: str) -> str:
+    return requti.unquote(texte)  # type: ignore[attr-defined]
+
+
+def decode_text(texte: str) -> str:
+    try:
+        variable = json.loads(texte.replace("'", '"'))
+    except json.JSONDecodeError:
+        variable = texte
+    except TypeError:
+        variable = str(texte)
+
+    return variable
 
 
 def dprint(*args, **kwargs):
@@ -162,11 +210,7 @@ class MyHTMLParser(HTMLParser):
         debut = path.find(self.recherche)
         if debut >= 0:
             if path[debut:] == self.recherche:
-                trouve = self.attributs_match_path()
-                if trouve:
-                    self.found = True
-                else:
-                    self.found = False
+                self.found = self.attributs_match_path()
 
         elif self.found and not self.tout:
             self.findnext()
@@ -226,10 +270,11 @@ class MyHTMLParser(HTMLParser):
         if self.session is None:
             self.session = Session()
 
-        print("Load:", url)
+        dprint("Load:", url)
 
         try:
-            reponse: Response = self.session.get(url, timeout=(5, 15), headers=MY_HEADER)
+            reponse: Response = self.session.get(url, timeout=(2, 5), headers=MY_HEADER)
+
         except Exception as erreur:
             return False, f"{erreur}"
 
@@ -242,6 +287,58 @@ class MyHTMLParser(HTMLParser):
             return False, f"type_page problem : {type_page}"
 
         return self.load_str(reponse.text)
+
+    def post_data(self, url: str, secret: str, pdata: list) -> Tuple[bool, str]:
+
+        # ActiveMQ default keys 
+        # -----------------------
+        # "secret={secret}"
+        # "JMSDestination={nom_queue}"
+        # "JMSDestinationType=queue"
+        # "JMSPersistent=true"
+        # "JMSCorrelationID="
+        # "JMSReplyTo="
+        # "JMSPriority="
+        # "JMSType="
+        # "JMSTimeToLive="
+        # "JMSXGroupID="
+        # "JMSXGroupSeq="
+        # "AMQ_SCHEDULED_DELAY="
+        # "AMQ_SCHEDULED_PERIOD="
+        # "AMQ_SCHEDULED_REPEAT="
+        # "AMQ_SCHEDULED_CRON="
+        # "JMSMessageCount=1"
+        # "JMSMessageCountHeader=JMSXMessageCounter"
+        # "JMSText="
+
+        if self.session is None:
+            self.session = Session()
+
+        print("Post:", url)
+
+        referer = url[:url.index("/", 10)] + "/admin/send.jsp"
+
+        headers = MY_HEADER.copy()
+        headers.update({
+            "Content-Type": "application/x-www-form-urlencoded", 
+            "Upgrade-Insecure-Requests": "1",
+            "Priority": "u=0, i",
+            "Referer": referer
+        })
+
+        # Transformation des donnees afin d'etre compatible avec le format "urlencoded"
+        data = "&".join([f"{key}={urlquote(to_string(value))}" for key, value in pdata])
+
+        try:
+            response = self.session.post(url, data=data, headers=headers)
+
+        except Exception as erreur:
+            return False, f"{erreur}"
+
+        if not response.ok:
+            return False, f"{response}: {response.url}"
+
+        return True, "Posted"
 
 
     def init_find(self, recherche: str):
@@ -310,7 +407,7 @@ class MyHTMLParser(HTMLParser):
         if nb_result == nombre:
             return True
 
-        print(f"Le nombre de résultat '{nb_result}' ne correspond pas à l'attendu '{nombre}'.")
+        print(f"Le nombre de résultats '{nb_result}' ne correspond pas à l'attendu '{nombre}'.")
         return False
 
     def print(self): 
@@ -331,18 +428,83 @@ if __name__ == "__main__":
 
     browse_path: str = "/admin/browse.jsp"
     message_path: str = "/admin/message.jsp"
+    send_path: str = "/admin/send.jsp"
 
     queue: str = "ActiveMQ.queue.cja"
 
     auth: str = f"{user}:{passwd}"
     adresse: str = f"{host}:{port}"
 
+    secret_css_selector: str = "form input"
     browse_css_selector: str = "table#messages tbody tr td a"
     msg_css_selector: str = "table tbody tr td div.message pre.prettyprint"
+    header_css_selector: str = "td.layout table#header tbody"
+    properties_css_selector: str = "td.layout table#properties tbody"
+
+    credentials: str = base64.b64encode(auth.encode('latin-1')).decode('latin-1')
+    MY_HEADER.update({
+        "Authorization": f"Basic {credentials}"        
+    })
 
     parser = MyHTMLParser()
 
-    url: str = f"{scheme}://{auth}@{adresse}{browse_path}?JMSDestination={queue}"
+    # mettre à True pour Ajouter un nouveau document
+    if False:
+        # load Send html page
+        url: str = f"{scheme}://{adresse}{send_path}"
+
+        # Récupération du secret afin de pouvoir utiliser l'action POST avec
+        ok, result = parser.load_url(url)
+        if not ok:
+            print(result)
+            exit()
+
+        parser.find(secret_css_selector)
+        ok = parser.test_nb_results(1)
+        if not ok:
+            exit()
+
+        for resultat in parser.result:
+            for attribut in resultat["attrs"]:
+                key, value = attribut
+                if key == "value":
+                    secret = value
+
+
+        # Create new Document
+        payload: dict = DOCUMENT
+
+        data: list = [
+            ("secret", secret),
+            ("JMSDestination", queue),
+            ("JMSDestinationType", "queue"),
+            ("JMSPersistent", "true"),
+            ("JMSMessageCount", 1),
+            ("JMSMessageCountHeader", "JMSXMessageCounter"),
+            ("JMSText", payload),
+        ]
+        properties: list = [
+            ("codeEnvoi", payload.get("codeEnvoi", 0)),
+            ("routeId", "PERF3"),
+            ("key", "START"),
+            ("idDemandeAide", payload.get("idDemandeAide", "")),
+            ("horodatageSIGestion", payload.get("horodatageSIGestion", "")),
+            ("horodatageSynapse", maintenant()),
+        ]
+        data += properties
+
+        url = f"{scheme}://{adresse}/admin/sendMessage.action"
+        ok, result = parser.post_data(url, secret, data)
+        if not ok:
+            print(result)
+            exit()
+
+        print("OK", result)
+        print()
+
+
+    # GET activeMQ liste des messages
+    url = f"{scheme}://{adresse}{browse_path}?JMSDestination={queue}"
 
     ok, result = parser.load_url(url)
     if not ok:
@@ -352,11 +514,21 @@ if __name__ == "__main__":
     parser.findall(browse_css_selector)
     messages: list = list(
         filter(lambda r: r["attrs"][0][1].startswith("message.jsp"), 
-            parser.result.copy()))
+            parser.result))
 
+    # calcul du nb de documents (messages / 2)
     print(len(messages), "message(s) trouvé(s).\n")
 
-    for parsed_html in messages:
+    headers: set = set()
+    csv_messages: list = list()
+    un_message: dict
+
+    # GET all activeMQ documents
+    for parsed_html in messages[:]:
+        # Recuperation d'un idMessage
+
+        un_message = dict()
+
         # filtre sur l'attribut href
         for attrs in parsed_html["attrs"]:
             if attrs[0] == "href":
@@ -379,27 +551,102 @@ if __name__ == "__main__":
                 id_message = valeur_param
                 break
 
+        dprint("idMessage =", urlunquote(id_message))
 
+        # Recuperation des informations de l'idMessage trouve
         parametres : list = [
             f"JMSDestination={queue}",
             f"id={id_message}"
         ]
 
-        # map(lambda p: p.replace(":", "%3a"), parametres)
         params = "&".join(parametres)
-
-        url = f"{scheme}://{auth}@{adresse}{message_path}?{params}"
+        url = f"{scheme}://{adresse}{message_path}?{params}"
 
         ok, result = parser.load_url(url)
         if not ok:
             print(result)
             exit()
 
-        parser.find(msg_css_selector)
-        for ligne in parser.result:
-            variable = json.loads(ligne["text"].replace("\r", ""))
-            print(variable)
 
-        print()
+        # Recherche des proprietes
+        if True:
+            parser.find(header_css_selector)
+
+            dprint("Headers :")
+            label = False
+            key = ""
+
+            for ligne in parser.result:
+                if label:
+                    label = False
+                    dprint(f"  {key:20}= {ligne["text"]}")
+                    clef = f"headers.{key}"
+                    headers.add(clef)
+                    un_message[clef] = f"{ligne["text"]}"
+
+                elif ligne["path"].endswith("tr td"):
+                    for k, v in ligne["attrs"]:
+                        if k == "class" and v == "label":
+                            key = ligne["text"]
+                            label = True
+                            break
+
+
+        # Recherche des proprietes
+        if True:
+            parser.find(properties_css_selector)
+
+            dprint("Properties :")
+            label = False
+            key = ""
+            for ligne in parser.result:
+                if label:
+                    label = False
+                    dprint(f"  {key:20}= {ligne["text"]}")
+                    clef = f"properties.{key}"
+                    headers.add(clef)
+                    un_message[clef] = f"{ligne["text"]}"
+
+                elif ligne["path"].endswith("tr td"):
+                    for k, v in ligne["attrs"]:
+                        if k == "class" and v == "label":
+                            key = ligne["text"]
+                            label = True
+                            break
+
+        if True:
+            # Recherche du payload
+            parser.find(msg_css_selector)
+            for ligne in parser.result:
+                variable = decode_text(ligne["text"])
+                dprint("payload:\n ", variable)
+                un_message["payload"] = f"{ligne["text"]}"
+
+        csv_messages.append(un_message)
+        dprint()
 
     parser.close()
+
+
+    # Creation d'un fichier au format CSV 
+    with open("activemq.csv", "w") as csvhandle:
+        # entete de colonnes
+        csv_msg = ""
+        for header in sorted(headers):
+            csv_msg += header + ";"
+
+        csv_msg += "payload\n"
+        csvhandle.write(csv_msg)
+
+        # contenu des lignes
+        for un_message in csv_messages:
+            csv_msg = ""
+            for header in sorted(headers):
+                csv_msg += un_message.get(header, "") + ";"
+
+            csv_msg += un_message.get("payload", "") 
+            csvhandle.write(csv_msg + "\n")
+            print(csv_msg)
+
+
+print(f"FIN. durée = {time.perf_counter() - heure_debut:.2f}s")
