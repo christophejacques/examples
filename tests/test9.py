@@ -30,7 +30,7 @@ print(string_format("1 https://javgg.net/jav/{img_name:lower:filename}/", img_na
 print(string_format("2 https://javgg.net/jav/{img_name:lower:filename}/" + 
     "{img_name:extension:upper}/", img_name="AzErTy.jpg"))
 print(string_format("3 {scheme:lower}://{uri}/{img_name:capitalize}", 
-    scheme="https",
+    scheme="HTTPS",
     uri="www.google.fr",
     img_name="AzErTy.jpg"))
 

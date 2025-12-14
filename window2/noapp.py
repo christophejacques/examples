@@ -6,11 +6,12 @@ class NoApplication(Application):
     DEFAULT_CONFIG = ("No Application", (80, 80, 80))
     WINDOW_PROPERTIES = []
 
-    def __init__(self, screen, *args):
-        super().__init__(screen)
+    def __init__(self, *args):
         self.title = self.DEFAULT_CONFIG[0]
         self.action = ""
-        self.resize(screen)
+
+    def post_init(self):
+        # self.resize(screen)
         self.get_theme()
 
     def get_theme(self):
@@ -18,9 +19,8 @@ class NoApplication(Application):
         self.back_color = self.theme.get("BACKGROUND_COLOR")
         self.draw_once()
 
-    def resize(self, screen):
-        self.set_title(self.title + " Resize({}x{})".format(*screen.get_size()))
-        self.screen = screen
+    def resize(self):
+        self.set_title(self.title + " Resize({}x{})".format(*self.tools.get_size()))
 
     def mouse_enter(self, mouseX, mouseY):
         self.set_title(self.title + " Mouse_Enter()")
@@ -43,8 +43,8 @@ class NoApplication(Application):
         pass
 
     def draw_once(self):
-        w, h = self.screen.get_size()
-        self.screen.fill(self.back_color)
+        w, h = self.tools.get_size()
+        self.tools.fill(self.back_color)
         self.tools.line(self.fore_color, (200, 200), (200, h))
         self.tools.line(self.fore_color, (200, 200), (w, 200))
 

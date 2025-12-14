@@ -1,4 +1,4 @@
-from classes import SysTray, get_all_classes, Variable
+from classes import SysTray, get_all_classes
 from datetime import datetime
 from audio import Audio
 
@@ -13,15 +13,16 @@ class SystemDateTime(SysTray):
     DEFAULT_CONFIG = ("Date Time", (50, 200, 50))
     INITIAL_WIDTH = 200
 
-    def __init__(self, screen, couleur):
-        super().__init__(screen)
-        self.update_screen(screen)
+    def __init__(self, couleur):
+        self.couleur = couleur
+
+    def post_init(self):
+        self.update_screen()
         self.get_theme()
         self.SYS_FONT = self.tools.font("courier", 16)
 
         etat_actuel = 1
         self.etat = self.registre.load("Etat", etat_actuel)
-
         if etat_actuel != self.etat:
             # On force la mise à jour du Format
             # pour charger la dernière valeur
@@ -48,9 +49,8 @@ class SystemDateTime(SysTray):
         else:
             return None
 
-    def update_screen(self, screen):
-        super().update_screen(screen)
-        self.screen_width = screen.get_size()[0]
+    def update_screen(self):
+        self.screen_width = self.tools.get_size()[0]
 
     def get_width(self):
         return self.systray_width
@@ -94,13 +94,14 @@ class SoundView(SysTray):
     DEFAULT_CONFIG = ("Sound", (50, 200, 50))
     INITIAL_WIDTH = 25
 
-    def __init__(self, screen, couleur):
-        super().__init__(screen)
-        self.update_screen(screen)
-        self.get_theme()
-        self.SYS_FONT = self.tools.font("comicsans", 12)
+    def __init__(self, couleur):
         self.systray_width = 25
         self.etat = 1
+
+    def post_init(self):
+        self.update_screen()
+        self.get_theme()
+        self.SYS_FONT = self.tools.font("comicsans", 12)
 
     def get_theme(self):
         if self.theme.get_theme() == "CLAIR":
@@ -109,9 +110,8 @@ class SoundView(SysTray):
             self.couleur = self.theme.get("FORE_COLOR")
         self.inactive_couleur = self.theme.get("INACTIVE_FORE_COLOR")
 
-    def update_screen(self, screen):
-        super().update_screen(screen)
-        self.width = screen.get_size()[0]
+    def update_screen(self):
+        self.width = self.tools.get_size()[0]
 
     def get_width(self):
         return self.systray_width
@@ -154,9 +154,11 @@ class ThemeSelection(SysTray):
     DEFAULT_CONFIG = ("Theme", (50, 200, 50))
     INITIAL_WIDTH = 20
 
-    def __init__(self, screen, couleur):
-        super().__init__(screen)
-        self.update_screen(screen)
+    def __init__(self, couleur):
+        pass
+
+    def post_init(self):
+        self.update_screen()
         self.get_theme()
         self.SYS_FONT = self.tools.font("comicsans", 12)
 
@@ -171,17 +173,16 @@ class ThemeSelection(SysTray):
         else:
             self.pending_action = None
         
-        self.systray_width = screen.get_size()[0]
-        self.systray_height = screen.get_size()[1]
+        self.systray_width = self.tools.get_size()[0]
+        self.systray_height = self.tools.get_size()[1]
 
     def get_theme(self):
         # self.couleur = self.theme.get("FORE_COLOR")
         self.couleur = (200, 200, 200)
         self.pending_action = None
 
-    def update_screen(self, screen):
-        super().update_screen(screen)
-        self.screen_width = screen.get_size()[0]
+    def update_screen(self):
+        self.screen_width = self.tools.get_size()[0]
 
     def get_width(self):
         return self.systray_width

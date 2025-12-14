@@ -42,12 +42,9 @@ class Demineur(Application):
     x = 0
     y = 0
 
-    def __init__(self, screen, *args):
-        super().__init__(screen)
+    def __init__(self, *args):
         self.grid = []
-        self.screen = screen
         self.cursor_cell_over = None
-        self.get_theme()
 
     def get_theme(self):
         if self.theme.get_theme() == "CLAIR":
@@ -60,22 +57,21 @@ class Demineur(Application):
             self.MARKED = (100, 100, 20)
 
     def post_init(self):
+        self.get_theme()
+
         self.SYS_FONT = self.tools.font("comicsans", 30)
-        w, h = self.screen.get_size()
+        w, h = self.tools.get_size()
         longueur = min(w, h)//Cell.size * Cell.size
         self.win_resize("BOTTOM RIGHT", -(w-longueur), -(h-longueur))
 
-        # self.resize(self.screen)
-
-    def resize(self, screen):
-        self.screen = screen
+    def resize(self):
         self.initialize()
 
     def initialize(self):
-        print("initialize", self.screen, flush=True)
+        # print("initialize", flush=True)
         self.action = ""
         # initialisation du tableau 2D
-        self.TAILLE = min(self.screen.get_size())//50
+        self.TAILLE = min(self.tools.get_size())//50
         self.set_title(f"Demineur taille: {self.TAILLE}")
             
         self.grid.clear()
@@ -114,7 +110,7 @@ class Demineur(Application):
         trect = self.grid[x][y].draw_text()
         trect += (trect[-1],)
         texte_surf = self.SYS_FONT.render("{}".format(self.grid[x][y].nb_bees), False, color)
-        self.screen.blit(texte_surf, trect)
+        self.tools.blit(texte_surf, trect)
 
     def grid_resolved(self):
         for row in range(self.TAILLE):
@@ -188,7 +184,7 @@ class Demineur(Application):
         pass
 
     def draw(self):
-        self.screen.fill(self.grid_color)
+        self.tools.fill(self.grid_color)
         for col in range(self.TAILLE):
             for row in range(self.TAILLE):
                 if self.grid[col][row].revealed:
@@ -197,21 +193,21 @@ class Demineur(Application):
                             couleur_fond = self.MARKED
                         else:
                             couleur_fond = (200, 200, 200)
-                        # pygame.draw.rect(self.screen, couleur_fond, self.grid[col][row].draw_square())
+
                         self.tools.rect(couleur_fond, self.grid[col][row].draw_square())
 
                         if self.grid[col][row].marked:
                             couleur_fond = (0, 250, 0)
                         else:
                             couleur_fond = (250, 0, 0)
-                        # pygame.draw.circle(self.screen, couleur_fond, *self.grid[col][row].draw_circle())
+
                         self.tools.circle(couleur_fond, *self.grid[col][row].draw_circle())
                     else:
                         if self.grid[col][row].marked:
                             couleur_fond = self.MARKED
                         else:
                             couleur_fond = (200, 200, 200)
-                        # pygame.draw.rect(self.screen, couleur_fond, self.grid[col][row].draw_square())
+
                         self.tools.rect(couleur_fond, self.grid[col][row].draw_square())
 
                         if self.grid[col][row].marked:
@@ -223,11 +219,10 @@ class Demineur(Application):
                         couleur_fond = self.MARKED
                     else:
                         couleur_fond = self.back_color
-                    # pygame.draw.rect(self.screen, couleur_fond, self.grid[col][row].draw_square())
+
                     self.tools.rect(couleur_fond, self.grid[col][row].draw_square())
 
         if self.cursor_cell_over:
-            # pygame.draw.rect(self.screen, (0, 255, 0), (*self.cursor_cell_over.topleft, self.cursor_cell_over.width-2, self.cursor_cell_over.width-2), 4)
             self.tools.rect((0, 255, 0), (*self.cursor_cell_over.topleft, self.cursor_cell_over.width-2, self.cursor_cell_over.width-2), 4)
 
 

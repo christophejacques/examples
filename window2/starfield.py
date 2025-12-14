@@ -18,14 +18,14 @@ class StarField(Application):
     DEFAULT_CONFIG = ("Starfiel 50", Colors.DARK_ORANGE, 50)
     MIN_SIZE = (400, 300)
 
-    def __init__(self, screen, args):
-        super().__init__(screen)
+    def __init__(self, args):
         self.title = self.DEFAULT_CONFIG[0]
-        self.screen = screen
         self.maximum = args[0]
         self.action = ""
         self.liste = []
-        self.set_zone(((0, 0), self.screen.get_size()))
+
+    def post_init(self):
+        self.set_zone(((0, 0), self.tools.get_size()))
 
     def set_zone(self, new_zone):
         Variables.gauche, Variables.haut = new_zone[0]
@@ -37,9 +37,8 @@ class StarField(Application):
         Variables.distanceMax = \
             math.sqrt(Variables.width*Variables.width/4 + Variables.height*Variables.height/4)
 
-    def resize(self, screen):
-        self.screen = screen
-        window_size = self.screen.get_size()
+    def resize(self):
+        window_size = self.tools.get_size()
         # print(f"change Screen Resolution = {window_size}")
         self.set_zone(((0, 0), window_size))
 
@@ -65,7 +64,7 @@ class StarField(Application):
             etoile.update()
 
     def draw(self):
-        self.screen.fill((0, 0, 0))
+        self.tools.fill((0, 0, 0))
         for i, etoile in enumerate(self.liste):
             res = etoile.get_attrs()
             if res:

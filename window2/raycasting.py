@@ -207,13 +207,13 @@ class RayCasting(Application):
 
     MIN_SIZE = (400, 300)
 
-    def __init__(self, screen, args):
-        super().__init__(screen)
-        self.screen = screen
+    def __init__(self, args):
         self.action = ""
         self.nb_walls = args[1]
         self.nb_sources = args[0]
-        self.set_zone(self.screen.get_size())
+
+    def post_init(self):
+        self.set_zone(self.tools.get_size())
         self.get_theme()
 
     def get_theme(self):
@@ -250,9 +250,8 @@ class RayCasting(Application):
         self.set_cercles()
         self.set_sources()
 
-    def resize(self, screen):
-        self.screen = screen
-        self.set_zone(self.screen.get_size())
+    def resize(self):
+        self.set_zone(self.tools.get_size())
 
     def get_action(self):
         return self.action
@@ -277,7 +276,7 @@ class RayCasting(Application):
                 rayon.cast_to_cercle(self.cercles)
 
     def draw(self):
-        self.screen.fill(self.color)
+        self.tools.fill(self.color)
         for source in self.sources:
             for rayon in source.rayons:
                 couleur = source.color

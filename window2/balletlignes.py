@@ -40,24 +40,23 @@ class BalletLignes(Application):
 
     DEFAULT_CONFIG = ("BalletLignes 500", Colors.MIDDLE_RED, 500)
 
-    def __init__(self, screen, args):
-        super().__init__(screen)
+    def __init__(self, args):
         self.lignes = list()
-        self.resize(screen)
+        self.title = self.DEFAULT_CONFIG[0]
+        self.action = ""
+
+    def post_init(self):
+        self.resize()
         nombre = self.registre.load("nombre")
         if nombre is None:
             self.nombre = args[0]
         else:
             self.nombre = nombre
-        self.title = self.DEFAULT_CONFIG[0]
-        self.action = ""
-
         self.get_theme()
 
-    def resize(self, screen):
-        print(f"demineur resize({screen})", flush=True)
-        self.screen = screen
-        self.width, self.height = self.screen.get_size()
+    def resize(self):
+        print(f"demineur resize()", flush=True)
+        self.width, self.height = self.tools.get_size()
 
         # update max ligne values
         for ligne in self.lignes:
@@ -95,7 +94,7 @@ class BalletLignes(Application):
             ligne.update()
 
     def draw(self):
-        self.screen.fill(self.back_color)
+        self.tools.fill(self.back_color)
         for ligne in self.lignes:
             self.tools.line(ligne.couleur, *ligne.coords)
 

@@ -41,19 +41,20 @@ class Firework(Application):
     DEFAULT_CONFIG = ("Feu d'artifice", Colors.MIDDLE_BLUE)
     WINDOW_PROPERTIES = ["SOUND(60)", "RESIZABLE"]
 
-    def __init__(self, screen, args):
-        
-        super().__init__(screen)
-        self.resize(screen)
-        nombre = self.registre.load("nombre")
-        if nombre is None:
-            self.nombre = self.screen.get_size()[0]//300 
-        else:
-            self.nombre = nombre
-
+    def __init__(self, args):
         self.action = ""
         self.fusees = []
         self.particles = []
+
+
+    def post_init(self):
+        self.resize()
+        nombre = self.registre.load("nombre")
+        if nombre is None:
+            self.nombre = self.tools.get_size()[0]//300 
+        else:
+            self.nombre = nombre
+
         self.load_sounds()
         self.get_theme()
 
@@ -99,9 +100,8 @@ class Firework(Application):
     def set_parent(self, parent):
         self.parent = parent
 
-    def resize(self, screen):
-        self.screen = screen
-        self.width, self.height = self.screen.get_size()
+    def resize(self):
+        self.width, self.height = self.tools.get_size()
         Firework.VEL_MAX = int(0.35*math.sqrt(self.height*4/5))
 
     def get_action(self):
@@ -141,7 +141,7 @@ class Firework(Application):
                 self.particles.pop(i)
 
     def draw(self):
-        self.screen.fill(self.back_color)
+        self.tools.fill(self.back_color)
         for f in self.fusees:
             self.tools.circle(f.color, f.to_draw(), f.nombre)
         for p in self.particles:

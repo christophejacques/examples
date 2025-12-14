@@ -42,16 +42,16 @@ class Laby(Application):
 
     MIN_SIZE = (400, 300)
     
-    def __init__(self, screen, args):  # args = cell_size
-        super().__init__(screen)
-        self.screen = screen
+    def __init__(self, args):  # args = cell_size
         self.title = self.DEFAULT_CONFIG[0]
-        w, h = screen.get_size()
         self.cell_size = args[0]
         self.chemin = None
         self.show_soluce = False
         self.touche = ""
         self.action = ""
+
+    def post_init(self):
+        w, h = self.tools.get_size()
         self.set_size(w, h)
         self.generate()
         self.get_theme()
@@ -65,9 +65,8 @@ class Laby(Application):
         self.h = h
         self.prepare_board()        
 
-    def resize(self, screen):
-        self.screen = screen
-        self.set_size(*self.screen.get_size())
+    def resize(self):
+        self.set_size(*self.tools.get_size())
         self.generate()
 
     def prepare_board(self):
@@ -194,10 +193,9 @@ class Laby(Application):
 
     def draw(self):
         if self.generated:
-            # self.screen.fill((20, 20, 20))
-            self.screen.fill(self.back_color)
+            self.tools.fill(self.back_color)
         else:
-            self.screen.fill((60, 30, 20))
+            self.tools.fill((60, 30, 20))
 
         bg_color = (10, 80, 20)
 

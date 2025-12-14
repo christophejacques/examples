@@ -10,25 +10,25 @@ class TicTacToe(Application):
     WINDOW_PROPERTIES = ["NO_MAX"]
     DEFAULT_CONFIG = ("Tic Tac Toe", Colors.DARK_BLUE)
 
-    def __init__(self, screen, args):
-        super().__init__(screen)
-        self.screen = screen
-        self.nombre = screen.get_size()[0]//200 
+    def __init__(self, args):
         self.action = ""
         self.grid = []
         self.tour = "X"
-        self.initialisation()
-        self.get_theme()
+
 
     def get_theme(self):
         self.fore_color = self.theme.get("FORE_COLOR")
         self.back_color = self.theme.get("BACKGROUND_COLOR")
 
     def post_init(self):
-        self.resize(self.screen)
+        self.nombre = self.tools.get_size()[0]//200 
+        self.initialisation()
+        self.get_theme()
+
+        self.resize()
         self.FONT = self.tools.font("comicsans", 100)
 
-        w, h = self.screen.get_size()
+        w, h = self.tools.get_size()
         longueur = self.MIN_SIZE[0]
         self.win_resize("BOTTOM RIGHT", -(w-longueur), -(h-longueur))
 
@@ -37,9 +37,8 @@ class TicTacToe(Application):
         for _ in range(3):
             self.grid.append(["" for _ in range(3)])
 
-    def resize(self, screen):
-        self.screen = screen
-        self.width, self.height = self.screen.get_size()
+    def resize(self):
+        self.width, self.height = self.tools.get_size()
         self.dx = self.width // 3
         self.dy = self.height // 3
         self.decalx = max(0, self.dx // 2)
@@ -163,12 +162,12 @@ class TicTacToe(Application):
         pass
 
     def draw(self):
-        self.screen.fill(self.back_color)
+        self.tools.fill(self.back_color)
 
-        self.tools.line(self.fore_color, (self.width // 3, 0), (self.width // 3, self.height), 2)
-        self.tools.line(self.fore_color, (2*self.width // 3, 0), (2*self.width // 3, self.height), 2)
-        self.tools.line(self.fore_color, (0, self.height // 3), (self.width, self.height // 3), 2)
-        self.tools.line(self.fore_color, (0, 2*self.height // 3), (self.width, 2*self.height // 3), 2)
+        self.tools.line(self.fore_color, (self.width // 3, 0), (self.width // 3, self.height), width=2)
+        self.tools.line(self.fore_color, (2*self.width // 3, 0), (2*self.width // 3, self.height), width=2)
+        self.tools.line(self.fore_color, (0, self.height // 3), (self.width, self.height // 3), width=2)
+        self.tools.line(self.fore_color, (0, 2*self.height // 3), (self.width, 2*self.height // 3), width=2)
         self.tools.rect(self.fore_color, (0, 0, self.width-1, self.height-1), 2)
 
         sol = self.isResolved(self.grid, "X") + self.isResolved(self.grid, "O") + "  "
@@ -193,7 +192,7 @@ class TicTacToe(Application):
 
                 texte_surf = self.FONT.render("{}".format(self.grid[i][j]), False, color)
                 w, h = texte_surf.get_size()
-                self.screen.blit(texte_surf, (self.decalx-w//2+i*self.dx, self.decaly+self.dy*j-h//2)) 
+                self.tools.blit(texte_surf, (self.decalx-w//2+i*self.dx, self.decaly+self.dy*j-h//2)) 
 
 
 if __name__ == '__main__':

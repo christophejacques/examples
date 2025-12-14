@@ -164,28 +164,34 @@ class Theme:
 
 class Sound:
 
-    def __init__(self):
-        if Variable.DEBUG:
-            print(f"Sound.__init__({Variable.window.title})", flush=True)
+    def __init__(self, window=None):
+        if not window:
+            window = Variable.window
 
-        self.load_sound = Variable.window.load_sound
-        self.play_sound = Variable.window.play_sound
-        self.stop_channels = Variable.window.stop_channels
-        self.remove_unused_channels = Variable.window.remove_unused_channels
+        if Variable.DEBUG:
+            print(f"Sound.__init__({window.title})", flush=True)
+
+        self.load_sound = window.load_sound
+        self.play_sound = window.play_sound
+        self.stop_channels = window.stop_channels
+        self.remove_unused_channels = window.remove_unused_channels
 
 
 class Keys:
 
-    def __init__(self):
+    def __init__(self, window=None):
+        if not window:
+            window = Variable.window
+
         if Variable.DEBUG:
-            print(f"Keys.__init__({Variable.window.title})", flush=True)
+            print(f"Keys.__init__({window.title})", flush=True)
 
         for attrib in filter(lambda a: a[:2] == "K_", dir(pygame)):
             setattr(self, attrib, getattr(pygame, attrib))
 
-        self.get_key = Variable.window.get_key
-        self.view_key = Variable.window.view_key
-        self.clear_key_buffer = Variable.window.clear_key_buffer            
+        self.get_key = window.get_key
+        self.view_key = window.view_key
+        self.clear_key_buffer = window.clear_key_buffer            
 
 
 class Tools:
@@ -201,8 +207,11 @@ class Tools:
     def update_screen(self, screen):
         self.screen = screen
 
-    def fill(self, color):
-        self.screen.fill(color)
+    def fill(self, color, rect=None):
+        if rect:
+            self.screen.fill(color, rect)
+        else:
+            self.screen.fill(color)
 
     def font(self, police, taille):
         return pygame.font.SysFont(police, taille)
@@ -231,6 +240,9 @@ class Tools:
     def pixels3d(self):
         return pygame.surfarray.pixels3d(self.screen)
 
+    def get_locked(self):
+        return self.screen.get_locked()
+
     def get_rect(self):
         return self.screen.get_rect()
 
@@ -242,6 +254,9 @@ class Tools:
 
     def blit(self, surface, rect):
         self.screen.blit(surface, rect)
+
+    def unlock(self):
+        self.screen.unlock()
 
 
 class SysTray(metaclass=ABCMeta):
@@ -257,17 +272,20 @@ class SysTray(metaclass=ABCMeta):
     mouse_over = False
 
     @abstractmethod
-    def __init__(self, screen):
-        self.tools = Tools(screen)
+    def __init__(self, color):
         self.theme = Theme()
-        # self.sound = Sound()
         self.registre = Registres(self.DEFAULT_CONFIG[0])
 
-    @abstractmethod
-    def update_screen(self, screen, posx=0):
+    def __init_screen__(self, screen):
         self.tools = Tools(screen)
 
-    # @abstractmethod
+    @abstractmethod
+    def update_screen(self):
+        pass
+
+    def post_init(self):
+        pass
+        
     def get_width(self):
         return self.tools.screen.get_size()[0]
 
@@ -312,15 +330,22 @@ class Application(metaclass=ABCMeta):
     DEFAULT_CONFIG: tuple = ("?", (0, 0, 0))
 
     @abstractmethod
-    def __init__(self, screen, *args):
+    def __init__(self, screen, window):
+        if hasattr(self, "__is_initialized"):
+            return
+
+        if Variable.DEBUG:
+            print(f"Initialisation de l'application {self.DEFAULT_CONFIG[0]}", flush=True)
+        self.__is_initialized = True
+
         self.tools = Tools(screen)
-        self.keys = Keys()
-        self.sound = Sound()
+        self.keys = Keys(window)
+        self.sound = Sound(window)
         self.theme = Theme()
         self.registre = Registres(self.DEFAULT_CONFIG[0])
         self.mouse = Mouse()
 
-        window = Variable.window
+        # window = Variable.window
         self.set_title = window.set_title
         self.win_resize = window.resize
 
@@ -331,7 +356,7 @@ class Application(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def resize(self, screen):
+    def resize(self):
         pass
 
     def get_theme(self):

@@ -34,6 +34,10 @@ def _(d: dt):
 def _(s: set):
     return f"set:({len(s)}) {s}"
 
+@to_string.register
+def _(s: str):
+    return f"string:({len(s)}) {s}"
+
 class User: ...
 
 print(to_string(12))
@@ -42,4 +46,5 @@ print(to_string(dt.now()))
 print(to_string([1, 2, 3]))
 print(to_string([1, 2, 3, 4, 5]))
 print(to_string({1, 3, 3, 4, 5}))
+print(to_string("chaine de caratères"))
 print(to_string(User()))

@@ -121,8 +121,7 @@ class Calculatrice(Application):
     WINDOW_PROPERTIES = []
     ESPACE_BTN: int = 5
 
-    def __init__(self, screen, *args):
-        super().__init__(screen)
+    def __init__(self, *args):
         self.title = self.DEFAULT_CONFIG[0]
         self.action = ""
         self.mouse_over = None
@@ -132,11 +131,13 @@ class Calculatrice(Application):
         self.operator = ""
 
         self.touches: list = list()
-        self.ecran = Ecran(self)
-        self.memory = Ecran(self, False, "GRAY_COLOR", (20, 10, 200, 70))
-        self.get_theme()
+
+    def post_init(self):
         nombre = self.registre.load("Utilisation", 0)
         self.registre.save("Utilisation", 1+nombre)
+
+        self.ecran = Ecran(self)
+        self.memory = Ecran(self, False, "GRAY_COLOR", (20, 10, 200, 70))
 
         for ligne, valeur in enumerate(["CE","C", "<"]):
             touche = Touche(self, valeur, (0, ligne))
@@ -153,13 +154,13 @@ class Calculatrice(Application):
         for ligne, valeur in enumerate(["/","*", "-", "+", "="]):
             touche = Touche(self, valeur, (ligne, 3))
             self.touches.append(touche)
-
-    def post_init(self):
+        
+        self.get_theme()
         self.set_title(self.title)
         self.win_resize("BOTTOM RIGHT", 0, 0, *self.MIN_SIZE)
         self.draw_init()
 
-    def resize(self, screen):
+    def resize(self):
         for touche in self.touches:
             touche.set_tools(self)
 

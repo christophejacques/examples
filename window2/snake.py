@@ -84,24 +84,22 @@ class SnakeGame(Application):
     size = 10
     w, h = 0, 0
 
-    def __init__(self, screen, args):
-        super().__init__(screen)
+    def __init__(self, args):
         self.snake = Snake()
         self.apples = Apples()
-        self.resize(screen)
         self.action = ""
-        self.get_theme()
 
     def post_init(self):
+        self.resize()
+        self.get_theme()
         self.snake.set_tools(self.tools)
 
     def get_theme(self):
         self.fore_color = self.theme.get("FORE_COLOR")
         self.back_color = self.theme.get("BACKGROUND_COLOR")
 
-    def resize(self, screen):
-        self.screen = screen
-        self.width, self.height = self.screen.get_size()
+    def resize(self):
+        self.width, self.height = self.tools.get_size()
         # print("NewSize:", self.width, self.height)
         self.initialisation()
 
@@ -157,13 +155,13 @@ class SnakeGame(Application):
             self.snake.to_show = ""
 
     def draw(self):
-        self.screen.fill(self.back_color)
+        self.tools.fill(self.back_color)
 
         for x, y in self.apples.to_draw():
-            self.screen.fill(Colors.GREEN, (x, y, SnakeGame.size, SnakeGame.size))
+            self.tools.fill(Colors.GREEN, (x, y, SnakeGame.size, SnakeGame.size))
         
         for x, y in self.snake.to_draw():
-            self.screen.fill(self.fore_color, (x, y, SnakeGame.size, SnakeGame.size))
+            self.tools.fill(self.fore_color, (x, y, SnakeGame.size, SnakeGame.size))
 
 
 if __name__ == '__main__':

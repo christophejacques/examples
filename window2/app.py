@@ -8,7 +8,7 @@ from audio import Audio
 from mouse import Mouse
 from keyboard import Keyboard
 from colors import Colors
-from classes import Variable, Tools, get_all_classes, Theme, Registres, fprint
+from classes import Application, SysTray, Variable, Tools, get_all_classes, Theme, Registres, fprint
 
 from typing import Tuple, Optional
 
@@ -199,8 +199,8 @@ class Window:
         self.sound_index = 0
         self.sounds = {}
         try:
-            Variable.window = self
-            self.instance = self.app(self.window_draw_surf, args)
+            self.instance = self.app(args)
+            Application.__init__(self.instance, self.window_draw_surf, self)
             self.instance.post_init()
 
         except Exception as e:
@@ -247,7 +247,7 @@ class Window:
         if update_app and not self.on_error:
             try:
                 self.instance.tools = Tools(self.window_draw_surf)
-                self.instance.resize(self.window_draw_surf)
+                self.instance.resize()
                 
             except Exception as e:
                 self.set_error()
@@ -533,7 +533,8 @@ class OperatingSystem:
                 width - total - systray_width, 0, 
                 systray_width, height)
 
-            systray.update_screen(self.barre_taches.subsurface(sysapp_rect))
+            systray.tools.update_screen(self.barre_taches.subsurface(sysapp_rect))
+            systray.update_screen()
             
             # calcul du decalage de zone pour le prochain SysTray
             total += systray_width + systray.TEXT_OFFSET
@@ -638,7 +639,11 @@ class OperatingSystem:
                 une_classe.INITIAL_WIDTH, height)
 
             # Initialisation du SysTray
-            systray = une_classe(self.barre_taches.subsurface(sysapp_rect), color)
+            systray = une_classe(color)
+            SysTray.__init__(systray, color)
+            SysTray.__init_screen__(systray, self.barre_taches.subsurface(sysapp_rect))
+            systray.post_init()
+
             self.liste_systray.append(systray)
             
             # calcul du decalage de zone pour le prochain SysTray

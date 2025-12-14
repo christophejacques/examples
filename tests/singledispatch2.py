@@ -1,7 +1,8 @@
 from functools import singledispatch
 
-class UneClasse:
-    pass
+class UneClasse: ...
+class DeuxClasse: ...
+
 
 @singledispatch
 def traiter_donnee(data):
@@ -17,6 +18,10 @@ def _(data):
 def _(data):
   print(f"Traitement spécifique pour un entier : {data + 10}")
 
+@traiter_donnee.register(float)
+def _(data):
+  print(f"Traitement spécifique pour un float : {data}")
+
 @traiter_donnee.register(str)
 def _(data):
   print(f"Traitement spécifique pour une chaîne : {data.upper()}")
@@ -25,9 +30,22 @@ def _(data):
 def _(data):
   print(f"Traitement spécifique pour une liste : {', '.join(map(str, data))}")
 
+@traiter_donnee.register(set)
+def _(data):
+  print(f"Traitement spécifique pour un set : {data}")
+
+@traiter_donnee.register(dict)
+def _(data):
+  print(f"Traitement spécifique pour un dict : {data}")
+
+
 traiter_donnee(15)
+traiter_donnee(1.5)
 traiter_donnee("bonjour")
 traiter_donnee([1, 2, 3])
+traiter_donnee({1, 2, 3})
+traiter_donnee({"a":1, "b":2, "c":3})
 traiter_donnee(UneClasse())
 
-traiter_donnee(3.14)
+traiter_donnee(DeuxClasse())
+

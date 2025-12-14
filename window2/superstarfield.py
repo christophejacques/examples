@@ -11,14 +11,11 @@ class SuperStarfield(Application):
     DEFAULT_CONFIG = ("Super Starfield", Colors.ORANGE)
     WINDOW_PROPERTIES = ["RESIZABLE"]
 
-    def __init__(self, screen, args):
-        super().__init__(screen)
+    def __init__(self, args):
         # set up a random batch of stars for the background
-        self.screen = screen
         self.z_range = (50, 2000)  # range for Z coordinates of stars
         self.action = ""
         
-        self.get_theme()
 
     def get_theme(self):
         if self.theme.get_theme() == "CLAIR":
@@ -27,13 +24,13 @@ class SuperStarfield(Application):
             self.background_color = Colors.BLACK
 
     def post_init(self):
-        self.resize(self.screen)
+        self.get_theme()
+        self.resize()
 
-    def resize(self, screen):
-        w, h = screen.get_size()
+    def resize(self):
+        w, h = self.tools.get_size()
         self.nr_stars = int(w * h / 200)
-        self.screen = screen
-        self.screen_size = np.array(self.screen.get_size())
+        self.screen_size = np.array(self.tools.get_size())
         self.mid_screen = self.screen_size // 2
         self.set_title(f"{self.DEFAULT_CONFIG[0]} - {self.nr_stars} étoiles")
         self.init()
@@ -58,7 +55,6 @@ class SuperStarfield(Application):
     def update(self):
         # clear screen for a new frame
         self.time = self.tools.get_ticks()
-        # self.screen.fill(self.background_color)
         self.move_stars(self.time, self.prev_time)
 
     def move_stars(self, time, prev_time):
@@ -91,9 +87,9 @@ class SuperStarfield(Application):
             * np.array([self.screen_size[0] - 2, self.screen_size[1] - 2, 0]) + np.array([-self.mid_screen[0], -self.mid_screen[1], self.z_range[1]])
 
     def draw(self):
-        self.screen.fill(self.background_color)
-        while self.screen.get_locked():
-            self.screen.unlock()
+        self.tools.fill(self.background_color)
+        while self.tools.get_locked():
+            self.tools.unlock()
         rgb_array = self.tools.pixels3d()
         # print(self.time)
 

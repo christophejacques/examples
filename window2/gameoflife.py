@@ -15,12 +15,13 @@ class GameOfLife(Application):
     olds = 0
     compteur = 0
 
-    def __init__(self, screen, args):
-        super().__init__(screen)
+    def __init__(self, args):
         self.grid = []
-        self.resize(screen)
         self.action = ""
         self.mouse_button_state = 0
+
+    def post_init(self):
+        self.resize()
         self.get_theme()
 
     def get_theme(self):
@@ -35,9 +36,8 @@ class GameOfLife(Application):
         for _ in range(self.COLS):
             grid.append([random.randint(0, 1) if rand else 0 for _ in range(self.ROWS)])
 
-    def resize(self, screen):
-        self.screen = screen
-        width, height = self.screen.get_size()
+    def resize(self):
+        width, height = self.tools.get_size()
         self.ROWS = width // self.SIZE
         self.COLS = height // self.SIZE
         self.initialisation(self.grid)
@@ -100,7 +100,7 @@ class GameOfLife(Application):
                     print("x:", x, " y:", y, " ROWS:", self.ROWS, " COLS:", self.COLS)
 
     def draw(self):
-        self.screen.fill(self.back_color)
+        self.tools.fill(self.back_color)
         s = sum([sum(x) for x in self.grid])
         if self.olds == s:
             self.compteur += 1

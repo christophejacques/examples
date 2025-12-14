@@ -28,7 +28,7 @@ class Box:
         self.tools = parent.tools.get_subtools((*self.rect.topleft, *self.rect.size))
 
     def set_backcolor(self, backcolor):
-        self.backcolor = color
+        self.backcolor = backcolor
 
     def set_theme(self, theme):
         pass
@@ -310,8 +310,8 @@ class ListDirectoryFile(Box):
             fprint(error)
 
     def scan(self):
-        self.liste["dirs"]: list = list()
-        self.liste["files"]: list = list()
+        self.liste["dirs"] = list()
+        self.liste["files"] = list()
         self.decal = 0
         self.index = -1
         self.selected_index = -1
@@ -408,8 +408,8 @@ class ListDirectoryFile(Box):
             self.ascenseur_is_clicked = False
             return
 
-        if self.index < self.len_dirs:
-            directory = self.liste["dirs"][self.index].strip("[]")
+        if self.decal + self.index < self.len_dirs:
+            directory = self.liste["dirs"][self.decal + self.index].strip("[]")
             self.directory = os.path.join(self.directory, directory)
             self.scan()
             return
@@ -632,21 +632,14 @@ class SelectWallpaper(Application):
     MIN_SIZE: tuple = (1200, 545)
     WINDOW_PROPERTIES: list = ["CENTER", "UNIQUE"]
 
-    def __init__(self, screen, *args):
-        super().__init__(screen)
+    def __init__(self, *args):
         self.title = self.DEFAULT_CONFIG[0]
         self.action = ""
 
-        nombre = self.registre.load("Utilisation", 0)
-        self.registre.save("Utilisation", 1+nombre)
-
         self.ecrans = list()
         self.boutons = list()
-        self.get_theme()
 
         self.focused_bouton = None
-        self.img_filename = self.registre.load("fichier", None)
-        self.decal_sep_x = self.registre.load("decal_sep_x", 410)
         self.compteur_tache = 0
 
     @property
@@ -660,6 +653,12 @@ class SelectWallpaper(Application):
     def post_init(self):
         self.set_title(self.title)
         self.win_resize("CENTER", 0, 0, *self.MIN_SIZE)
+
+        nombre = self.registre.load("Utilisation", 0)
+        self.registre.save("Utilisation", 1+nombre)
+        self.get_theme()
+        self.img_filename = self.registre.load("fichier", None)
+        self.decal_sep_x = self.registre.load("decal_sep_x", 410)
 
         # couleur_fond = (220, 220, 220)
         couleur_fond = self.theme.get("LIST_BACK_COLOR")
@@ -705,12 +704,11 @@ class SelectWallpaper(Application):
             else:
                 bouton.hide()
 
-    def resize(self, screen):
-
+    def resize(self):
         if not self.ecrans:
             return
 
-        self.width, self.height = screen.get_size()
+        self.width, self.height = self.tools.get_size()
         
         self.liste_dirs_files.resize(self, 
             (self.liste_dirs_files.rect.x, 60, self.liste_dirs_files.rect.width, self.height-127))

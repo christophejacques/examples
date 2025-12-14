@@ -8,12 +8,12 @@ class Modele(Application):
     WINDOW_PROPERTIES: list = []
 
     def __init__(self, screen, *args):
-        super().__init__(screen)
+        # super().__init__(screen)
         self.title = self.DEFAULT_CONFIG[0]
         self.action = ""
-        self.get_theme()
 
     def post_init(self):
+        self.get_theme()
         self.set_title(self.title)
         self.win_resize("BOTTOM RIGHT", 0, 0, *self.MIN_SIZE)
 

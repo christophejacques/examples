@@ -4,7 +4,7 @@ import traceback
 from mouse import Mouse
 from audio import Audio
 from keyboard import Keyboard
-from classes import Tools, Variable
+from classes import Tools, Application
 
 
 
@@ -57,8 +57,8 @@ class Window:
         self.tools = Tools(full_screen)
 
         try:
-            Variable.window = self
-            self.instance = self.app(self.window_draw_surf, args)
+            self.instance = self.app(args)
+            Application.__init__(self.instance, self.window_draw_surf, self)
             self.instance.post_init()
 
         except Exception as e:
@@ -175,7 +175,7 @@ class Window:
         pass
 
     def resize(self, direction, dx=0, dy=0, width=None, height=None):
-        self.instance.resize(self.instance.tools.screen)
+        self.instance.resize()
 
     def update(self):
         pass
@@ -295,7 +295,7 @@ def run(application=None):
                 pass
 
             elif event.type == pygame.VIDEORESIZE:
-                instance.resize(screen)
+                instance.resize()
 
             else:
                 print(event.type, get_pygame_const_name(event.type), flush=True)
