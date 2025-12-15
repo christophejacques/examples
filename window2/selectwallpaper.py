@@ -607,23 +607,33 @@ class Image(Box):
             self.image = None
             return
 
+        self.filename = filename.split("\\")[-1]
         self.img = self.tools.load_image(filename)
         self.calc_rapport()
         self.image = self.tools.scale_image(self.img, *self.img_size)
 
+    def printscreen(self, texte: str, position: tuple[int, int]):
+        ombre = self.FONT.render(texte, False, (5, 5, 5))
+        texte = self.FONT.render(texte, False, (20, 255, 20))
+        x, y = position
+        self.tools.blit(ombre, [x-1, y-1])
+        self.tools.blit(ombre, [x-1, y+1])
+        self.tools.blit(ombre, [x+1, y-1])
+        self.tools.blit(ombre, [x+1, y+1])
+        self.tools.blit(ombre, [x-1, y])
+        self.tools.blit(ombre, [x+1, y])
+        self.tools.blit(texte, [x, y])
+
     def draw(self):
         super().draw()
         if self.image:
-            self.tools.blit(self.image, (0, 0))
-            ombre = self.FONT.render(f"{self.w}x{self.h}", False, (5, 5, 5))
-            texte = self.FONT.render(f"{self.w}x{self.h}", False, (20, 255, 20))
-            self.tools.blit(ombre, [9, 1])
-            self.tools.blit(ombre, [9, 3])
-            self.tools.blit(ombre, [11, 1])
-            self.tools.blit(ombre, [11, 3])
-            self.tools.blit(ombre, [9, 2])
-            self.tools.blit(ombre, [11, 2])
-            self.tools.blit(texte, [10, 2])
+            w, h = self.tools.get_size()
+            dx = (w - self.image.get_width()) // 2
+            dy = (h - self.image.get_height()) // 2
+            self.tools.blit(self.image, (dx, dy))
+
+            self.printscreen(self.filename, (10, 2))
+            self.printscreen(f"{self.w}x{self.h}", (10, h-32))
 
 
 class SelectWallpaper(Application):

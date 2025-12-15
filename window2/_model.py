@@ -7,8 +7,7 @@ class Modele(Application):
     MIN_SIZE: tuple = (600, 400)
     WINDOW_PROPERTIES: list = []
 
-    def __init__(self, screen, *args):
-        # super().__init__(screen)
+    def __init__(self, *args):
         self.title = self.DEFAULT_CONFIG[0]
         self.action = ""
 
@@ -17,7 +16,7 @@ class Modele(Application):
         self.set_title(self.title)
         self.win_resize("BOTTOM RIGHT", 0, 0, *self.MIN_SIZE)
 
-    def resize(self, screen):
+    def resize(self):
         pass
 
     def get_theme(self):

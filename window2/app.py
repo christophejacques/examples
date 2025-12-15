@@ -1,7 +1,6 @@
 import pygame
 import json
 import traceback
-
 import pygame._sdl2.audio as sdl2_audio
 
 from audio import Audio
@@ -9,8 +8,10 @@ from mouse import Mouse
 from keyboard import Keyboard
 from colors import Colors
 from classes import Application, SysTray, Variable, Tools, get_all_classes, Theme, Registres, fprint
-
 from typing import Tuple, Optional
+
+
+SYS_FONT: pygame.font.Font
 
 
 def get_pygame_const_name(index):
@@ -18,13 +19,6 @@ def get_pygame_const_name(index):
         if c[1] in "AZERTYUIOPMLKJHGFDSQWXCVBN":
             if type(getattr(pygame, c)) == int and getattr(pygame, c) == index:
                 return c
-
-
-pygame.init()
-
-# SYS_FONT = pygame.font.SysFont(pygame.font.get_default_font(), 16)
-# SYS_FONT = pygame.font.SysFont("comicsans", 12)
-SYS_FONT = pygame.font.SysFont("courier", 12)
 
 
 class Icone:
@@ -479,6 +473,11 @@ class OperatingSystem:
     TASK_BAR_COLOR = (20, 20, 20, 100)
 
     def __init__(self):
+        global SYS_FONT
+
+        pygame.init()
+        SYS_FONT = pygame.font.SysFont("courier", 12)
+
         self.running = True
         Tache.TASK_HEIGHT = OperatingSystem.TASK_BAR_HEIGHT
         self.registre = Registres("OS")
