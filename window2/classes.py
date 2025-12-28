@@ -103,7 +103,7 @@ class Variable:
 
 
 class Theme:
-    theme: str = "CLAIR"
+    theme: str = "SOMBRE"
 
     data = {
         "CLAIR": {
@@ -150,16 +150,16 @@ class Theme:
     }
 
     @classmethod
-    def get_theme(self):
-        return Theme.theme
+    def get_theme(cls):
+        return cls.theme
 
     @classmethod
-    def set_theme(self, theme):
-        Theme.theme = theme.upper()
+    def set_theme(cls, theme):
+        cls.theme = theme.upper()
 
     @classmethod
-    def get(self, type_color):
-        return Theme.data[Theme.theme][type_color]
+    def get(cls, type_color):
+        return cls.data[Theme.theme][type_color]
 
 
 class Sound:

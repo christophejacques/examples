@@ -453,13 +453,13 @@ class Window:
     def close(self):
         if not self.on_error:
             try:
-                self.instance.registre.save_file()
                 self.instance.close()
+                self.instance.registre.save_file()
             except Exception as erreur:
                 self.set_error()
                 print("Erreur:", erreur, flush=True)
-        else:
-            Keyboard.clear_buffer()
+
+        Keyboard.clear_buffer()
 
         if self.sound_id:
             Audio.close_application(self.sound_id)
@@ -906,8 +906,6 @@ class OperatingSystem:
                         self.load_background_image()
 
     def check_keyboard_events(self):
-        return
-
         if not Keyboard.keypressed():
             return
 

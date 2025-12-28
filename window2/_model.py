@@ -1,7 +1,8 @@
 from classes import Application, fprint
 
 
-class Modele(Application):
+# class Modele("Application"):
+class Modele():
 
     DEFAULT_CONFIG: tuple = ("Modele", (150, 150, 150))
     MIN_SIZE: tuple = (600, 400)
@@ -37,6 +38,7 @@ class Modele(Application):
         # touche = self.keys.get_key()
         if event.key == 27:
             self.action = "QUIT"
+            self.keys.clear_key_buffer()
                 
     def mouse_move(self, mouseX, mouseY):
         pass

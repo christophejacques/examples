@@ -184,7 +184,17 @@ class Window:
         pass
 
     def close(self):
-        pass
+        try:
+            self.instance.close()
+            self.instance.registre.save_file()
+        except Exception as erreur:
+            self.set_error()
+            print("Erreur:", erreur, flush=True)
+
+        Keyboard.clear_buffer()
+
+        if self.sound_id:
+            Audio.close_application(self.sound_id)
 
 
 def get_application_classe(applications):
@@ -232,6 +242,7 @@ def run(application=None):
             for action in all_actions.split(";"):
                 match action:
                     case "QUIT":
+                        instance.close()
                         instance.registre.save_file()
                         running = False
 
@@ -274,8 +285,8 @@ def run(application=None):
 
             elif event.type == pygame.QUIT:
                 running = False
-                instance.registre.save_file()
                 instance.close()
+                instance.registre.save_file()
 
             elif event.type in (
                     pygame.TEXTEDITING,

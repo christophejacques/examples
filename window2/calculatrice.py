@@ -215,6 +215,7 @@ class Calculatrice(Application):
         # touche = self.keys.get_key()
         if event.key == 27 and self.ecran.get_texte() == "":
             self.action = "QUIT"
+            self.keys.clear_key_buffer()
 
         self.compute_touche(event.unicode)
 

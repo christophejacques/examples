@@ -110,7 +110,8 @@ class Firework(Application):
     def explosion(self, fusee):
         for _ in range(fusee.nombre*20):
             p = StaticVector.random2D().mult(fusee.nombre*random.random()).add(Vector(0, -1))
-            self.particles.append(Particle(fusee.pos.x, fusee.pos.y, p.x, p.y, fusee.color, 1, fusee.nombre))
+            self.particles.append(
+                Particle(fusee.pos.x, fusee.pos.y, p.x, p.y, fusee.color, 1, fusee.nombre))
 
     def play_sounds(self, type_sound, rand):
         if len(self.sound_channels) < self.max_channels:
@@ -122,7 +123,7 @@ class Firework(Application):
         self.sound.remove_unused_channels()
         self.play_sounds("LAUNCH", 2)
         self.fusees.append(
-            Particle(random.randint(10, self.width-10), self.height, nombre=random.randint(2, 12)))
+            Particle(random.randint(10, self.width-10), self.height, nombre=random.randint(2, 14)))
 
     def update(self):
         if len(self.fusees) < self.nombre:

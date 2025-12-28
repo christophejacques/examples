@@ -4,6 +4,7 @@ import os
 from classes import Application, fprint
 from functools import partial
 from threading import Thread
+from typing import Optional
 
 
 class Box:
@@ -263,6 +264,11 @@ class TextBox(Box):
 
     def set_texte(self, texte):
         self.texte_font = self.font.render(texte, False, self.theme.get("FORE_COLOR"))
+        if self.tools.get_size()[0] < self.texte_font.get_width():
+            # la taille du texte depasse de la zone
+            texte = "<" + texte.split("\\")[-1]
+            self.texte_font = self.font.render(texte, False, self.theme.get("FORE_COLOR"))
+
         self.texte = texte
 
     def set_theme(self, theme):
@@ -524,25 +530,23 @@ class ListDirectoryFile(Box):
                 rech_index += 1
                 continue
 
+            posy = self.BORDER_SIZE+(index)*21
+
             if self.selected_index == index:
                 color = self.theme.get("LIST_SELECTED_TEXT_COLOR")
-                self.tools.rect((100, 100, 250), (
-                    2, self.BORDER_SIZE+(index)*21, largeur_dirfile, 21))
-                self.tools.rect((0, 0, 250), (
-                    2, self.BORDER_SIZE+(index)*21, largeur_dirfile, 21), 1)
+                self.tools.rect((100, 100, 250), (2, posy, largeur_dirfile, 21))
+                self.tools.rect((0, 0, 250), (2, posy, largeur_dirfile, 21), 1)
 
             elif self.index == index and not self.ascenseur_is_clicked:
                 color = self.theme.get("LIST_MOUSEOVER_TEXT_COLOR")
-                self.tools.rect((10, 250, 250), (
-                    2, self.BORDER_SIZE+(index)*21, largeur_dirfile, 21))
-                self.tools.rect((10, 200, 200), (
-                    2, self.BORDER_SIZE+(index)*21, largeur_dirfile, 21), 1)
+                self.tools.rect((10, 250, 250), (2, posy, largeur_dirfile, 21))
+                self.tools.rect((10, 200, 200), (2, posy, largeur_dirfile, 21), 1)
 
             else:
                 color = self.theme.get("LIST_TEXT_COLOR")
 
             texte_font = self.font.render(dirfile, False, color)
-            self.tools.blit(texte_font, (self.BORDER_SIZE, self.BORDER_SIZE+21*(index)))
+            self.tools.blit(texte_font, (self.BORDER_SIZE, posy))
             index += 1
 
         # Affichage de l'ascenseur si besoin
@@ -602,7 +606,7 @@ class Image(Box):
 
         self.img_size = img_w, img_h
 
-    def set_filename(self, filename):
+    def set_filename(self, filename: Optional[str]):
         if filename is None:
             self.image = None
             return
@@ -615,21 +619,27 @@ class Image(Box):
     def printscreen(self, texte: str, position: tuple[int, int]):
         ombre = self.FONT.render(texte, False, (5, 5, 5))
         texte = self.FONT.render(texte, False, (20, 255, 20))
+
         x, y = position
-        self.tools.blit(ombre, [x-1, y-1])
-        self.tools.blit(ombre, [x-1, y+1])
-        self.tools.blit(ombre, [x+1, y-1])
-        self.tools.blit(ombre, [x+1, y+1])
-        self.tools.blit(ombre, [x-1, y])
-        self.tools.blit(ombre, [x+1, y])
+        xm1 = x - 1
+        xp1 = x + 1
+        ym1 = y - 1
+        yp1 = y + 1
+        self.tools.blit(ombre, [xm1, ym1])
+        self.tools.blit(ombre, [xm1, yp1])
+        self.tools.blit(ombre, [xp1, ym1])
+        self.tools.blit(ombre, [xp1, yp1])
+        self.tools.blit(ombre, [xm1, y])
+        self.tools.blit(ombre, [xp1, y])
         self.tools.blit(texte, [x, y])
 
     def draw(self):
         super().draw()
         if self.image:
             w, h = self.tools.get_size()
-            dx = (w - self.image.get_width()) // 2
-            dy = (h - self.image.get_height()) // 2
+            wi, hi = self.image.get_size()
+            dx = (w - wi) // 2
+            dy = (h - hi) // 2
             self.tools.blit(self.image, (dx, dy))
 
             self.printscreen(self.filename, (10, 2))
@@ -787,6 +797,7 @@ class SelectWallpaper(Application):
         self.anykey_released = True
 
         if event.key == self.keys.K_ESCAPE:
+            self.keys.clear_key_buffer()
             self.close()
 
         elif event.key in (self.keys.K_KP_ENTER, self.keys.K_RETURN):
@@ -870,6 +881,7 @@ class SelectWallpaper(Application):
                 self.check_actions()
 
         if self.separation.mouse_is_clicked and self.focused_ecran != self.separation:
+            # changement de taille des ecran suivant le separateur
             self.separation.mouse_button_up(
                 mouseX-self.separation.rect.left, 
                 mouseY-self.separation.rect.top, button)

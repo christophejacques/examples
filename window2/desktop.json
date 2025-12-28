@@ -41,6 +41,13 @@
             120
         ]
     },
+    "Librairie": {
+        "libelle": "Switch",
+        "position": [
+            530,
+            10
+        ]
+    },
     "NoApplication": {
         "libelle": "No Application",
         "position": [
@@ -58,7 +65,7 @@
     "SelectWallpaper": {
         "libelle": "SelectWallpaper",
         "position": [
-            140,
+            10,
             450
         ]
     },
@@ -88,13 +95,6 @@
         "position": [
             10,
             10
-        ]
-    },
-    "Modele": {
-        "libelle": "Modele",
-        "position": [
-            10,
-            450
         ]
     }
 }

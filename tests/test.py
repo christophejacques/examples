@@ -1,3 +1,17 @@
+import typing
+from typing import Type
+
+
+# help(typing.Type)
+# exit()
+
+for m in dir(typing):
+    if m[0] not in "AZERTYUIOPMLKJHGFDSQWXCVBN":
+        continue
+    print(m)
+
+exit()
+
 class Unique:
     __instance = None
 

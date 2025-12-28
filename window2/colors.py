@@ -29,3 +29,11 @@ class Colors:
     DARK_BLUE = (0, 0, 64)
     
     CYAN = (50, 130, 255)
+
+
+def lighter(color: tuple, coef: float=1.2) -> tuple:
+    return tuple(max(255, int(c*coef)) for c in color)
+
+
+def darker(color: tuple, coef: float=0.8) -> tuple:
+    return tuple(int(c*coef) for c in color)
