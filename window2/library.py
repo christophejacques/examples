@@ -315,7 +315,7 @@ class ListBoutons:
 class Switch:
     SPACE: int = 4
 
-    def __init__(self, parent, couleur: tuple, coords: tuple, 
+    def __init__(self, parent, couleur: tuple, coords: tuple, size: tuple,
             default: bool=False, callback: Optional[Callable]=None):
         self.on = default
         self.min_color = darker(couleur, 0.6)
@@ -325,6 +325,7 @@ class Switch:
         self.clicked = False
         self.callback = callback
         self.coords = coords
+        self.size = size
 
         self.set_tools(parent)
         self.rect = self.tools.Rect(self.coords)
@@ -356,7 +357,7 @@ class Switch:
 
     def draw(self):
         if self.on:
-            self.tools.rect((100, 250, 100), (self.rect.x-20, self.rect.y+10, 160, 220), 1)
+            self.tools.rect(self.max_color, (self.rect.x-20, self.rect.y+10, *self.size), 1)
             self.tools.rect((0, 0, 0), (self.rect.x-5, self.rect.y-5, self.rect.w+10, self.rect.h+10))
             self.tools.rect(self.color, (self.x2, self.y, self.w, self.h))
         else:
@@ -403,9 +404,9 @@ class Librairie(Application):
         selected2 = self.registre.load("RadioBoutons.selected1", [])
         selected3 = self.registre.load("RadioBoutons.selected2", [])
 
-        self.objets.append(Switch(self, Colors.GREEN, (40, 30, 50, 20), visible1, callback=self.callback(0)))
-        self.objets.append(Switch(self, Colors.CYAN, (240, 30, 50, 20), visible2, callback=self.callback(1)))
-        self.objets.append(Switch(self, Colors.ORANGE, (440, 30, 50, 20), visible3, callback=self.callback(2)))
+        self.objets.append(Switch(self, Colors.GREEN, (40, 30, 50, 20), (160, 220), visible1, callback=self.callback(0)))
+        self.objets.append(Switch(self, Colors.CYAN, (240, 30, 50, 20), (160, 220), visible2, callback=self.callback(1)))
+        self.objets.append(Switch(self, Colors.ORANGE, (440, 30, 50, 20), (160, 220), visible3, callback=self.callback(2)))
 
         rbs = ListBoutons(Radio, (40, 80), visible=visible1)
         rbs.add(Radio(self, Rond, "Un", (50, 200, 100), (0, 0, 20, 20)))
