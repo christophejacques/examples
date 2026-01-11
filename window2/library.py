@@ -1,7 +1,8 @@
 from abc import abstractmethod, ABCMeta
 from classes import Application, fprint
-from typing import Optional, Callable, List, Tuple, Any
+from typing import Self, Optional, Callable, List, Tuple, Any
 from colors import Colors, darker
+from functools import partial
 
 
 class CheckForme(metaclass=ABCMeta):
@@ -12,7 +13,7 @@ class CheckForme(metaclass=ABCMeta):
     getColor: Callable
     getMaxColor: Callable
 
-    def __init__(self, parent):
+    def __init__(self, parent: Self):
         self.tools = parent.tools
         self.rect = parent.rect
         self.isActif = parent.isActif
@@ -32,7 +33,6 @@ class CheckForme(metaclass=ABCMeta):
         self.tools = parent.tools
 
     def draw(self):
-        # self.tools.rect((0, 0, 0), self.rect)
         self.draw_form()
 
 
@@ -52,6 +52,20 @@ class Carre(CheckForme):
         self.tools.rect(self.getMaxColor(), self.rect, 1)
         if self.isActif():
             self.tools.rect(self.getColor(), (self.x, self.y, self.w, self.h))
+
+
+class Tiret(CheckForme):
+
+    def __post_init__(self):
+        self.x = self.rect.x + self.SPACE
+        self.y = self.rect.y + self.SPACE
+        self.w = self.rect.w - 2*self.SPACE
+        self.h = self.rect.h - 2*self.SPACE
+        self.y1 = self.rect.y + self.rect.h // 2 - self.SPACE // 2
+        self.h1 = self.SPACE
+
+    def draw_form(self):
+        self.tools.rect(self.getColor(), (self.x, self.y1, self.w, self.h1))
 
 
 class Cible(CheckForme):
@@ -118,13 +132,10 @@ class Rond(CheckForme):
 
 class ButtonStyle:
 
-    def __init__(self, parent, forme: type[CheckForme], texte: str, couleur: Tuple, coords: Tuple, 
-            default: bool=False, callback: Optional[Callable]=None):
+    def __init__(self, parent, forme: type, texte: str, coords: Tuple, 
+            default: bool=False, couleur: Optional[Tuple]=None, callback: Optional[Callable]=None):
         
         self.on = default
-        self.max_color = couleur
-        self.min_color = darker(couleur, 0.6)
-        self.color = self.min_color
         self.mouse_over = False
         self.clicked = False
 
@@ -138,13 +149,21 @@ class ButtonStyle:
 
         self.texte = texte
         self.FONT = self.tools.font("courrier", 24)
-        self.texte_surf_min = self.FONT.render(self.texte, False, self.min_color)
-        self.texte_surf_max = self.FONT.render(self.texte, False, self.max_color)
+        self.set_color(couleur)
+
         _, _, self.texte_w, self.texte_h = self.texte_surf_min.get_rect()
         self.texte_rect = self.tools.Rect(
             self.rect.x+24, self.rect.y+3, self.texte_w, self.texte_h)
 
-    def set_tools(self, parent):
+    def set_color(self, color):
+        couleur = color if color else (0, 0, 0)
+        self.max_color = couleur
+        self.min_color = darker(couleur, 0.6)
+        self.color = self.min_color
+        self.texte_surf_min = self.FONT.render(self.texte, False, self.min_color)
+        self.texte_surf_max = self.FONT.render(self.texte, False, self.max_color)
+
+    def set_tools(self, parent: Application):
         self.tools = parent.tools
         self.forme.set_tools(parent)
 
@@ -195,6 +214,10 @@ class ButtonStyle:
             self.tools.blit(self.texte_surf_min, self.texte_rect)
 
 
+class Liste(ButtonStyle):
+    pass
+
+
 class Radio(ButtonStyle):
 
     def mouse_button_up(self, mouseX: int, mouseY: int, button: int):
@@ -218,7 +241,7 @@ class Check(ButtonStyle):
 class ListBoutons:
 
     def __init__(self, style: type[ButtonStyle], coords: tuple, default: int=-1, 
-            visible: bool=True, callback: Optional[Callable]=None):
+            visible: bool=True, color: Optional[tuple]=None, callback: Optional[Callable]=None):
 
         self.style = style
         self.x, self.y = coords
@@ -226,10 +249,14 @@ class ListBoutons:
         self.boutons: list[ButtonStyle] = list()
         self.index: int = default
         self.visible: bool = visible
+        self.color = color
 
-    def set_tools(self, parent):
+    def set_tools(self, parent: Application):
         for bouton in self.boutons:
             bouton.set_tools(parent)
+
+    def set_visible(self, valeur):
+        self.visible = valeur
 
     def add(self, bouton: ButtonStyle):
         if not isinstance(bouton, self.style):
@@ -237,6 +264,8 @@ class ListBoutons:
                 f"Le bouton est de type '{bouton.__class__.__name__}' au lieu de type '{self.style.__name__}'")
 
         bouton.update_position(self.x, self.y)
+        if self.color:
+            bouton.set_color(self.color)
         self.boutons.append(bouton)
 
     def select(self, select_index):
@@ -259,14 +288,14 @@ class ListBoutons:
         if self.style == Radio:
             return self.index
             
-        elif self.style == Check:
-            lst_index: list = list()
-            for index, btn in enumerate(self.boutons):
-                if btn.on:
-                    lst_index.append(index)
-            return lst_index
+        elif self.style != Check:
+            return None
 
-        return None
+        lst_index: list = list()
+        for index, btn in enumerate(self.boutons):
+            if btn.on:
+                lst_index.append(index)
+        return lst_index
 
     def mouse_move(self, mouseX: int, mouseY: int):
         if not self.visible:
@@ -316,14 +345,14 @@ class Switch:
     SPACE: int = 4
 
     def __init__(self, parent, couleur: tuple, coords: tuple, size: tuple,
-            default: bool=False, callback: Optional[Callable]=None):
+            default: bool=False, callback: Optional[Callable]=None, *params):
         self.on = default
         self.min_color = darker(couleur, 0.6)
         self.color = self.min_color
         self.max_color = couleur
         self.mouse_over = False
         self.clicked = False
-        self.callback = callback
+        self.set_callback(callback, *params)
         self.coords = coords
         self.size = size
 
@@ -334,8 +363,14 @@ class Switch:
         self.y = self.rect.y+self.SPACE
         self.x2 = self.rect.x + self.rect.w - self.w - self.SPACE
 
-    def set_tools(self, parent):
+    def set_tools(self, parent: Application):
         self.tools = parent.tools
+
+    def set_callback(self, callback, *params):
+        if callback:
+            self.callback = partial(callback, *params)
+        else:
+            self.callback = None
 
     def mouse_move(self, mouseX: int, mouseY: int):
         self.mouse_over = self.rect.collidepoint((mouseX, mouseY))
@@ -370,27 +405,13 @@ class Switch:
 class Librairie(Application):
 
     DEFAULT_CONFIG: tuple = ("Switch", (50, 150, 150))
-    MIN_SIZE: tuple = (600, 300)
+    MIN_SIZE: tuple = (810, 300)
     WINDOW_PROPERTIES: list = ["CENTER"]
 
     def __init__(self, *args):
         self.title = self.DEFAULT_CONFIG[0]
         self.action = ""
         self.objets: list = list()
-
-    def callback(self, numero: int):
-        def execute(visible: bool):
-            index = -1
-            for obj in self.objets:
-                if not isinstance(obj, ListBoutons):
-                    continue
-                index += 1
-                if index != numero:
-                    continue
-                obj.visible = visible
-                break
-
-        return execute
 
     def post_init(self):
         self.get_theme()
@@ -404,41 +425,61 @@ class Librairie(Application):
         selected2 = self.registre.load("RadioBoutons.selected1", [])
         selected3 = self.registre.load("RadioBoutons.selected2", [])
 
-        self.objets.append(Switch(self, Colors.GREEN, (40, 30, 50, 20), (160, 220), visible1, callback=self.callback(0)))
-        self.objets.append(Switch(self, Colors.CYAN, (240, 30, 50, 20), (160, 220), visible2, callback=self.callback(1)))
-        self.objets.append(Switch(self, Colors.ORANGE, (440, 30, 50, 20), (160, 220), visible3, callback=self.callback(2)))
-
-        rbs = ListBoutons(Radio, (40, 80), visible=visible1)
-        rbs.add(Radio(self, Rond, "Un", (50, 200, 100), (0, 0, 20, 20)))
-        rbs.add(Radio(self, Rond, "Deux", (100, 200, 50), (0, 30, 20, 20)))
-        rbs.add(Radio(self, Rond, "Trois", (50, 200, 200), (0, 60, 20, 20)))
-        rbs.add(Radio(self, Rond, "Quatre", (200, 200, 50), (0, 90, 20, 20)))
-        rbs.add(Radio(self, Rond, "Cinq", (200, 100, 50), (0, 120, 20, 20)))
-        rbs.add(Radio(self, Rond, "Six", (200, 50, 100), (0, 150, 20, 20)))
+        rbs = ListBoutons(Radio, (40, 70), visible=visible1)
+        rbs.add(Radio(self, Rond, "Un", (0, 0, 20, 20), couleur=(50, 200, 100)))
+        rbs.add(Radio(self, Rond, "Deux", (0, 30, 20, 20), couleur=(100, 200, 50)))
+        rbs.add(Radio(self, Rond, "Trois", (0, 60, 20, 20), couleur=(50, 200, 200)))
+        rbs.add(Radio(self, Rond, "Quatre", (0, 90, 20, 20), couleur=(200, 200, 50)))
+        rbs.add(Radio(self, Rond, "Cinq", (0, 120, 20, 20), couleur=(200, 100, 50)))
+        rbs.add(Radio(self, Rond, "Six", (0, 150, 20, 20), couleur=(200, 50, 100)))
         rbs.select(selected1)
 
         self.objets.append(rbs)
 
-        rbs = ListBoutons(Check, (240, 80), visible=visible2)
-        rbs.add(Check(self, Carre, "One", (50, 200, 100), (0, 0, 20, 20)))
-        rbs.add(Check(self, Carre, "Two", (100, 200, 50), (0, 30, 20, 20)))
-        rbs.add(Check(self, Carre, "Three", (50, 200, 200), (0, 60, 20, 20)))
-        rbs.add(Check(self, Carre, "Four", (200, 200, 50), (0, 90, 20, 20)))
-        rbs.add(Check(self, Carre, "Five", (200, 100, 50), (0, 120, 20, 20)))
-        rbs.add(Check(self, Carre, "Six", (200, 50, 100), (0, 150, 20, 20)))
+        sw1: Switch = Switch(self, Colors.GREEN, (40, 30, 50, 20), (160, 220), visible1)
+        sw1.set_callback(rbs.set_visible)
+        self.objets.append(sw1)
+
+        rbs = ListBoutons(Check, (240, 70), visible=visible2)
+        rbs.add(Check(self, Carre, "One", (0, 0, 20, 20), couleur=(50, 200, 100)))
+        rbs.add(Check(self, Carre, "Two", (0, 30, 20, 20), couleur=(100, 200, 50)))
+        rbs.add(Check(self, Carre, "Three", (0, 60, 20, 20), couleur=(50, 200, 200)))
+        rbs.add(Check(self, Carre, "Four", (0, 90, 20, 20), couleur=(200, 200, 50)))
+        rbs.add(Check(self, Carre, "Five", (0, 120, 20, 20), couleur=(200, 100, 50)))
+        rbs.add(Check(self, Carre, "Six", (0, 150, 20, 20), couleur=(200, 50, 100)))
         rbs.select(selected2)
 
         self.objets.append(rbs)
 
-        rbs = ListBoutons(Check, (440, 80), visible=visible3)
-        rbs.add(Check(self, Cible, "Uno", (50, 200, 100), (0, 0, 20, 20)))
-        rbs.add(Check(self, Cible, "Dos", (50, 200, 100), (0, 30, 20, 20)))
-        rbs.add(Check(self, Cible, "Tres", (50, 200, 100), (0, 60, 20, 20)))
-        rbs.add(Check(self, Cible, "Quatro", (50, 200, 100), (0, 90, 20, 20)))
-        rbs.add(Check(self, Cible, "Cinco", (50, 200, 100), (0, 120, 20, 20)))
-        rbs.add(Check(self, Cible, "Seise", (50, 200, 100), (0, 150, 20, 20)))
+        sw2: Switch = Switch(self, Colors.CYAN, (240, 30, 50, 20), (160, 220), visible2)
+        sw2.set_callback(rbs.set_visible)
+        self.objets.append(sw2)
+
+        sw3: Switch = Switch(self, Colors.ORANGE, (440, 30, 50, 20), (160, 220), visible3)
+
+        rbs = ListBoutons(Check, (440, 70), visible=visible3, color=sw3.max_color)
+        rbs.add(Check(self, Cible, "Uno", (0, 0, 20, 20)))
+        rbs.add(Check(self, Cible, "Dos", (0, 30, 20, 20)))
+        rbs.add(Check(self, Cible, "Tres", (0, 60, 20, 20)))
+        rbs.add(Check(self, Cible, "Quatro", (0, 90, 20, 20)))
+        rbs.add(Check(self, Cible, "Cinco", (0, 120, 20, 20)))
+        rbs.add(Check(self, Cible, "Seise", (0, 150, 20, 20)))
         rbs.select(selected3)
 
+        sw3.set_callback(rbs.set_visible)
+        self.objets.append(sw3)
+        self.objets.append(rbs)
+
+        sw4: Switch = Switch(self, Colors.RED, (640, 30, 50, 20), (160, 220), True)
+
+        rbs = ListBoutons(Liste, (640, 70), visible=True, color=(250, 20, 20))
+        rbs.add(Liste(self, Tiret, "First", (0, 0, 20, 20)))
+        rbs.add(Liste(self, Tiret, "Second", (0, 30, 20, 20)))
+        rbs.add(Liste(self, Tiret, "Third", (0, 60, 20, 20)))
+        rbs.add(Liste(self, Tiret, "Fourth", (0, 90, 20, 20)))
+
+        sw4.set_callback(rbs.set_visible)
+        self.objets.append(sw4)
         self.objets.append(rbs)
 
         self.win_resize("BOTTOM RIGHT", 0, 0, *self.MIN_SIZE)
