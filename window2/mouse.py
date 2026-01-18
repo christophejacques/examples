@@ -1,5 +1,7 @@
 import pygame
+
 from time import perf_counter
+from typing import Optional
 
 
 class Mouse:
@@ -9,7 +11,7 @@ class Mouse:
     old_position = (0, 0)
     down_position = (0, 0)
     selected_object = None
-    cursor_over = None
+    cursor_over: Optional[str] = None
     time = [perf_counter()]
 
     @classmethod

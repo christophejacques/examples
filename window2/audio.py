@@ -1,3 +1,4 @@
+from typing import Callable, Optional
 import pygame
 from threading import Thread
 from time import sleep
@@ -40,7 +41,7 @@ class Audio:
         return f"APP{cls.AppliID}"
 
     @classmethod
-    def init_application(cls, application, max_channels=1):
+    def init_application(cls, application: str, max_channels: int=1):
         if application not in cls.APPLI:
             max_channels = max(0, min(max_channels, cls.MAX_CHANNELS-cls.get_reserved_channels_number()))
             cls.APPLI[application] = {}
@@ -63,7 +64,7 @@ class Audio:
                 fprint(f"Audio clos pour application '{application}'")
 
     @classmethod
-    def close_application(cls, application):
+    def close_application(cls, application: str):
         for idx, channel in cls.APPLI[application]["CHANNELS"].items():
             if cls.DEBUG:
                 fprint("stop channel", idx, "pour :", application)
@@ -73,7 +74,7 @@ class Audio:
             fprint(f"Audio clos pour application '{application}'")
 
     @classmethod
-    def stop_all_channels_application(cls, application):
+    def stop_all_channels_application(cls, application: str):
         for idx, channel in cls.APPLI[application]["CHANNELS"].items():
             if cls.DEBUG:
                 fprint("stop channel", idx, "pour :", application)
@@ -85,7 +86,7 @@ class Audio:
             cls.remove_appli_unused_sound_channels(application)
 
     @classmethod
-    def remove_appli_unused_sound_channels(cls, application):
+    def remove_appli_unused_sound_channels(cls, application: str):
         channels_to_del = []
         for idx, channel in cls.APPLI[application]["CHANNELS"].items():
             if not channel.get_busy():
@@ -98,33 +99,33 @@ class Audio:
             cls.APPLI[application]["CHANNELS"].pop(idx)
 
     @classmethod
-    def set_channel_volume(cls, application, idx, volume):
+    def set_channel_volume(cls, application: str, idx: int, volume: float):
         if application in cls.APPLI:
             if idx in cls.APPLI[application]["CHANNELS"]:
                 cls.APPLI[application]["CHANNELS"][idx].set_volume(volume)
 
     @classmethod
-    def set_sound_volume(cls, application, idx, volume):
+    def set_sound_volume(cls, application: str, idx: int, volume: float):
         if application in cls.APPLI:
             if idx in cls.APPLI[application]["SOUNDS"]:
                 cls.APPLI[application]["SOUNDS"][idx].set_volume(volume)
 
     @classmethod
-    def get_channel_volume(cls, application, idx):
+    def get_channel_volume(cls, application: str, idx: int):
         if application in cls.APPLI:
             if idx in cls.APPLI[application]["CHANNELS"]:
                 return cls.APPLI[application]["CHANNELS"][idx].get_volume()
         return 0
 
     @classmethod
-    def get_sound_volume(cls, application, idx):
+    def get_sound_volume(cls, application: str, idx: int):
         if application in cls.APPLI:
             if idx in cls.APPLI[application]["SOUNDS"]:
                 return cls.APPLI[application]["SOUNDS"][idx].get_volume()
         return 0
 
     @classmethod
-    def channel_fadeout(cls, application, idx, time):
+    def channel_fadeout(cls, application: str, idx: int, time):
         if application in cls.APPLI:
             if idx in cls.APPLI[application]["CHANNELS"]:
                 cls.APPLI[application]["CHANNELS"][idx].fadeout(time)
@@ -142,7 +143,7 @@ class Audio:
             cls.unmute_application(application)
 
     @classmethod
-    def mute_application(cls, application):
+    def mute_application(cls, application: str):
         if application in cls.APPLI:
             if len(cls.APPLI[application]["SNDMUTE"]) == 0:
                 for snd_idx in cls.APPLI[application]["SOUNDS"]:
@@ -151,7 +152,7 @@ class Audio:
                     cls.APPLI[application]["SOUNDS"][snd_idx].set_volume(0)
 
     @classmethod
-    def unmute_application(cls, application):
+    def unmute_application(cls, application: str):
         if application in cls.APPLI:
             for snd_idx in cls.APPLI[application]["SNDMUTE"]:
                 snd_volume = cls.APPLI[application]["SOUNDS"][snd_idx].get_volume()
@@ -161,13 +162,13 @@ class Audio:
             cls.APPLI[application]["SNDMUTE"].clear()
 
     @classmethod
-    def sound_fadeout(cls, application, idx, time):
+    def sound_fadeout(cls, application: str, idx: int, time):
         if application in cls.APPLI:
             if idx in cls.APPLI[application]["SOUNDS"]:
                 cls.APPLI[application]["SOUNDS"][idx].fadeout(time)
 
     @classmethod
-    def unload_sound(cls, application, idx):
+    def unload_sound(cls, application: str, idx: int):
         if application in cls.APPLI:
             if idx in cls.APPLI[application]["SOUNDS"]:
                 if cls.DEBUG:
@@ -175,7 +176,7 @@ class Audio:
                 cls.APPLI[application]["SOUNDS"].pop(idx)
 
     @classmethod
-    def load_sound(cls, application, sound_file, volume=1):
+    def load_sound(cls, application: str, sound_file: str, volume: float=1):
         if application in cls.APPLI:
             idx = cls.APPLI[application]["sound_index"]
             if cls.DEBUG:
@@ -198,13 +199,13 @@ class Audio:
         return False
 
     @classmethod
-    def wait_channel(cls, channel, callback):
+    def wait_channel(cls, channel, callback: Callable):
         while channel.get_busy():
             sleep(0.5)
         callback()
 
     @classmethod
-    def play_sound(cls, application, idx, callback=None):
+    def play_sound(cls, application: str, idx: int, callback: Optional[Callable]=None):
         if application in cls.APPLI:
             if idx in cls.APPLI[application]["SOUNDS"] and (
               len(cls.APPLI[application]["CHANNELS"]) < cls.APPLI[application]["max_channels"]):
@@ -224,7 +225,7 @@ class Audio:
             callback()
                         
     @classmethod
-    def channel_action(cls, action, application, idx):
+    def channel_action(cls, action: str, application: str, idx: int):
         if application in cls.APPLI:
             if idx in cls.APPLI[application]["CHANNELS"]:
                 if action.upper() == "STOP":

@@ -7,8 +7,8 @@ from audio import Audio
 from mouse import Mouse
 from keyboard import Keyboard
 from colors import Colors
-from classes import Application, SysTray, Variable, Tools, get_all_classes, Theme, Registres, fprint
-from typing import Tuple, Optional
+from classes import Application, Irq, Irqs, SysTray, Variable, Tools, get_all_classes, Theme, Registres, fprint
+from typing import Callable, Tuple, Optional
 
 
 SYS_FONT: pygame.font.Font
@@ -22,11 +22,11 @@ def get_pygame_const_name(index):
 
 
 class Icone:
-    ICONE_WIDTH = 80
-    ICONE_HEIGHT = 60
-    ICONE_DECAL = 50
+    ICONE_WIDTH: int = 80
+    ICONE_HEIGHT: int = 60
+    ICONE_DECAL: int = 50
 
-    def __init__(self, screen, title, couleur, x, y, app, *args):
+    def __init__(self, screen: pygame.Surface, title: str, couleur: Tuple, x: int, y: int, app: Application, *args):
         self.title = title
         self.couleur = couleur
         self.app = app
@@ -49,17 +49,17 @@ class Icone:
     def update_theme(self):
         self.text_surf = SYS_FONT.render(self.title, False, Theme.get("FORE_COLOR"))
 
-    def move(self, dx=0, dy=0, liste_icones=None):
+    def move(self, dx: int=0, dy: int=0, liste_icones=None):
         if dx or dy:
             w, h = self.screen_surf.get_size()
-            if self.icone_rect[0] + dx < 0:
-                dx = -self.icone_rect[0]
-            if self.icone_rect[1] + dy < 0:
-                dy = -self.icone_rect[1]
-            if dx + self.icone_rect[0] + self.icone_rect[2] > w:
-                dx = w - self.icone_rect[0] - self.icone_rect[2] 
-            if dy + self.icone_rect[1] + self.icone_rect[3] > h:
-                dy = h - self.icone_rect[1] - self.icone_rect[3] 
+            if self.icone_rect.x + dx < 0:
+                dx = -self.icone_rect.x
+            if self.icone_rect.y + dy < 0:
+                dy = -self.icone_rect.y
+            if dx + self.icone_rect.x + self.icone_rect.w > w:
+                dx = w - self.icone_rect.x - self.icone_rect.w
+            if dy + self.icone_rect.y + self.icone_rect.h > h:
+                dy = h - self.icone_rect.y - self.icone_rect.h
 
             self.icone_rect = self.icone_rect.move(dx, dy)
             self.title_rect = self.title_rect.move(dx, dy)
@@ -77,7 +77,7 @@ class Icone:
                 # Pas de collision avec les autres icones sur le bureau
                 self.dest_rect = dest_rect
 
-    def move_ip(self, x, y):
+    def move_ip(self, x: int, y: int):
         self.icone_rect = pygame.Rect(x, y, Icone.ICONE_WIDTH, Icone.ICONE_HEIGHT)
         self.dest_rect = self.icone_rect
         self.title_rect = pygame.Rect(x, Icone.ICONE_HEIGHT+y, Icone.ICONE_WIDTH, Icone.ICONE_HEIGHT)
@@ -90,73 +90,7 @@ class Icone:
             pygame.draw.rect(self.icone_surf, Colors.WHITE, (0, 0, self.ICONE_WIDTH, self.ICONE_HEIGHT), 1)
         self.screen_surf.blit(self.text_surf, self.title_rect)
 
-
-class Tache:
-    TASK_HEIGHT = 0
-    TASK_WIDTH_MAX = 200
-    TASK_WIDTH = TASK_WIDTH_MAX
-    TASK_SELECT_HEIGHT = 3
-    TASK_ICONE_SIZE = 20
-    TASK_TITLE_BORDER = 5
-
-    TASK_BUTTON_BACK_COLOR = (80, 80, 80)
-    TASK_SELECTED_BUTTON_BACK_COLOR = (50, 50, 50)
-    TASK_ERROR_BUTTON_BACK_COLOR = (250, 50, 50)
-
-    def __init__(self, screen, title, couleur, x, window):
-        self.update_screen(screen)
-        self.title = title
-        self.window = window
-        self.mouse_over = False
-        self.set_pos(x)
-        self.get_theme()
-
-    def get_theme(self):
-        self.text_surf = SYS_FONT.render(self.title, False, Theme.get("FORE_COLOR"))
-        if self.window.on_error:
-            self.couleur = Window.THEME_ERROR_COLOR
-        else:
-            self.couleur = Tache.TASK_BUTTON_BACK_COLOR
-
-    def update_screen(self, screen):
-        self.screen_surf = screen
-
-    def set_pos(self, x):
-        self.posx = x
-        self.tache_rect = pygame.Rect(self.posx, 0, Tache.TASK_WIDTH, Tache.TASK_HEIGHT)
-        self.tache_button_rect = self.tache_rect.clip(
-            (self.posx, 0), (Tache.TASK_WIDTH, Tache.TASK_HEIGHT-Tache.TASK_SELECT_HEIGHT))
-        self.title_rect = self.tache_button_rect.clip(
-            (self.posx+Tache.TASK_ICONE_SIZE, Tache.TASK_TITLE_BORDER), 
-            (Tache.TASK_WIDTH-Tache.TASK_ICONE_SIZE, Tache.TASK_HEIGHT-Tache.TASK_SELECT_HEIGHT))
-        self.tache_select_rect = self.tache_rect.clip(
-            (self.posx, Tache.TASK_HEIGHT-Tache.TASK_SELECT_HEIGHT), (Tache.TASK_WIDTH, Tache.TASK_SELECT_HEIGHT))
-
-        self.tache_button_surf = self.screen_surf.subsurface(self.tache_button_rect)
-        self.tache_select_surf = self.screen_surf.subsurface(self.tache_select_rect)
-
-    def set_title(self, title):
-        self.title = title
-        self.text_surf = SYS_FONT.render(self.title, False, Theme.get("FORE_COLOR"))
-
-    def update(self):
-        if self.window.on_error and self.couleur != Window.THEME_ERROR_COLOR:
-            self.couleur = Window.THEME_ERROR_COLOR
-    
-    def draw(self):
-        if self.window.active:
-            if self.window.on_error:
-                self.tache_button_surf.fill(Tache.TASK_ERROR_BUTTON_BACK_COLOR)
-            else:
-                self.tache_button_surf.fill(Tache.TASK_SELECTED_BUTTON_BACK_COLOR)
-        else:
-            self.tache_button_surf.fill(self.couleur)
-
-        if self.mouse_over:
-            self.tache_select_surf.fill(Colors.CYAN)
-        self.screen_surf.blit(self.text_surf, self.title_rect)
-
-
+        
 class Window:
 
     ICONE_WIDTH = 30
@@ -167,14 +101,18 @@ class Window:
     THEME_INACTIVE_COLOR = (130, 130, 150, 50)
     THEME_ERROR_COLOR = (200, 20, 20)
 
-    def __init__(self, x, y, w, h, text, colour, app, *args):
+    app: Application
+    statut: list
+    sounds: dict
+
+    def __init__(self, x: int, y: int, w: int, h: int, text: str, colour: Tuple, app: Application, *args) -> None:
         self.app = app
         self.sound_id = None
         self.active = True
         self.mouse_over = False
         self.mouse_over_window_draw = False
         self.properties = self.app.WINDOW_PROPERTIES
-        sound_property = self.search_for_in("SOUND", self.properties)
+        sound_property: str = str(self.search_for_in("SOUND", self.properties))
         if sound_property:
             # print("Activate", sound_property)
             if "(" in sound_property and ")" in sound_property:
@@ -202,7 +140,7 @@ class Window:
             print("Window.__init__() Error:", e)
             traceback.print_exc()
 
-    def set_size(self, x, y, w, h, update_app=True):
+    def set_size(self, x: int, y: int, w: int, h: int, update_app=True):
         self.border_size = 0 if self.last_statut() == "MAXIMIZED" else self.WINDOW_BORDER_SIZE
 
         # creation surfaces d'affichage
@@ -249,10 +187,10 @@ class Window:
 
         self.set_surface_color()
 
-    def resize(self, direction, dx=0, dy=0, width=None, height=None):
+    def resize(self, direction: str, dx: int=0, dy: int=0, width: Optional[int]=None, height: Optional[int]=None) -> None:
         # print(f"{dx=}, {dy=}, {width=}, {height=}", flush=True)
         x, y = self.window.topleft
-        if not width is None:
+        if not width is None and not height is None :
             self.set_size(x, y, width, height)
             return 
             
@@ -287,12 +225,12 @@ class Window:
                 return val
         return False
 
-    def load_sound(self, fichier, volume) -> Optional[int]:
+    def load_sound(self, fichier: str, volume: float) -> Optional[int]:
         if not self.sound_id:
             return False
         return Audio.load_sound(self.sound_id, fichier, volume)
 
-    def play_sound(self, index, callback=None):
+    def play_sound(self, index, callback: Optional[Callable]=None):
         if self.sound_id:
             Audio.play_sound(self.sound_id, index, callback)
         return False
@@ -342,7 +280,7 @@ class Window:
         pygame.draw.line(self.close_surf, self.theme_color((0, 0, 0), (60, 60, 60)), (12, 7), (19, 13), 3)
         pygame.draw.line(self.close_surf, self.theme_color((0, 0, 0), (60, 60, 60)), (12, 13), (19, 7), 3)
 
-    def set_title(self, title):
+    def set_title(self, title: str):
         self.title = title
         self.text_surf = SYS_FONT.render(self.title, False, (255, 255, 255))
 
@@ -350,7 +288,7 @@ class Window:
         self.on_error = True
         self.set_surface_color()
 
-    def theme_color(self, active_color=None, inactive_color=None, check_error=False):
+    def theme_color(self, active_color: Optional[Tuple]=None, inactive_color: Optional[Tuple]=None, check_error: bool=False):
         if check_error and self.on_error:
             return self.THEME_ERROR_COLOR
             
@@ -386,7 +324,7 @@ class Window:
         else:
             return None
 
-    def view_key(self, which_one):
+    def view_key(self, which_one: str):
         if self.active:
             if which_one.lower() == "LAST":
                 return Keyboard.view_last_key()
@@ -415,7 +353,7 @@ class Window:
             screen_size = pygame.display.get_window_size()
             self.set_size(0, 0, screen_size[0], screen_size[1]-OperatingSystem.TASK_BAR_HEIGHT)
 
-    def move(self, x=0, y=0):
+    def move(self, x: int=0, y: int=0):
         if x or y:
             self.window = self.window.move(x, y)
             self.window_draw = self.window_draw.move(x, y)
@@ -438,7 +376,7 @@ class Window:
                 self.set_error()
                 print("Window.update() Error:", e)
 
-    def draw(self, screen_surf):
+    def draw(self, screen_surf: pygame.Surface):
         if self.last_statut() != "MINIMIZED":
             screen_surf.blit(self.window_surf, self.window)
             # if self.mouse_over:
@@ -465,12 +403,78 @@ class Window:
             Audio.close_application(self.sound_id)
             
 
+class Tache:
+    TASK_HEIGHT: int = 0
+    TASK_WIDTH_MAX: int = 200
+    TASK_WIDTH: int = TASK_WIDTH_MAX
+    TASK_SELECT_HEIGHT: int = 3
+    TASK_ICONE_SIZE: int = 20
+    TASK_TITLE_BORDER: int = 5
+
+    TASK_BUTTON_BACK_COLOR: Tuple = (80, 80, 80)
+    TASK_SELECTED_BUTTON_BACK_COLOR: Tuple = (50, 50, 50)
+    TASK_ERROR_BUTTON_BACK_COLOR: Tuple = (250, 50, 50)
+
+    def __init__(self, screen: pygame.Surface, title: str, x: int, window: Window):
+        self.update_screen(screen)
+        self.title = title
+        self.window = window
+        self.mouse_over = False
+        self.set_pos(x)
+        self.get_theme()
+
+    def get_theme(self):
+        self.text_surf = SYS_FONT.render(self.title, False, Theme.get("FORE_COLOR"))
+        if self.window.on_error:
+            self.couleur = Window.THEME_ERROR_COLOR
+        else:
+            self.couleur = Tache.TASK_BUTTON_BACK_COLOR
+
+    def update_screen(self, screen: pygame.Surface):
+        self.screen_surf = screen
+
+    def set_pos(self, x: int):
+        self.posx = x
+        self.tache_rect = pygame.Rect(self.posx, 0, Tache.TASK_WIDTH, Tache.TASK_HEIGHT)
+        self.tache_button_rect = self.tache_rect.clip(
+            (self.posx, 0), (Tache.TASK_WIDTH, Tache.TASK_HEIGHT-Tache.TASK_SELECT_HEIGHT))
+        self.title_rect = self.tache_button_rect.clip(
+            (self.posx+Tache.TASK_ICONE_SIZE, Tache.TASK_TITLE_BORDER), 
+            (Tache.TASK_WIDTH-Tache.TASK_ICONE_SIZE, Tache.TASK_HEIGHT-Tache.TASK_SELECT_HEIGHT))
+        self.tache_select_rect = self.tache_rect.clip(
+            (self.posx, Tache.TASK_HEIGHT-Tache.TASK_SELECT_HEIGHT), (Tache.TASK_WIDTH, Tache.TASK_SELECT_HEIGHT))
+
+        self.tache_button_surf = self.screen_surf.subsurface(self.tache_button_rect)
+        self.tache_select_surf = self.screen_surf.subsurface(self.tache_select_rect)
+
+    def set_title(self, title: str):
+        self.title = title
+        self.text_surf = SYS_FONT.render(self.title, False, Theme.get("FORE_COLOR"))
+
+    def update(self):
+        if self.window.on_error and self.couleur != Window.THEME_ERROR_COLOR:
+            self.couleur = Window.THEME_ERROR_COLOR
+    
+    def draw(self):
+        if self.window.active:
+            if self.window.on_error:
+                self.tache_button_surf.fill(Tache.TASK_ERROR_BUTTON_BACK_COLOR)
+            else:
+                self.tache_button_surf.fill(Tache.TASK_SELECTED_BUTTON_BACK_COLOR)
+        else:
+            self.tache_button_surf.fill(self.couleur)
+
+        if self.mouse_over:
+            self.tache_select_surf.fill(Colors.CYAN)
+        self.screen_surf.blit(self.text_surf, self.title_rect)
+
+
 class OperatingSystem:
-    TASK_BAR_HEIGHT = 25
-    TASK_BAR_DECAL = 1
-    TASK_BAR_MENU_WIDTH = 3
-    NEW_WINDOW_DECAL = 30
-    TASK_BAR_COLOR = (20, 20, 20, 100)
+    TASK_BAR_HEIGHT: int = 25
+    TASK_BAR_DECAL: int = 1
+    TASK_BAR_MENU_WIDTH: int = 3
+    NEW_WINDOW_DECAL: int = 30
+    TASK_BAR_COLOR: Tuple = (20, 20, 20, 100)
 
     def __init__(self):
         global SYS_FONT
@@ -481,6 +485,7 @@ class OperatingSystem:
         self.running = True
         Tache.TASK_HEIGHT = OperatingSystem.TASK_BAR_HEIGHT
         self.registre = Registres("OS")
+        self.irqs = Irqs()
 
         Audio.init(False)
         Theme.set_theme("SOMBRE")
@@ -522,7 +527,7 @@ class OperatingSystem:
             if fenetre.last_statut() == "MAXIMIZED":
                 fenetre.set_size(0, 0, screen_size[0], screen_size[1]-OperatingSystem.TASK_BAR_HEIGHT)
 
-    def update_systrays_positions(self):
+    def update_systrays_positions(self) -> None:
         total: int = 0
         width, height = self.barre_taches.get_size()
         for systray in self.liste_systray:
@@ -588,7 +593,7 @@ class OperatingSystem:
     def close_all_icones(self):
         self.liste_icones.clear()
 
-    def create_icone(self, title, couleur, app, *args):
+    def create_icone(self, title: str, couleur: Tuple, app: Application, *args):
         trouve = False
         if self.saved_icones_position.get(app.__name__, False):
             self.ico_posX, self.ico_posY = self.saved_icones_position.get(app.__name__)
@@ -618,9 +623,12 @@ class OperatingSystem:
             # print(systray.registre.get_all())
             systray.registre.save_file()
 
+            # Suppression de l'enregistrement des interruptions
+            self.irqs.close_application(systray.DEFAULT_CONFIG[0])
+
         self.liste_systray.clear()
 
-    def load_systrays(self):
+    def load_systrays(self) -> None:
         total: int = 0
         classes: list = []
         for une_classe in get_all_classes("SysTray"):
@@ -671,7 +679,7 @@ class OperatingSystem:
                 self.update_systrays_positions()
                 return
 
-    def open(self, title, couleur, app, *args):
+    def open(self, title: str, couleur: Tuple, app: Application, *args):
         # Check si la fenetre est unique
         if "UNIQUE" in app.WINDOW_PROPERTIES:
             for fenetre in self.liste_fenetres:
@@ -709,7 +717,7 @@ class OperatingSystem:
                                    (1+len(self.liste_taches)) - self.TASK_BAR_DECAL
         
         self.resize_taches()
-        tache = Tache(self.barre_taches, title, couleur, 
+        tache = Tache(self.barre_taches, title, 
             self.TASK_BAR_MENU_WIDTH+len(self.liste_taches)*(Tache.TASK_WIDTH+self.TASK_BAR_DECAL), fenetre)
         self.liste_taches.append(tache)
 
@@ -728,7 +736,7 @@ class OperatingSystem:
                     fenetre.set_error()
                     print("mouse_move Error:", e)
 
-    def calculate_tache_position(self, index):
+    def calculate_tache_position(self, index: int):
         for i, tache in enumerate(self.liste_taches[index:]):
             tache.set_pos(self.TASK_BAR_MENU_WIDTH+(index+i)*(Tache.TASK_WIDTH+self.TASK_BAR_DECAL))
 
@@ -739,7 +747,7 @@ class OperatingSystem:
     def resize_taches(self):
         self.calculate_tache_position(0)
 
-    def close_tache(self, fenetre):
+    def close_tache(self, fenetre: Window):
         for i, tache in enumerate(self.liste_taches):
             if tache.window == fenetre:
                 self.liste_taches.pop(i)
@@ -756,13 +764,14 @@ class OperatingSystem:
                     self.calculate_tache_position(i)
                 break
 
-    def close(self, fenetre):
+    def close(self, fenetre: Window):
         if fenetre:
             try:
                 fenetre.close()
             except Exception as erreur:
                 print("Erreur:", erreur, flush=True)
 
+            self.irqs.close_application(fenetre.app.DEFAULT_CONFIG[0])
             self.close_tache(fenetre)
             self.liste_fenetres.remove(fenetre)
             self.activate_last_window()
@@ -785,7 +794,7 @@ class OperatingSystem:
         for f in self.liste_fenetres:
             f.active = False
 
-    def activate_window(self, fenetre):
+    def activate_window(self, fenetre: Window):
         for i, f in enumerate(self.liste_fenetres):
             if f == fenetre:
                 if not f.active:
@@ -889,6 +898,14 @@ class OperatingSystem:
                     self.update_systray_pos()
                     if callback:
                         callback()
+
+                case ["AUDIO", "MUTE_ALL"]:
+                    Audio.mute_all_applications()
+                    self.irqs.run(Irq.MUTE_AUDIO)
+
+                case ["AUDIO", "UNMUTE_ALL"]:
+                    Audio.unmute_all_applications()
+                    self.irqs.run(Irq.UNMUTE_AUDIO)
 
     def get_windows_actions(self):
         for fenetre in self.liste_fenetres:
@@ -1004,7 +1021,7 @@ class OperatingSystem:
         pygame.display.update()
         self.clock.tick(60)  # Limit the frame rate to 60 FPS.
 
-    def mouse_button_down(self, mouse_position, mouse_button):
+    def mouse_button_down(self, mouse_position: Tuple, mouse_button: int):
         window_spotted = False
         Mouse.left_button_down = True
         self.icone_catched_by_mouse = None
@@ -1041,7 +1058,7 @@ class OperatingSystem:
         if not window_spotted and self.liste_icones:
             self.icone_catched_by_mouse = self.get_icone_mouse_over()
 
-    def mouse_button_up(self, mouse_position, mouse_button):
+    def mouse_button_up(self, mouse_position: Tuple, mouse_button: int):
         Mouse.left_button_down = False
         Mouse.right_button_down = False
         self.window_catch_by_mouse = None
@@ -1132,7 +1149,7 @@ class OperatingSystem:
 
         Mouse.set_pos(mouse_position)
 
-    def mouse_wheel(self, dx, dy):
+    def mouse_wheel(self, dx: int, dy: int):
         fen_active = self.get_active_window()
         if fen_active:
             try:
@@ -1141,7 +1158,7 @@ class OperatingSystem:
                 fen_active.set_error()
                 print("Erreur:", erreur, flush=True)
 
-    def mouse_move(self, mouse_position):
+    def mouse_move(self, mouse_position: Tuple):
         window_spotted = False
         mx, my = Mouse.get_pos()
         if self.icone_catched_by_mouse:
@@ -1291,7 +1308,7 @@ class OperatingSystem:
 
         Mouse.set_pos(mouse_position)
 
-    def mouse_enter_leave(self, check_mouse_over=True):
+    def mouse_enter_leave(self, check_mouse_over: bool=True):
         # Mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
         Mouse.cursor_over = None
         self.unselect_all_taches()

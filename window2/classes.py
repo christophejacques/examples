@@ -3,6 +3,9 @@ import json
 
 from abc import abstractmethod, ABCMeta
 from os import path
+from typing import Callable, Optional
+from functools import partial
+from enum import Enum, auto
 
 from mouse import Mouse
 # from os.path import sep as separateur
@@ -11,6 +14,139 @@ from mouse import Mouse
 def fprint(*args, **kwargs):
     print(*args, **kwargs, flush=True)
     
+
+class Irq(Enum):
+    CLOSE = auto()
+    KILL = auto()
+
+    AUDIO = auto()
+    MUTE_AUDIO = auto()
+    UNMUTE_AUDIO = auto()
+
+
+class Irqs:
+
+    __irqs: dict = dict()
+
+    @classmethod
+    def initialize(cls):
+        cls.__irqs = dict()
+
+    @classmethod
+    def open(cls):
+        cls.initialize()
+
+    @classmethod
+    def close(cls):
+        cls.initialize()
+
+    @classmethod
+    def register(cls, irq: Irq, application: str, callback: Callable, *args):
+
+        if irq not in Irq:
+            raise Exception(f"L'interruption {irq} n'est pas définie")
+
+        if cls.__irqs.get(irq, None) is None:
+            cls.__irqs[irq] = dict()
+        
+        fonction = partial(callback, *args)
+        cls.__irqs[irq][application] = fonction
+
+    @classmethod
+    def unregister(cls, irq: Irq, application: str):
+        if cls.__irqs.get(irq, {}).get(application, False):
+            del cls.__irqs[irq][application]
+        else:
+            raise Exception(f"L'interruption {irq} n'a pas été enregistrée.")
+
+    @classmethod
+    def has(cls, irq: Irq, application: str):
+        return application in cls.__irqs.get(irq, {}).keys()
+
+    @classmethod
+    def run(cls, irq: Irq):
+        for application in cls.__irqs.get(irq, {}):
+            fonction = cls.__irqs.get(irq, {}).get(application)
+            if fonction:
+                fonction()
+
+    @classmethod
+    def close_application(cls, application: str):
+        application_founded: bool = False
+        for irq in cls.__irqs:
+            if application in cls.__irqs[irq]:
+                del cls.__irqs[irq][application]
+                application_founded = True
+            
+        # if application_founded:
+        #     print(f"Interruptions for {application} removed.", flush=True)
+
+
+class Interrupts:
+
+    __application: str
+
+    def __init__(self, application: str):
+        self.__application = application
+
+    def register(self, irq: Irq, callback: Callable, *args):
+        Irqs.register(irq, self.__application, callback, *args)
+
+    def unregister(self, irq: Irq):
+        Irqs.unregister(irq, self.__application)
+
+    def close(self):
+        Irqs.close_application(self.__application)
+
+
+def test_interrupts():
+
+    class Window:
+        def __init__(self, nom):
+            self.nom = nom
+
+        def interrupt(self, *args):
+            print(self.nom, "interrupted by", *args)
+
+
+    w1 = Window("Firework")
+    w2 = Window("Calculatrice")
+    w3 = Window("Snake")
+    w4 = Window("Starfield")
+
+    i = Interrupts(w1.nom)
+    i.register(Irq.AUDIO, w1.interrupt, "AUDIO")
+    i.register(Irq.MUTE_AUDIO, w1.interrupt, "MUTE_AUDIO")
+    i.register(Irq.UNMUTE_AUDIO, w1.interrupt, "UNMUTE_AUDIO")
+
+    j = Interrupts(w2.nom)
+    j.register(Irq.AUDIO, w2.interrupt, "AUDIO")
+    j.register(Irq.MUTE_AUDIO, w2.interrupt, "MUTE_AUDIO")
+
+    k = Interrupts(w3.nom)
+    k.register(Irq.AUDIO, w3.interrupt, "AUDIO")
+
+    l = Interrupts(w4.nom)
+    l.register(Irq.AUDIO, w4.interrupt, "AUDIO")
+    l.close()
+
+    i.unregister(Irq.AUDIO)
+    try:
+        i.unregister(Irq.AUDIO)
+    except Exception as e:
+        print("ERROR>>", e)
+
+    os_irqs = Irqs()
+    os_irqs.close_application(w2.nom)
+
+    os_irqs.run(Irq.AUDIO)
+    os_irqs.run(Irq.MUTE_AUDIO)
+    os_irqs.run(Irq.UNMUTE_AUDIO)
+
+
+# test_interrupts()
+# exit()
+
 
 class Registres:
     __filename: str = "registres.json"
@@ -263,6 +399,7 @@ class SysTray(metaclass=ABCMeta):
     tools: Tools
     theme: Theme
     registre: Registres
+    interrupt: Interrupts
 
     PRIORITY = 99
     DEFAULT_CONFIG = ("?", (0, 0, 0))
@@ -275,6 +412,7 @@ class SysTray(metaclass=ABCMeta):
     def __init__(self, color):
         self.theme = Theme()
         self.registre = Registres(self.DEFAULT_CONFIG[0])
+        self.interrupt = Interrupts(self.DEFAULT_CONFIG[0])
 
     def __init_screen__(self, screen):
         self.tools = Tools(screen)
@@ -343,6 +481,7 @@ class Application(metaclass=ABCMeta):
         self.sound = Sound(window)
         self.theme = Theme()
         self.registre = Registres(self.DEFAULT_CONFIG[0])
+        self.interrupt = Interrupts(self.DEFAULT_CONFIG[0])
         self.mouse = Mouse()
 
         # window = Variable.window

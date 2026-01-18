@@ -1,6 +1,5 @@
-from classes import SysTray, get_all_classes
+from classes import SysTray, get_all_classes, Irq
 from datetime import datetime
-from audio import Audio
 
 
 class SysTrayOff:
@@ -94,14 +93,30 @@ class SoundView(SysTray):
     DEFAULT_CONFIG = ("Sound", (50, 200, 50))
     INITIAL_WIDTH = 25
 
+    audio_on: bool
+    action: str
+
     def __init__(self, couleur):
         self.systray_width = 25
         self.etat = 1
+        self.audio_on = True
+        self.action = ""
 
     def post_init(self):
         self.update_screen()
         self.get_theme()
         self.SYS_FONT = self.tools.font("comicsans", 12)
+
+        self.interrupt.register(Irq.MUTE_AUDIO, self.check_irq, "MUTE")
+        self.interrupt.register(Irq.UNMUTE_AUDIO, self.check_irq, "UNMUTE")
+
+    def check_irq(self, code):
+        match code:
+            case "MUTE":
+                self.audio_on = False
+
+            case "UNMUTE":
+                self.audio_on = True
 
     def get_theme(self):
         if self.theme.get_theme() == "CLAIR":
@@ -124,11 +139,16 @@ class SoundView(SysTray):
         self.etat += 1
         if self.etat > 2:
             self.etat = 1
-        self.format, mute_unmute = {
-            1: ("  <)  ", Audio.unmute_all_applications),
-            2: (" <X)  ", Audio.mute_all_applications)
-        }[self.etat]
-        mute_unmute()
+        
+        if self.etat == 1:
+            self.action = "AUDIO:UNMUTE_ALL"
+        else:
+            self.action = "AUDIO:MUTE_ALL"
+
+    def get_action(self) -> str:
+        action = self.action
+        self.action = ""
+        return action
 
     def update(self):        
         self.systray_rect = self.tools.Rect(0, 0, self.systray_width, 25)
@@ -142,7 +162,7 @@ class SoundView(SysTray):
         points = [(x, 12), (x+6, 7), (x+6, 17)]
         self.tools.polygon(self.couleur, points, 1)
 
-        color = self.inactive_couleur if Audio.MUTE else self.couleur
+        color = self.couleur if self.audio_on else self.inactive_couleur
         x += 8
         for i in range(3):
             self.tools.line(color, (x+2*i, y-2*i), (x+2*i, y+h+2*i))
