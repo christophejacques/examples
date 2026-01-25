@@ -1,0 +1,60 @@
+{
+    "operator": "OR",
+    "components":
+    [
+        {
+            "fonction": "is_admin"
+        },
+        {
+            "operator": "AND",
+            "components":
+            [
+                {
+                    "fonction": "is_active"
+                },
+                {
+                    "fonction": "account_older_than",
+                    "args":
+                    [
+                        30
+                    ]
+                },
+                {
+                    "operator": "NOT",
+                    "components":
+                    [
+                        {
+                            "fonction": "is_banned"
+                        }
+                    ]
+                },
+                {
+                    "fonction": "from_country",
+                    "args":
+                    [
+                        [
+                            "NL",
+                            "BE"
+                        ]
+                    ]
+                },
+                {
+                    "operator": "OR",
+                    "components":
+                    [
+                        {
+                            "fonction": "credit_score_above",
+                            "args":
+                            [
+                                650
+                            ]
+                        },
+                        {
+                            "fonction": "has_override"
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}
