@@ -3,10 +3,6 @@ from json import load
 from pprint import pprint
 
 
-with open("rule_test.json") as file_handle:
-    rules = load(file_handle)
-
-
 def decodage_regle(source: dict, operator: Optional[str]=None):
     result: str = ""
     first: bool = True
@@ -43,6 +39,9 @@ def decodage_regle(source: dict, operator: Optional[str]=None):
     return result
 
 try:
+    with open("rule_test.json") as file_handle:
+        rules = load(file_handle)
+
     print(decodage_regle(rules))
 except Exception as e:
     print(e)

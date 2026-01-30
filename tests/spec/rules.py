@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 import json
-from functools import wraps
-from typing import Any, Callable
+from functools import wraps, partial
+from typing import Any, Callable, Optional
 
 
 # ------------------------------------------------------------
@@ -67,62 +67,115 @@ def rule[T](fn: RuleDef) -> PredicateFactory[Any]:
     return wrapper
 
 
-# ------------------------------------------------------------
-# Config Loader
-# ------------------------------------------------------------
-def load_rule_from_config(path: str) -> Predicate[Any]:
-    """
-    Load a rule from a JSON config file that looks like:
-    The returned object is a composed Predicate[Any].
-    """
+def eprint(*args, **kwargs):
+    print(*args, **kwargs, end="")
 
+
+# ------------------------------------------------------------
+# Recursive Config Loader
+# ------------------------------------------------------------
+def decodage_regle(source: dict, operator: Optional[str]=None) -> Predicate[Any]:
+    result: Optional[Predicate[Any]] = None
+    first: bool = True
+
+    if isinstance(source, dict):
+        operator = source.get("operator")
+        if operator:
+            # gestion des operateurs
+            if operator == "NOT":
+                if result is None:
+                    result = decodage_regle(source.get("components", []), operator)
+                else:
+                    raise Exception("Erreur", "NOT operateur non utilisable")
+
+            elif operator == "AND":
+                decode = decodage_regle(source.get("components", []), operator)
+                if result is None:
+                    result = decode
+                else:
+                    result = result & decode
+
+            elif operator == "OR":
+                decode = decodage_regle(source.get("components", []), operator)
+                if result is None:
+                    result = decode
+                else:
+                    result = result | decode
+
+            else:
+                raise Exception("Erreur", f"operateur inconnu {operator}")
+
+        else:
+            raise Exception("Erreur", "pas d'operateur")
+
+    elif isinstance(source, list):
+
+        for element in source:
+            # gestion des fonctions
+            fonc_name = element.get("fonction")
+            if first:
+                eprint("(")
+                eprint("NOT " if operator == "NOT" else "")
+                eprint(fonc_name)
+            else:
+                eprint("", operator, "" if fonc_name is None else fonc_name)
+
+            if fonc_name is None:
+                # c'est un operateur NOT, OR ou AND
+                if operator == "NOT":
+                    if not first:
+                        raise Exception("il y a plus d'une expression pour NOT")
+
+                    result = decodage_regle(source.get("components", []), operator)
+                    print(result.fn)
+
+                elif operator == "AND":
+                    result = result & decodage_regle(element)
+                elif operator == "OR":
+                    result = result | decodage_regle(element)
+                else:
+                    raise Exception("Erreur", f"operateur inconnu {operator}")
+
+            else:
+                # c'est une fonction
+                args = tuple(element.get("args",()))
+                eprint(args)
+
+                factory = RULES[fonc_name]
+                fonction = factory(*args)
+
+                if first:
+                    if operator == "NOT":
+                        result = ~ fonction
+                    else:
+                        result = fonction
+
+                elif operator == "AND":
+                    result = result & fonction
+                elif operator == "OR":
+                    result = result | fonction
+                else:
+                    raise Exception("Erreur", f"operateur inconnu {operator}")
+
+
+            first = False
+
+        eprint(")")
+
+    else:
+        raise Exception("Erreur", "type source inconnu")
+
+    if result is None:
+        raise Exception("Le resultat est None")
+
+    return result
+
+
+# ------------------------------------------------------------
+# Recursive Config Loader
+# ------------------------------------------------------------
+def load_recursive_rule_from_config(path: str) -> Predicate[Any]:
     with open(path) as f:
         regles = json.load(f)
 
-    preds: list[Predicate[Any]] = []
-    resultat: Predicate[Any] 
-    first_regle: bool = True
-    first_cond: bool
-
-    for regle in regles:
-        preds.clear()
-        first_cond = True
-
-        logic = regle["logic"]
-        if first_regle:
-            print()
-        else:
-            print(logic)
-
-        for cond in regle["conditions"]:
-            name = cond["name"]
-            args = cond.get("args", [])
-            if first_cond:
-                print("(", name, args)
-            else:
-                print(" ", logic, name, args)
-
-            if name not in RULES:
-                raise ValueError(f"Unknown rule: {name}")
-
-            factory = RULES[name]
-            predicate_obj = factory(*args)
-            preds.append(predicate_obj)
-
-            first_cond = False
-
-        print(")")
-
-        combined = preds[0]
-
-        for p in preds[1:]:
-            combined = (combined & p) if logic == "AND" else (combined | p)
-
-        if first_regle:
-            resultat = combined
-        else:
-            resultat = (resultat & combined) if logic == "AND" else (resultat | combined)
-
-        first_regle = False
-
-    return resultat
+    return decodage_regle(regles)

@@ -1,8 +1,9 @@
 from dataclasses import dataclass
 from typing import Iterable
 
-from rules import load_rule_from_config, rule
+from rules import rule, load_recursive_rule_from_config, eprint
 
+DEBUG: bool = False
 
 @dataclass
 class User:
@@ -20,36 +21,50 @@ class User:
 # ---------------------------------------------------------------------------
 @rule
 def is_admin(u: User) -> bool:
+    if DEBUG:
+        eprint("is_admin", u.is_admin, ",")
     return u.is_admin
 
 
 @rule
 def is_active(u: User) -> bool:
+    if DEBUG:
+        eprint("is_active", u.is_active, ",")
     return u.is_active
 
 
 @rule
 def is_banned(u: User) -> bool:
+    if DEBUG:
+        eprint("is_banned", u.is_banned, ",")
     return u.is_banned
 
 
 @rule
 def has_override(u: User) -> bool:
+    if DEBUG:
+        eprint("has_override", u.has_manual_override, ",")
     return u.has_manual_override
 
 
 @rule
 def account_older_than(days: int, u: User) -> bool:
+    if DEBUG:
+        eprint("account_older_than", u.account_age > days, ",")
     return u.account_age > days
 
 
 @rule
 def from_country(countries: Iterable[str], u: User) -> bool:
+    if DEBUG:
+        eprint("from_country", u.country in countries, ",")
     return u.country in countries
 
 
 @rule
 def credit_score_above(threshold: int, u: User) -> bool:
+    if DEBUG:
+        eprint("credit_score_above", u.credit_score > threshold, ",")
     return u.credit_score > threshold
 
 
@@ -80,23 +95,27 @@ def cli_export(users: list[User]) -> list[User]:
 # ---------------------------------------------------------------------------
 def main() -> None:
     users = [
-        User(True, False, 1, False, "US", 100, False),
+        User(True, False, 10, True, "US", 100, False),
         User(False, True, 40, False, "NL", 700, False),
         User(False, True, 40, False, "BE", 500, True),
-        User(False, True, 5, False, "NL", 900, False),
-        User(False, False, 100, True, "NL", 900, False),
+        User(False, True, 10, False, "NL", 900, False),
+        User(False, False, 60, False, "NL", 900, False),
+        User(False, True, 60, True, "NL", 900, False),
     ]
 
-    print("=== Access via Python DSL ===")
-    for u in users:
-        print(u, "=>", api_check(u))
+    if True:
+        print("=== Access via Python DSL ===")
+        for u in users:
+            print(u, "=>", api_check(u))
 
     # If rule_config.json exists, load dynamic rule:
     try:
-        dynamic_rule = load_rule_from_config("rule_config.json")
-        print("\n=== Access via Config Rule ===")
+        eprint("\n=== Access via Recursive Config Rule ===")
+        print("\nrule = ", end="")
+        recursive_rule = load_recursive_rule_from_config("rule_test.json")
+        print("\n")
         for u in users:
-            print(u, "=>", dynamic_rule(u))
+            print(u, "=>", recursive_rule(u))
 
     except FileNotFoundError:
         print("\n(No rule_config.json found — skipping dynamic demo)")

@@ -5,12 +5,12 @@ from typing import Type
 # help(typing.Type)
 # exit()
 
-for m in dir(typing):
-    if m[0] not in "AZERTYUIOPMLKJHGFDSQWXCVBN":
-        continue
-    print(m)
+# for m in dir(typing):
+#     if m[0] not in "AZERTYUIOPMLKJHGFDSQWXCVBN":
+#         continue
+#     print(m)
 
-exit()
+# exit()
 
 class Unique:
     __instance = None
@@ -24,9 +24,10 @@ class Unique:
     def __init__(self, a: int, key: bool):
         # print("__init__", a)
         self.a = a
+        self.key = key
 
     def print(self):
-        print(self.a)
+        print(self.a, self.key)
 
 
 u1 = Unique(1, key=True)
