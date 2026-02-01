@@ -90,7 +90,6 @@ def fisinstance():
 def fissubclass(): ...
 def fiter(): ...
 
-# help(copyright)
 
 def main():
     for fonction in sorted(dir(builtins)):
@@ -98,8 +97,8 @@ def main():
             printf(f"{fonction}:")
             try:
                 eval("f"+fonction)()
-            except Exception:
-                pass
+            except Exception as e:
+                printf(e)
 
 main()
 

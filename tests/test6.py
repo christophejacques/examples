@@ -1,6 +1,6 @@
 import os
 import platform
-
+from typing import Optional
 
 class PathException(Exception):
     pass
@@ -10,7 +10,7 @@ class Path:
     __path: str
     __filename: str
 
-    def __init__(self, path: str = None, filename: str = "", controle: bool = True):
+    def __init__(self, path: Optional[str] = None, filename: str = "", controle: bool = True):
         self.__filename = filename
         self.__path = ""
         self.controle = controle

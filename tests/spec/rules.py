@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import json
-from functools import wraps, partial
+from functools import wraps
 from typing import Any, Callable, Optional
 
 

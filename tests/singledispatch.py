@@ -28,7 +28,7 @@ def _(l: list):
 
 @to_string.register
 def _(d: dt):
-    return f"datetime: {d.isoformat()}"
+    return f"datetime: {(d).isoformat()}"
 
 @to_string.register
 def _(s: set):
@@ -42,7 +42,7 @@ class User: ...
 
 print(to_string(12))
 print(to_string(12.00))
-print(to_string(dt.now()))
+print(to_string(dt.now() ))
 print(to_string([1, 2, 3]))
 print(to_string([1, 2, 3, 4, 5]))
 print(to_string({1, 3, 3, 4, 5}))

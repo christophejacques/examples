@@ -107,10 +107,10 @@ def boucle_for3():
         print(ml)
 
 
-# boucle_for1()
-# boucle_for2()
-# boucle_for3()
+boucle_for1()
+boucle_for2()
+boucle_for3()
 
-print("Démineur".encode("utf-8").decode())
+print("Démineur")
 
 print("fin")
