@@ -11,6 +11,7 @@ from classes import Application, Irq, Irqs, SysTray, Variable, Tools, get_all_cl
 from typing import Callable, Tuple, Optional
 
 
+DEBUG: bool = False
 SYS_FONT: pygame.font.Font
 
 
@@ -26,7 +27,8 @@ class Icone:
     ICONE_HEIGHT: int = 60
     ICONE_DECAL: int = 50
 
-    def __init__(self, screen: pygame.Surface, title: str, couleur: Tuple, x: int, y: int, app: Application, *args):
+    def __init__(self, screen: pygame.Surface, title: str, couleur: Tuple, 
+            x: int, y: int, app: type[Application], *args):
         self.title = title
         self.couleur = couleur
         self.app = app
@@ -101,11 +103,12 @@ class Window:
     THEME_INACTIVE_COLOR = (130, 130, 150, 50)
     THEME_ERROR_COLOR = (200, 20, 20)
 
-    app: Application
+    app: type[Application]
     statut: list
     sounds: dict
 
-    def __init__(self, x: int, y: int, w: int, h: int, text: str, colour: Tuple, app: Application, *args) -> None:
+    def __init__(self, x: int, y: int, w: int, h: int, text: str, colour: Tuple, 
+            app: type[Application], *args) -> None:
         self.app = app
         self.sound_id = None
         self.active = True
@@ -132,7 +135,7 @@ class Window:
         self.sounds = {}
         try:
             self.instance = self.app(args)
-            Application.__init__(self.instance, self.window_draw_surf, self)
+            Application.__initinstance__(self.instance, self.window_draw_surf, self)
             self.instance.post_init()
 
         except Exception as e:
@@ -507,6 +510,7 @@ class OperatingSystem:
             disp_size = (1800, 788)
         else:
             disp_size = desktops[0]
+            
         # self.screen = pygame.display.set_mode(desktops[0], pygame.FULLSCREEN, 24)
         self.screen = pygame.display.set_mode(disp_size, pygame.RESIZABLE, 24)
         self.set_size()
@@ -593,7 +597,7 @@ class OperatingSystem:
     def close_all_icones(self):
         self.liste_icones.clear()
 
-    def create_icone(self, title: str, couleur: Tuple, app: Application, *args):
+    def create_icone(self, title: str, couleur: Tuple, app: type, *args):
         trouve = False
         if self.saved_icones_position.get(app.__name__, False):
             self.ico_posX, self.ico_posY = self.saved_icones_position.get(app.__name__)
@@ -624,7 +628,8 @@ class OperatingSystem:
             systray.registre.save_file()
 
             # Suppression de l'enregistrement des interruptions
-            self.irqs.close_application(systray.DEFAULT_CONFIG[0])
+            # self.irqs.close_application(systray.DEFAULT_CONFIG[0])
+            self.irqs.close_application(systray)
 
         self.liste_systray.clear()
 
@@ -647,8 +652,7 @@ class OperatingSystem:
 
             # Initialisation du SysTray
             systray = une_classe(color)
-            SysTray.__init__(systray, color)
-            SysTray.__init_screen__(systray, self.barre_taches.subsurface(sysapp_rect))
+            SysTray.__initinstance__(systray, self.barre_taches.subsurface(sysapp_rect))
             systray.post_init()
 
             self.liste_systray.append(systray)
@@ -679,7 +683,7 @@ class OperatingSystem:
                 self.update_systrays_positions()
                 return
 
-    def open(self, title: str, couleur: Tuple, app: Application, *args):
+    def open(self, title: str, couleur: Tuple, app: type[Application], *args):
         # Check si la fenetre est unique
         if "UNIQUE" in app.WINDOW_PROPERTIES:
             for fenetre in self.liste_fenetres:
@@ -771,7 +775,8 @@ class OperatingSystem:
             except Exception as erreur:
                 print("Erreur:", erreur, flush=True)
 
-            self.irqs.close_application(fenetre.app.DEFAULT_CONFIG[0])
+            # self.irqs.close_application(fenetre.app.DEFAULT_CONFIG[0])
+            self.irqs.close_application(fenetre.app)
             self.close_tache(fenetre)
             self.liste_fenetres.remove(fenetre)
             self.activate_last_window()
@@ -829,7 +834,8 @@ class OperatingSystem:
         self.saved_icones_position = {}
         try:
             with open('desktop.json') as file_handle:
-                contenu = json.loads(file_handle.read())
+                # contenu = json.loads(file_handle.read())
+                contenu = json.load(file_handle)
                 for code_application, donnees in contenu.items():
                     if donnees.get("position"):
                         self.saved_icones_position[code_application] = donnees["position"]
@@ -1375,6 +1381,9 @@ class OperatingSystem:
                     pass
 
                 case pygame.AUDIODEVICEADDED:
+                    if not DEBUG:
+                        continue
+
                     if event.which == 0:
                         if event.iscapture == 0:
                             fprint("Sorties :")
@@ -1389,11 +1398,18 @@ class OperatingSystem:
                     fprint(event.type, get_pygame_const_name(event.type))
                     pass
 
-    def run(self):
+    def boot(self):
         self.load_icones()
         self.load_applications()
         self.load_systrays()
 
+    def shutdown(self):
+        self.close_all()
+        self.save_icones()
+        pygame.quit()
+
+    def run(self):
+        self.boot()
         while self.running:
             self.get_systrays_actions()
             self.get_windows_actions()
@@ -1402,9 +1418,7 @@ class OperatingSystem:
             self.draw()
             self.get_pygame_events()
 
-        self.close_all()
-        self.save_icones()
-        pygame.quit()
+        self.shutdown()
 
 
 if __name__ == "__main__":

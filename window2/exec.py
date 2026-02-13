@@ -58,7 +58,7 @@ class Window:
 
         try:
             self.instance = self.app(args)
-            Application.__init__(self.instance, self.window_draw_surf, self)
+            Application.__initinstance__(self.instance, self.window_draw_surf, self)
             self.instance.post_init()
 
         except Exception as e:

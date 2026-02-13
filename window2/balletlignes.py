@@ -55,7 +55,7 @@ class BalletLignes(Application):
         self.get_theme()
 
     def resize(self):
-        print(f"demineur resize()", flush=True)
+        # print(f"demineur resize()", flush=True)
         self.width, self.height = self.tools.get_size()
 
         # update max ligne values

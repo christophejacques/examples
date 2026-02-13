@@ -105,8 +105,8 @@ class HTTPProxyDigestAuth(requests.auth.HTTPDigestAuth):
 
 session = requests.Session()
 session.proxies = {
-    'http': 'http://christophe.jacques1:Pleinne8-@newproxy.asp-public.fr:8080',
-    'https':  'http://christophe.jacques1:Pleinne8-@newproxy.asp-public.fr:8080'
+    'http': 'http://christophe.jacques1:Pleinne@newproxy.asp-public.fr:8080',
+    'https':  'http://christophe.jacques1:Pleinne@newproxy.asp-public.fr:8080'
 }
 session.trust_env = False
 

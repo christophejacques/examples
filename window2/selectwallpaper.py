@@ -648,7 +648,7 @@ class Image(Box):
 
 class SelectWallpaper(Application):
 
-    DEFAULT_CONFIG: tuple = ("SelectWallpaper", (150, 150, 150))
+    DEFAULT_CONFIG: tuple = ("SelectWallpaper", (100, 100, 100))
     MIN_SIZE: tuple = (1200, 545)
     WINDOW_PROPERTIES: list = ["CENTER", "UNIQUE"]
 

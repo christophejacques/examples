@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import pygame
 import json
 
@@ -9,6 +11,8 @@ from enum import Enum, auto
 
 from mouse import Mouse
 # from os.path import sep as separateur
+
+type Executable = Application | SysTray
 
 
 def fprint(*args, **kwargs):
@@ -25,8 +29,10 @@ class Irq(Enum):
 
 
 class Irqs:
+    # Gestion des interruptions
+    # gerees par le Systeme d'exploitation
 
-    __irqs: dict = dict()
+    __irqs: dict[Irq, dict[Executable, Callable]] = dict()
 
     @classmethod
     def initialize(cls):
@@ -41,7 +47,7 @@ class Irqs:
         cls.initialize()
 
     @classmethod
-    def register(cls, irq: Irq, application: str, callback: Callable, *args):
+    def register(cls, irq: Irq, executable: Executable, callback: Callable, *args):
 
         if irq not in Irq:
             raise Exception(f"L'interruption {irq} n'est pas définie")
@@ -50,102 +56,111 @@ class Irqs:
             cls.__irqs[irq] = dict()
         
         fonction = partial(callback, *args)
-        cls.__irqs[irq][application] = fonction
+        cls.__irqs[irq][executable] = fonction
 
     @classmethod
-    def unregister(cls, irq: Irq, application: str):
-        if cls.__irqs.get(irq, {}).get(application, False):
-            del cls.__irqs[irq][application]
+    def unregister(cls, irq: Irq, executable: Executable):
+        if cls.__irqs.get(irq, {}).get(executable, False):
+            del cls.__irqs[irq][executable]
         else:
             raise Exception(f"L'interruption {irq} n'a pas été enregistrée.")
 
     @classmethod
-    def has(cls, irq: Irq, application: str):
-        return application in cls.__irqs.get(irq, {}).keys()
+    def has(cls, irq: Irq, executable: Executable) -> bool:
+        return executable in cls.__irqs.get(irq, {}).keys()
 
     @classmethod
     def run(cls, irq: Irq):
-        for application in cls.__irqs.get(irq, {}):
-            fonction = cls.__irqs.get(irq, {}).get(application)
+        for executable in cls.__irqs.get(irq, {}):
+            fonction = cls.__irqs.get(irq, {}).get(executable)
             if fonction:
                 fonction()
 
     @classmethod
-    def close_application(cls, application: str):
-        application_founded: bool = False
+    def close_application(cls, executable: Executable):
         for irq in cls.__irqs:
-            if application in cls.__irqs[irq]:
-                del cls.__irqs[irq][application]
-                application_founded = True
+            if executable in cls.__irqs[irq]:
+                del cls.__irqs[irq][executable]
             
-        # if application_founded:
-        #     print(f"Interruptions for {application} removed.", flush=True)
-
 
 class Interrupts:
+    # Class Mise a disposition des Application / Systray
+    # Afin de gerer les interruptions
+    # qu'elles veulent enregistrer / suivre
 
-    __application: str
+    __executable: Executable
 
-    def __init__(self, application: str):
-        self.__application = application
+    def __init__(self, executable: Executable):
+        # Initialisation de l'objet interruption
+        # mis a disposition d'un Executable
+        # Fait par le Systeme d'exploitation
+
+        if not isinstance(executable, Application) and not isinstance(executable, SysTray):
+            raise TypeError("La variable executable n'est pas de type Executable")
+
+        self.__executable = executable
 
     def register(self, irq: Irq, callback: Callable, *args):
-        Irqs.register(irq, self.__application, callback, *args)
+        Irqs.register(irq, self.__executable, callback, *args)
+
+    def has_registered(self, irq: Irq) -> bool:
+        return Irqs.has(irq, self.__executable)
 
     def unregister(self, irq: Irq):
-        Irqs.unregister(irq, self.__application)
+        Irqs.unregister(irq, self.__executable)
 
     def close(self):
-        Irqs.close_application(self.__application)
+        Irqs.close_application(self.__executable)
 
 
 def test_interrupts():
 
-    class Window:
-        def __init__(self, nom):
-            self.nom = nom
+    class TestAppli(Application):
+        def __init__(self, args):
+            self.nom = args
 
+        def draw(self): ...
+        def resize(self): ...
+        def update(self): ...
         def interrupt(self, *args):
-            print(self.nom, "interrupted by", *args)
+            print("->", self.nom, "interrupted by", *args)
 
 
-    w1 = Window("Firework")
-    w2 = Window("Calculatrice")
-    w3 = Window("Snake")
-    w4 = Window("Starfield")
+    print()
+    w1 = TestAppli("Firework")
 
-    i = Interrupts(w1.nom)
+    i = Interrupts(w1)
     i.register(Irq.AUDIO, w1.interrupt, "AUDIO")
     i.register(Irq.MUTE_AUDIO, w1.interrupt, "MUTE_AUDIO")
     i.register(Irq.UNMUTE_AUDIO, w1.interrupt, "UNMUTE_AUDIO")
 
-    j = Interrupts(w2.nom)
+    w2 = TestAppli("Calculatrice")
+    j = Interrupts(w2)
     j.register(Irq.AUDIO, w2.interrupt, "AUDIO")
     j.register(Irq.MUTE_AUDIO, w2.interrupt, "MUTE_AUDIO")
 
-    k = Interrupts(w3.nom)
+    w3 = TestAppli("Snake")
+    k = Interrupts(w3)
     k.register(Irq.AUDIO, w3.interrupt, "AUDIO")
 
-    l = Interrupts(w4.nom)
+    w4 = TestAppli("Starfield")
+    l = Interrupts(w4)
     l.register(Irq.AUDIO, w4.interrupt, "AUDIO")
     l.close()
 
-    i.unregister(Irq.AUDIO)
-    try:
+    if i.has_registered(Irq.AUDIO):
+        print("Unregister Irq.AUDIO")        
         i.unregister(Irq.AUDIO)
-    except Exception as e:
-        print("ERROR>>", e)
+
+    if not i.has_registered(Irq.AUDIO):
+        print("Irq.AUDIO not registered")
 
     os_irqs = Irqs()
-    os_irqs.close_application(w2.nom)
+    os_irqs.close_application(w2)
 
     os_irqs.run(Irq.AUDIO)
     os_irqs.run(Irq.MUTE_AUDIO)
     os_irqs.run(Irq.UNMUTE_AUDIO)
-
-
-# test_interrupts()
-# exit()
 
 
 class Registres:
@@ -206,8 +221,8 @@ class Registres:
         res : dict = self.__data
         # Recuperation des informations du chemin_registre
         for registre in chemin_registre.split("."):
-            res = res.get(registre, None)
-            if res is None:
+            res = res.get(registre, {})
+            if not res:
                 self.save(chemin_registre, default)
                 return default
 
@@ -410,11 +425,12 @@ class SysTray(metaclass=ABCMeta):
 
     @abstractmethod
     def __init__(self, color):
+        pass
+
+    def __initinstance__(self, screen):
         self.theme = Theme()
         self.registre = Registres(self.DEFAULT_CONFIG[0])
-        self.interrupt = Interrupts(self.DEFAULT_CONFIG[0])
-
-    def __init_screen__(self, screen):
+        self.interrupt = Interrupts(self)
         self.tools = Tools(screen)
 
     @abstractmethod
@@ -468,7 +484,10 @@ class Application(metaclass=ABCMeta):
     DEFAULT_CONFIG: tuple = ("?", (0, 0, 0))
 
     @abstractmethod
-    def __init__(self, screen, window):
+    def __init__(self, args):
+        pass
+
+    def __initinstance__(self, screen, window):
         if hasattr(self, "__is_initialized"):
             return
 
@@ -481,7 +500,7 @@ class Application(metaclass=ABCMeta):
         self.sound = Sound(window)
         self.theme = Theme()
         self.registre = Registres(self.DEFAULT_CONFIG[0])
-        self.interrupt = Interrupts(self.DEFAULT_CONFIG[0])
+        self.interrupt = Interrupts(self)
         self.mouse = Mouse()
 
         # window = Variable.window
@@ -578,3 +597,5 @@ def get_all_classes(type_classe: str):
 if __name__ == '__main__':
     for cls in get_all_classes("Application"):
         print(cls)
+
+    test_interrupts()

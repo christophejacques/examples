@@ -255,11 +255,12 @@ class Page:
         for pages in self.contenu:
             if self.current == pages.nom:
                 self.current = previous_nom
+                fprint("- ", self.nom, f"({self.current})")
                 return
 
             previous_nom = pages.nom
 
-        fprint(self.nom, f"({self.current})")
+        fprint("- ", self.nom, f"({self.current})")
 
     def goto_next_pages(self) -> None:
         trouve: bool = False
@@ -276,7 +277,7 @@ class Page:
         if not updated:
             self.current = self.contenu[0].nom
 
-        fprint(self.nom, f"({self.current})")
+        fprint("+ ", self.nom, f"({self.current})")
 
     def mouse_enter(self):
         # fprint(f"mouse_enter({self.nom})")
@@ -643,7 +644,9 @@ class Ecrans:
         if cls.index < 0:
             cls.index = cls.total - 1
 
-        return cls.ecrans[cls.index]
+        page = cls.ecrans[cls.index]
+        fprint("<-", page.nom, f"({page.current})")
+        return page
 
     @classmethod
     def next_ecran(cls) -> Page:
@@ -652,13 +655,14 @@ class Ecrans:
             cls.index = 0
 
         page = cls.ecrans[cls.index]
-        fprint(page.nom, f"({page.current})")
+        fprint("->", page.nom, f"({page.current})")
         return page
 
 
 def initialize_test():
     dx = 2
-    page = Page("Page1", "ROOT", color=(0, 250, 250), root=True, drawbg=False)
+    # Page 5
+    page = Page("Page5", "ROOT", color=(0, 250, 250), root=True, drawbg=False)
     menu = page.add(Page("Menu", "TOP", color=(150, 50, 0), height=30, pad=2, drawbg=False))
 
     menu.add(Page("File", "LEFT", color=(50, 250, 0), width=80, padx=(dx,0), 
@@ -684,7 +688,8 @@ def initialize_test():
     content.add(Page("Left3", "RIGHTTO", color=(150, 150, 0), endwidth=True, pad=10))
     Ecrans.add_ecran(page)
 
-    page = Page("Page2", "ROOT", color=(0, 250, 250), root=True, drawbg=False)
+    # Paeg 6
+    page = Page("Page6", "ROOT", color=(0, 250, 250), root=True, drawbg=False)
     menu = page.add(Page("Menu", "TOP", color=(150, 50, 0), height=30, pad=2, drawbg=False))
 
     menu.add(Page("File", "RIGHT", color=(50, 250, 0), width=80, padx=(dx, 0), 
@@ -710,7 +715,8 @@ def initialize_test():
     content.add(Page("Left3", "LEFTTO", color=(150, 150, 0), beginwidth=True, pad=15))
     Ecrans.add_ecran(page)
 
-    page = Page("Page3", "ROOT", color=(0, 250, 250), root=True, drawbg=False)
+    # Page 7
+    page = Page("Page7", "ROOT", color=(0, 250, 250), root=True, drawbg=False)
     top = page.add(Page("Line1", "TOP", color=(150, 150, 0), height=80, pad=15, drawbg=False))
     top.add(Page("left1", "LEFT", color=(150, 150, 0), relwidth=0.25, pady=4, padx=(4, 2)))
     top.add(Page("left2", "RIGHTTO", color=(150, 150, 0), endwidth=True, pady=4, padx=(2, 4)))
@@ -719,7 +725,8 @@ def initialize_test():
     page.add(Page("Line3", "UNDER", color=(150, 150, 0), pad=15, endheight=True))
     Ecrans.add_ecran(page)
 
-    page = Page("Page4", "ROOT", color=(0, 250, 250), root=True, drawbg=False)
+    # Page 8
+    page = Page("Page8", "ROOT", color=(0, 250, 250), root=True, drawbg=False)
     bottom = page.add(Page("Line1", "BOTTOM", color=(150, 150, 0), height=80, pad=15, drawbg=False))
     bottom.add(Page("left1", "LEFT", color=(150, 150, 0), relwidth=0.75, pady=4, padx=(4, 2)))
     bottom.add(Page("left2", "RIGHTTO", color=(150, 150, 0), endwidth=True, pady=4, padx=(2, 4)))
@@ -731,7 +738,7 @@ def initialize_test():
 
 def initialize():
     # Page 1
-    page = Page("root", "ROOT", color=(0, 250, 250), root=True, drawbg=False)
+    page = Page("Page1", "ROOT", color=(0, 250, 250), root=True, drawbg=False)
     page.create_group("accueil")
     page.add(Page("Accueil", "FULL", color=(150, 250, 0), pad=15))
 
@@ -757,18 +764,21 @@ def initialize():
     Ecrans.add_ecran(page)
 
     # Page 2
-    page = Page("root", "ROOT", color=(0, 250, 250), root=True, drawbg=False)
+    page = Page("Page2", "ROOT", color=(0, 250, 250), root=True, drawbg=False)
     page.create_group("main")
 
     # Top
-    top = page.add(Page("Top", "TOP", color=(150, 150, 0), padx=15, pady=(15, 10), relheight=0.25, drawbg=False))
+    # top = page.add(Page("Top", "TOP", color=(150, 150, 0), padx=15, pady=(15, 10), relheight=0.25, drawbg=False))
+    top = page.add(Page("Top", "TOP", color=(150, 150, 0), padx=15, pady=(15, 10), height=200, drawbg=False))
     top.add(Page("Left", "LEFT", color=(150, 150, 0), padx=(5, 3), pady=5, relwidth=0.25))
     top.add(Page("right", "LEFT", color=(150, 150, 0), padx=(3, 23), pady=5, relx=0.25, relwidth=0.75))
     top.add(Page("Ascenseur", "RIGHT", color=(20, 150, 100), padx=(0, 3), pady=5, x=20, width=20))
 
     # Middle
-    page.add(Page("Middle", "TOP", color=(150, 150, 0), 
-        padx=15, pady=(0, 50), rely=0.25, relheight=0.75))
+    # page.add(Page("Middle", "TOP", color=(150, 150, 0), 
+    #     padx=15, pady=(0, 50), rely=0.25, relheight=0.75))
+    page.add(Page("Middle", "UNDER", color=(150, 150, 0), 
+        padx=15, pady=(0, 50), endheight=True))
 
     # Bottom
     bottom = page.add(Page("Bottom", "BOTTOM", color=(50, 50, 50), pad=15, height=55, relwidth=1, drawbg=False))
@@ -778,7 +788,7 @@ def initialize():
     Ecrans.add_ecran(page)
 
     # Page 3
-    page = Page("root", "ROOT", color=(0, 250, 250), root=True, drawbg=False)
+    page = Page("Page3", "ROOT", color=(0, 250, 250), root=True, drawbg=False)
     page.create_group("boite_outil")
     page.add(Page("Gauche", "", color=(50, 20, 200), relwidth=0.25, padx=(15, 0), pady=15))
     page.add(Page("Droite", "RIGHT", color=(50, 50, 250), relwidth=0.75, pad=15))
@@ -791,7 +801,7 @@ def initialize():
     Ecrans.add_ecran(page)
 
     # Page 4
-    page = Page("root", "ROOT", color=(0, 250, 250), root=True, drawbg=False)
+    page = Page("Page4", "ROOT", color=(0, 250, 250), root=True, drawbg=False)
     page.create_group("boite_outil2")
     page.add(Page("75w", "", color=(50, 20, 250), relwidth=0.75, padx=(15, 0), pady=15))
     page.add(Page("75p", "RIGHT", color=(50, 50, 250), relwidth=0.25, pad=15))

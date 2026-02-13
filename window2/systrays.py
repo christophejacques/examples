@@ -90,7 +90,7 @@ class SystemDateTime(SysTray):
 class SoundView(SysTray):
 
     PRIORITY = 2
-    DEFAULT_CONFIG = ("Sound", (50, 200, 50))
+    DEFAULT_CONFIG = ("Sound View", (50, 200, 50))
     INITIAL_WIDTH = 25
 
     audio_on: bool
@@ -171,7 +171,7 @@ class SoundView(SysTray):
 class ThemeSelection(SysTray):
 
     PRIORITY = 2
-    DEFAULT_CONFIG = ("Theme", (50, 200, 50))
+    DEFAULT_CONFIG = ("Theme Select", (50, 200, 50))
     INITIAL_WIDTH = 20
 
     def __init__(self, couleur):

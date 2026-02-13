@@ -3,7 +3,7 @@ from classes import Application
 
 class NoApplication(Application):
 
-    DEFAULT_CONFIG = ("No Application", (80, 80, 80))
+    DEFAULT_CONFIG = ("No Application", (50, 50, 50))
     WINDOW_PROPERTIES = []
 
     def __init__(self, *args):
