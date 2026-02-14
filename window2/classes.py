@@ -24,8 +24,16 @@ class Irq(Enum):
     KILL = auto()
 
     AUDIO = auto()
+    AUDIO_ON = auto()
+    AUDIO_OFF = auto()
     MUTE_AUDIO = auto()
     UNMUTE_AUDIO = auto()
+
+    NETWORK_ON = auto()
+    NETWORK_OFF = auto()
+
+    JOYSTICK_ON = auto()
+    JOYSTICK_OFF = auto()
 
 
 class Irqs:
@@ -130,35 +138,35 @@ def test_interrupts():
     w1 = TestAppli("Firework")
 
     i = Interrupts(w1)
-    i.register(Irq.AUDIO, w1.interrupt, "AUDIO")
+    i.register(Irq.AUDIO_ON, w1.interrupt, "AUDIO_ON")
     i.register(Irq.MUTE_AUDIO, w1.interrupt, "MUTE_AUDIO")
     i.register(Irq.UNMUTE_AUDIO, w1.interrupt, "UNMUTE_AUDIO")
 
     w2 = TestAppli("Calculatrice")
     j = Interrupts(w2)
-    j.register(Irq.AUDIO, w2.interrupt, "AUDIO")
+    j.register(Irq.AUDIO_ON, w2.interrupt, "AUDIO_ON")
     j.register(Irq.MUTE_AUDIO, w2.interrupt, "MUTE_AUDIO")
 
     w3 = TestAppli("Snake")
     k = Interrupts(w3)
-    k.register(Irq.AUDIO, w3.interrupt, "AUDIO")
+    k.register(Irq.AUDIO_ON, w3.interrupt, "AUDIO_ON")
 
     w4 = TestAppli("Starfield")
     l = Interrupts(w4)
-    l.register(Irq.AUDIO, w4.interrupt, "AUDIO")
+    l.register(Irq.AUDIO_ON, w4.interrupt, "AUDIO_ON")
     l.close()
 
-    if i.has_registered(Irq.AUDIO):
-        print("Unregister Irq.AUDIO")        
-        i.unregister(Irq.AUDIO)
+    if i.has_registered(Irq.AUDIO_ON):
+        print("Unregister Irq.AUDIO_ON")        
+        i.unregister(Irq.AUDIO_ON)
 
-    if not i.has_registered(Irq.AUDIO):
-        print("Irq.AUDIO not registered")
+    if not i.has_registered(Irq.AUDIO_ON):
+        print("Irq.AUDIO_ON not registered")
 
     os_irqs = Irqs()
     os_irqs.close_application(w2)
 
-    os_irqs.run(Irq.AUDIO)
+    os_irqs.run(Irq.AUDIO_ON)
     os_irqs.run(Irq.MUTE_AUDIO)
     os_irqs.run(Irq.UNMUTE_AUDIO)
 
@@ -493,6 +501,7 @@ class Application(metaclass=ABCMeta):
 
         if Variable.DEBUG:
             print(f"Initialisation de l'application {self.DEFAULT_CONFIG[0]}", flush=True)
+            
         self.__is_initialized = True
 
         self.tools = Tools(screen)

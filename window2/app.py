@@ -3,6 +3,8 @@ import json
 import traceback
 import pygame._sdl2.audio as sdl2_audio
 
+from os import getcwd, chdir
+from os.path import sep as separator
 from audio import Audio
 from mouse import Mouse
 from keyboard import Keyboard
@@ -480,20 +482,9 @@ class OperatingSystem:
     TASK_BAR_COLOR: Tuple = (20, 20, 20, 100)
 
     def __init__(self):
-        global SYS_FONT
-
-        pygame.init()
-        SYS_FONT = pygame.font.SysFont("courier", 12)
-
-        self.running = True
         Tache.TASK_HEIGHT = OperatingSystem.TASK_BAR_HEIGHT
-        self.registre = Registres("OS")
-        self.irqs = Irqs()
+        self.running = True
 
-        Audio.init(False)
-        Theme.set_theme("SOMBRE")
-
-        desktops = pygame.display.get_desktop_sizes()
         # define display/window height based on (the first) desktop size
         self.liste_fenetres = []
         self.liste_icones = []
@@ -502,9 +493,28 @@ class OperatingSystem:
         self.icone_catched_by_mouse = None
         self.window_catch_by_mouse = None
         self.liste_taches = []
-        self.clock = pygame.time.Clock()
         self.tick = 0
 
+    def initialize(self):
+        directory = separator.join(__file__.split(separator)[:-1])
+        if directory != getcwd():
+            print(f"change current directory to : {directory}")
+            chdir(directory)
+
+        pygame.init()
+
+        global SYS_FONT
+        SYS_FONT = pygame.font.SysFont("courier", 12)
+
+        self.registre = Registres("OS")
+        self.irqs = Irqs()
+
+        Audio.init(False)
+        Theme.set_theme("SOMBRE")
+
+        self.clock = pygame.time.Clock()
+
+        desktops = pygame.display.get_desktop_sizes()
         if desktops[0][1] > 1000:
             # Full HD max resolution
             disp_size = (1800, 788)
@@ -1378,7 +1388,7 @@ class OperatingSystem:
                     pass
 
                 case pygame.JOYDEVICEADDED:
-                    pass
+                    self.irqs.run(Irq.JOYSTICK_ON)
 
                 case pygame.AUDIODEVICEADDED:
                     if not DEBUG:
@@ -1399,6 +1409,7 @@ class OperatingSystem:
                     pass
 
     def boot(self):
+        self.initialize()
         self.load_icones()
         self.load_applications()
         self.load_systrays()

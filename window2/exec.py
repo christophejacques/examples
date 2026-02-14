@@ -1,6 +1,8 @@
 import pygame
 import traceback
 
+from os import getcwd, chdir
+from os.path import sep as separator
 from mouse import Mouse
 from audio import Audio
 from keyboard import Keyboard
@@ -217,6 +219,11 @@ def run(application=None):
             fprint("No Application found")
             return
         fprint("Run application :", application.__name__)
+
+    directory = separator.join(__file__.split(separator)[:-1])
+    if directory != getcwd():
+        print(f"change current directory to : {directory}")
+        chdir(directory)
 
     pygame.init()
     running = True

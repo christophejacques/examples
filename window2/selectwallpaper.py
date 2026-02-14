@@ -298,16 +298,24 @@ class ListDirectoryFile(Box):
         self.decal: int
 
         self.scan()
-
-        # recherche de l'image dans la liste afin de la pre selectionner
         filename = parent.registre.load("fichier", "")
+        self.select("files", filename[1+filename.rindex(os.path.sep):])
+
+    def select(self, item_type: str, item: str) -> None:
+        # recherche de l'item dans la liste afin de le pre-selectionner
         try:
-            self.selected_index = (
-                self.liste["files"].index(filename[1+filename.rindex(os.path.sep):]) +
-                self.len_dirs)
+            # self.selected_index == 24
+            self.selected_index = (self.liste[item_type].index(item) + 
+                (self.len_dirs if item_type == "files" else 0))
 
             if self.selected_index > self.MAX_FILES:
                 self.decal = self.selected_index - self.MAX_FILES 
+                self.decal += (self.MAX_FILES // 2)
+
+                nb_items = self.len_dirs+self.len_files
+                if self.decal + self.MAX_FILES >= nb_items:
+                    self.decal = nb_items - self.MAX_FILES - 1
+
                 self.selected_index -= self.decal 
 
             self.index = self.selected_index 
@@ -433,8 +441,10 @@ class ListDirectoryFile(Box):
 
             case "PARENT":
                 if os.path.sep in self.directory:
+                    directory = self.directory[1+self.directory.rindex(os.path.sep):]
                     self.directory = self.directory[:self.directory.rindex(os.path.sep)]
                     self.scan()
+                    self.select("dirs", f"[{directory}]")
 
             case "SELECT":
                 self.mouse_action(None)
@@ -517,7 +527,7 @@ class ListDirectoryFile(Box):
         fprint("set theme", theme)
         self.backcolor = self.theme.get("LIST_BACK_COLOR")
 
-    def draw(self):
+    def draw(self) -> None:
         super().draw()
         rech_index: int = 0
         index: int = 0
