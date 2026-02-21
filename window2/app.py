@@ -573,6 +573,7 @@ class OperatingSystem:
         Tache.TASK_BUTTON_BACK_COLOR = Theme.get("TASK_BUTTON_BACK_COLOR")
         Tache.TASK_ERROR_BUTTON_BACK_COLOR = Theme.get("TASK_ERROR_BUTTON_BACK_COLOR")
         Tache.TASK_SELECTED_BUTTON_BACK_COLOR = Theme.get("TASK_SELECTED_BUTTON_BACK_COLOR")
+
         for tache in self.liste_taches:
             tache.get_theme()
 
@@ -713,7 +714,6 @@ class OperatingSystem:
             self.last_position = (self.NEW_WINDOW_DECAL+10, 10)
 
         if "CENTER" in app.WINDOW_PROPERTIES:
-            print(self.width, "x", self.height)
             x = largeur - app.MIN_SIZE[0] // 2
             y = hauteur - app.MIN_SIZE[1] // 2
             fenetre = Window(x, y, largeur, hauteur, title, couleur, app, *args)
@@ -736,9 +736,14 @@ class OperatingSystem:
         self.liste_taches.append(tache)
 
         if self.liste_fenetres:
+            active_window = self.liste_fenetres[-1]
+            self.irqs.runForInstanceOnly(Irq.DESACTIVATED, active_window.instance)
+
             self.liste_fenetres[-1].active = False
             self.liste_fenetres[-1].set_surface_color()
+
         self.liste_fenetres.append(fenetre)
+        self.irqs.runForInstanceOnly(Irq.ACTIVATED, fenetre.instance)
 
         mouse_position = Mouse.get_pos()
         if fenetre.window.collidepoint(mouse_position):
@@ -785,8 +790,7 @@ class OperatingSystem:
             except Exception as erreur:
                 print("Erreur:", erreur, flush=True)
 
-            # self.irqs.close_application(fenetre.app.DEFAULT_CONFIG[0])
-            self.irqs.close_application(fenetre.app)
+            self.irqs.close_application(fenetre.instance)
             self.close_tache(fenetre)
             self.liste_fenetres.remove(fenetre)
             self.activate_last_window()
@@ -807,6 +811,8 @@ class OperatingSystem:
 
     def inactive_all_windows(self):
         for f in self.liste_fenetres:
+            if f.active:
+                self.irqs.runForInstanceOnly(Irq.DESACTIVATED, f.instance)
             f.active = False
 
     def activate_window(self, fenetre: Window):
@@ -815,12 +821,18 @@ class OperatingSystem:
                 if not f.active:
                     f.active = True
                     f.set_surface_color()
+                    self.irqs.runForInstanceOnly(Irq.ACTIVATED, fenetre.instance)
                     if f == self.liste_fenetres[-1]:
                         break
+
+                    active_window = self.liste_fenetres[-1]
                     self.liste_fenetres[-1].active = False
                     self.liste_fenetres[-1].set_surface_color()
+                    self.irqs.runForInstanceOnly(Irq.DESACTIVATED, active_window.instance)
+
                     fen = self.liste_fenetres.pop(i)
                     self.liste_fenetres.append(fen)
+
                 return
 
     def activate_last_window(self):
@@ -1123,12 +1135,14 @@ class OperatingSystem:
                        fen_active.close_rect.collidepoint(mouse_position)):
                         self.close(fen_active)
                         window_spotted = True
+
                     # Click sur btn Minimiser
                     elif fen_active.min_rect.collidepoint(Mouse.get_saved_pos()) and (
                          fen_active.min_rect.collidepoint(mouse_position)):
                         fen_active.minimize()
                         self.activate_last_window()
                         window_spotted = True
+                        
                     elif "RESIZABLE" in fen_active.properties:
                         # Click sur btn Maximiser
                         if (fen_active.max_rect.collidepoint(Mouse.get_saved_pos())) and (

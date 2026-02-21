@@ -304,7 +304,6 @@ class ListDirectoryFile(Box):
     def select(self, item_type: str, item: str) -> None:
         # recherche de l'item dans la liste afin de le pre-selectionner
         try:
-            # self.selected_index == 24
             self.selected_index = (self.liste[item_type].index(item) + 
                 (self.len_dirs if item_type == "files" else 0))
 

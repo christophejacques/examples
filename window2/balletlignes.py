@@ -1,5 +1,5 @@
 import random
-from classes import Application
+from classes import Application, Irq, fprint
 from colors import Colors
 
 
@@ -44,6 +44,7 @@ class BalletLignes(Application):
         self.lignes = list()
         self.title = self.DEFAULT_CONFIG[0]
         self.action = ""
+        self.activated = True
 
     def post_init(self):
         self.resize()
@@ -53,6 +54,12 @@ class BalletLignes(Application):
         else:
             self.nombre = nombre
         self.get_theme()
+
+        self.interrupt.register(Irq.ACTIVATED, self.set_activated, True)
+        self.interrupt.register(Irq.DESACTIVATED, self.set_activated, False)
+
+    def set_activated(self, activated: bool):
+        self.activated = activated
 
     def resize(self):
         # print(f"demineur resize()", flush=True)
@@ -82,6 +89,9 @@ class BalletLignes(Application):
             self.nombre -= 10
 
     def update(self):
+        if not self.activated:
+            return
+
         nb_lignes = len(self.lignes)
         if nb_lignes < self.nombre:
             self.lignes.append(Ligne(self.width, self.height))

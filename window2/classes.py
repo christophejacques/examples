@@ -17,12 +17,18 @@ type Executable = Application | SysTray
 
 def fprint(*args, **kwargs):
     print(*args, **kwargs, flush=True)
-    
 
-class Irq(Enum):
-    CLOSE = auto()
-    KILL = auto()
 
+class InstanceOnly: ...
+class MonEnum(Enum):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.isInstanceOnly = isinstance(args[0], InstanceOnly)
+
+
+class Irq(MonEnum):
+    # Irqs générales à toutes les applications
+    # ----------------------------------------
     AUDIO = auto()
     AUDIO_ON = auto()
     AUDIO_OFF = auto()
@@ -35,16 +41,33 @@ class Irq(Enum):
     JOYSTICK_ON = auto()
     JOYSTICK_OFF = auto()
 
+    # Irqs spécifiques a une instance d'application
+    # ---------------------------------------------
+    KEYPRESSED = InstanceOnly()
+    KEYRELEASED = InstanceOnly()
+
+    CLOSE = InstanceOnly()
+    KILL = InstanceOnly()
+
+    ACTIVATED = InstanceOnly()
+    DESACTIVATED = InstanceOnly()
+
 
 class Irqs:
     # Gestion des interruptions
     # gerees par le Systeme d'exploitation
 
     __irqs: dict[Irq, dict[Executable, Callable]] = dict()
+    __irqsForInstanceOnly: dict[Irq, dict[Executable, Callable]] = dict()
+
+    @classmethod
+    def getAll(cls):
+        return {**cls.__irqs, **cls.__irqsForInstanceOnly}
 
     @classmethod
     def initialize(cls):
         cls.__irqs = dict()
+        cls.__irqsForInstanceOnly = dict()
 
     @classmethod
     def open(cls):
@@ -55,27 +78,44 @@ class Irqs:
         cls.initialize()
 
     @classmethod
-    def register(cls, irq: Irq, executable: Executable, callback: Callable, *args):
+    def register(cls, irq: Irq, executable: Executable, callback: Callable, *args, **kwargs):
 
         if irq not in Irq:
             raise Exception(f"L'interruption {irq} n'est pas définie")
 
-        if cls.__irqs.get(irq, None) is None:
-            cls.__irqs[irq] = dict()
-        
-        fonction = partial(callback, *args)
-        cls.__irqs[irq][executable] = fonction
+        fonction = partial(callback, *args, **kwargs)
+        if irq.isInstanceOnly:
+            if cls.__irqsForInstanceOnly.get(irq, None) is None:
+                cls.__irqsForInstanceOnly[irq] = dict()
+            
+            cls.__irqsForInstanceOnly[irq][executable] = fonction
+
+        else:
+            if cls.__irqs.get(irq, None) is None:
+                cls.__irqs[irq] = dict()
+            
+            cls.__irqs[irq][executable] = fonction
 
     @classmethod
     def unregister(cls, irq: Irq, executable: Executable):
-        if cls.__irqs.get(irq, {}).get(executable, False):
-            del cls.__irqs[irq][executable]
+        if irq.isInstanceOnly:
+            if cls.__irqsForInstanceOnly.get(irq, {}).get(executable, False):
+                del cls.__irqsForInstanceOnly[irq][executable]
+            else:
+                raise Exception(f"L'interruption {irq} n'a pas été enregistrée pour cette instance.")
+
         else:
-            raise Exception(f"L'interruption {irq} n'a pas été enregistrée.")
+            if cls.__irqs.get(irq, {}).get(executable, False):
+                del cls.__irqs[irq][executable]
+            else:
+                raise Exception(f"L'interruption {irq} n'a pas été enregistrée.")
 
     @classmethod
     def has(cls, irq: Irq, executable: Executable) -> bool:
-        return executable in cls.__irqs.get(irq, {}).keys()
+        if irq.isInstanceOnly:
+            return executable in cls.__irqsForInstanceOnly.get(irq, {}).keys()
+        else:
+            return executable in cls.__irqs.get(irq, {}).keys()
 
     @classmethod
     def run(cls, irq: Irq):
@@ -85,11 +125,26 @@ class Irqs:
                 fonction()
 
     @classmethod
+    def runForInstanceOnly(cls, irq: Irq, executable: Executable):
+        fonction = cls.__irqsForInstanceOnly.get(irq, {}).get(executable)
+        if fonction:
+            fonction()
+
+    @classmethod
     def close_application(cls, executable: Executable):
-        for irq in cls.__irqs:
+
+        for irq in list(cls.__irqsForInstanceOnly.keys()):
+            if executable in cls.__irqsForInstanceOnly[irq]:
+                del cls.__irqsForInstanceOnly[irq][executable]
+                if not cls.__irqsForInstanceOnly[irq]:
+                    cls.__irqsForInstanceOnly.pop(irq)
+
+        for irq in list(cls.__irqs.keys()):
             if executable in cls.__irqs[irq]:
                 del cls.__irqs[irq][executable]
-            
+                if not cls.__irqs[irq]:
+                    cls.__irqs.pop(irq)
+
 
 class Interrupts:
     # Class Mise a disposition des Application / Systray
@@ -108,8 +163,8 @@ class Interrupts:
 
         self.__executable = executable
 
-    def register(self, irq: Irq, callback: Callable, *args):
-        Irqs.register(irq, self.__executable, callback, *args)
+    def register(self, irq: Irq, callback: Callable, *args, **kwargs):
+        Irqs.register(irq, self.__executable, callback, *args, **kwargs)
 
     def has_registered(self, irq: Irq) -> bool:
         return Irqs.has(irq, self.__executable)
@@ -130,17 +185,19 @@ def test_interrupts():
         def draw(self): ...
         def resize(self): ...
         def update(self): ...
-        def interrupt(self, *args):
-            print("->", self.nom, "interrupted by", *args)
+        def interrupt(self, *args, **kwargs):
+            print("->", self.nom, "interrupted by", *args, kwargs)
 
 
     print()
-    w1 = TestAppli("Firework")
+    os_irqs = Irqs()
 
+    w1 = TestAppli("Firework")
     i = Interrupts(w1)
     i.register(Irq.AUDIO_ON, w1.interrupt, "AUDIO_ON")
-    i.register(Irq.MUTE_AUDIO, w1.interrupt, "MUTE_AUDIO")
+    i.register(Irq.MUTE_AUDIO, w1.interrupt, "MUTE_AUDIO", firework=True)
     i.register(Irq.UNMUTE_AUDIO, w1.interrupt, "UNMUTE_AUDIO")
+    i.register(Irq.CLOSE, w1.interrupt, "CLOSE")
 
     w2 = TestAppli("Calculatrice")
     j = Interrupts(w2)
@@ -149,7 +206,7 @@ def test_interrupts():
 
     w3 = TestAppli("Snake")
     k = Interrupts(w3)
-    k.register(Irq.AUDIO_ON, w3.interrupt, "AUDIO_ON")
+    k.register(Irq.AUDIO_ON, w3.interrupt, Irq.AUDIO_ON, snake=True)
 
     w4 = TestAppli("Starfield")
     l = Interrupts(w4)
@@ -157,18 +214,25 @@ def test_interrupts():
     l.close()
 
     if i.has_registered(Irq.AUDIO_ON):
-        print("Unregister Irq.AUDIO_ON")        
+        print("Unregister Irq.AUDIO_ON")
         i.unregister(Irq.AUDIO_ON)
 
     if not i.has_registered(Irq.AUDIO_ON):
         print("Irq.AUDIO_ON not registered")
 
-    os_irqs = Irqs()
     os_irqs.close_application(w2)
 
     os_irqs.run(Irq.AUDIO_ON)
     os_irqs.run(Irq.MUTE_AUDIO)
     os_irqs.run(Irq.UNMUTE_AUDIO)
+
+    os_irqs.runForInstanceOnly(Irq.CLOSE, w1)
+
+    os_irqs.close_application(w3)
+    os_irqs.close_application(w4)
+    os_irqs.close_application(w1)
+
+    fprint(os_irqs.getAll().keys())
 
 
 class Registres:
