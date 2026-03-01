@@ -979,6 +979,7 @@ class OperatingSystem:
         if fenetre:
             try:
                 fenetre.instance.keypressed(event)
+                
             except Exception as erreur:
                 fenetre.set_error()
                 print("Erreur:", erreur, flush=True)
@@ -1044,7 +1045,6 @@ class OperatingSystem:
         # Barre de tache avec ses SysTray
         for systray in self.liste_systray:
             systray.draw()
-            # print(systray.registre.get_all(), flush=True)
 
         pygame.display.update()
         self.clock.tick(60)  # Limit the frame rate to 60 FPS.

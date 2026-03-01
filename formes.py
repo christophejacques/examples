@@ -164,7 +164,7 @@ class Carre(Rectangle):
 
 
 def main1():
-    t = Triangle((0, 0, 0, 5, 2, 3,))
+    t = Triangle((0, 0, 0, 3, 4, 0,))
     print(t)
     print("- Périmètre:", t.perimetre())
     print("- Aire:", t.aire(), "\n")

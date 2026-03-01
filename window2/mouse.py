@@ -15,41 +15,41 @@ class Mouse:
     time = [perf_counter()]
 
     @classmethod
-    def __init__(self):
+    def __init__(cls):
         pass
 
     @classmethod
-    def set_cursor(self, curseur):
+    def set_cursor(cls, curseur):
         pygame.mouse.set_cursor(curseur)
 
     @classmethod
-    def save_pos(self):
-        self.old_position = self.down_position
+    def save_pos(cls):
+        cls.old_position = cls.down_position
 
     @classmethod
-    def set_pos(self, position):
-        self.down_position = position
+    def set_pos(cls, position):
+        cls.down_position = position
 
     @classmethod
-    def get_pos(self):
-        return self.down_position
+    def get_pos(cls):
+        return cls.down_position
 
     @classmethod
-    def get_saved_pos(self):
-        return self.old_position
+    def get_saved_pos(cls):
+        return cls.old_position
 
     @classmethod
-    def click(self):
-        self.time.append(perf_counter())
-        if len(self.time) > 2:
-            self.time.pop(0)
+    def click(cls):
+        cls.time.append(perf_counter())
+        if len(cls.time) > 2:
+            cls.time.pop(0)
 
     @classmethod
-    def has_double_clicked(self):
-        if len(self.time) > 1:
-            res = self.time[-1]-self.time[-2] <= Mouse.DBL_CLICK_DELAY
+    def has_double_clicked(cls):
+        if len(cls.time) > 1:
+            res = cls.time[-1]-cls.time[-2] <= Mouse.DBL_CLICK_DELAY
             if res: 
-                self.time.clear()
+                cls.time.clear()
             return res
         else:
             return False

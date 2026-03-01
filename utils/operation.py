@@ -89,7 +89,6 @@ if __name__ == "__main__":
         print(decomposeDiviseurs(200))
 
         print(decomposePremiers(200))
-        
         print(decomposePremiers(321_180_009_873_217))
         
         print("\nDurée: {0:.2f}s".format(time.perf_counter()-debut))

@@ -204,6 +204,6 @@ def printdef(variable):
 
 if __name__ == "__main__":
   printdef(printdesc)
-  from msvcrt import getch
-  getch()
+  # from msvcrt import getch
+  # getch()
   print("fin")

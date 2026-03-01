@@ -243,4 +243,4 @@ def sha_256(input_string):
     return(final_hash)
     
 print( sha_256("foo") )
-input()
+# input()

@@ -214,11 +214,7 @@ def test_interrupts():
     l.close()
 
     if i.has_registered(Irq.AUDIO_ON):
-        print("Unregister Irq.AUDIO_ON")
         i.unregister(Irq.AUDIO_ON)
-
-    if not i.has_registered(Irq.AUDIO_ON):
-        print("Irq.AUDIO_ON not registered")
 
     os_irqs.close_application(w2)
 
@@ -231,8 +227,6 @@ def test_interrupts():
     os_irqs.close_application(w3)
     os_irqs.close_application(w4)
     os_irqs.close_application(w1)
-
-    fprint(os_irqs.getAll().keys())
 
 
 class Registres:
@@ -668,7 +662,10 @@ def get_all_classes(type_classe: str):
 
 
 if __name__ == '__main__':
-    for cls in get_all_classes("Application"):
-        print(cls)
+    print("Application", end=" = ")
+    print(list(map(lambda x: x.__name__, get_all_classes("Application"))))
+
+    print("SysTray", end=" = ")
+    print(list(map(lambda x: x.__name__, get_all_classes("SysTray"))))
 
     test_interrupts()

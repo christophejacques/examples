@@ -12,7 +12,7 @@ def retry(retries=3):
 
                 except Exception as ex:
                     left['retries'] -= 1
-                    print(ex)
+                    print(ex, flush=True)
                     sleep(1)
 
             msg = f"Retried {retries} times unsuccessfully."
@@ -24,9 +24,9 @@ def retry(retries=3):
 
 @retry()
 def func(p1, p2):
-    print(p1, p2, end=": ")
+    print(p1, p2, end=": ", flush=True)
     a = 1 / 0
-    print(p1)
+    print(p1, flush=True)
     
 
 func(1, 2)

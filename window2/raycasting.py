@@ -1,6 +1,6 @@
 import math
 import random
-from classes import Application
+from classes import Application, Irq
 from colors import Colors
 
 
@@ -211,10 +211,17 @@ class RayCasting(Application):
         self.action = ""
         self.nb_walls = args[1]
         self.nb_sources = args[0]
+        self.activated = True
 
     def post_init(self):
         self.set_zone(self.tools.get_size())
         self.get_theme()
+
+        self.interrupt.register(Irq.ACTIVATED, self.set_activated, True)
+        self.interrupt.register(Irq.DESACTIVATED, self.set_activated, False)
+
+    def set_activated(self, activated: bool):
+        self.activated = activated
 
     def get_theme(self):
         if self.theme.get_theme() == "CLAIR":
@@ -265,6 +272,9 @@ class RayCasting(Application):
             self.set_zone(self.size)
 
     def update(self):
+        if not self.activated:
+            return
+
         for cercle in self.cercles:
             cercle.update()
 
