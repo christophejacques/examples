@@ -6,17 +6,15 @@ from datetime import datetime as dt, UTC
 
 
 date_utc = dt.now(UTC)
-heure = date_utc.hour
+heure_utc = date_utc.hour
 
-heure_actuelle = time.localtime().tm_hour
-delta_hour = heure_actuelle - heure
-# print("delta=", delta_hour)
+heure_locale = time.localtime().tm_hour
+delta_hour = heure_locale - heure_utc
 
 tz = datetime.timezone(datetime.timedelta(hours=delta_hour))
 maintenant = dt.isoformat(dt.now(tz))
 print("date/heure =", maintenant)
 
-une_date = dt.today()
 une_date = dt.now(tz)
 print()
 print(une_date)

@@ -1,6 +1,18 @@
 import typing
+import sys
+
 from typing import Type
 
+# 1. Ajouter le dossier contenant le module au sys.path
+# import os
+# path_to_lib = os.path.abspath("../p5/lib")
+path_to_lib = "../p5/lib"
+if path_to_lib not in sys.path:
+    sys.path.insert(0, path_to_lib)
+    print(f"{path_to_lib!r} added to PATH.")
+
+# p5 = __import__('p5')
+# print(dir(p5))
 
 # help(typing.Type)
 # exit()
