@@ -637,7 +637,12 @@ def make_path(*args):
 
 
 def get_classes_from_file(type_classe, fichier):
-    mon_app = __import__(fichier)
+    try:
+        mon_app = __import__(fichier)
+    except Exception as erreur:
+        print("Erreur de chargement:", fichier)
+        return
+        
     for classe_name in dir(mon_app):
         if not hasattr(mon_app, type_classe): continue
         classe = getattr(mon_app, classe_name)
