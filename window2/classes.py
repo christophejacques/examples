@@ -5,7 +5,7 @@ import json
 
 from abc import abstractmethod, ABCMeta
 from os import path
-from typing import Callable, Optional
+from typing import Callable, Optional, Dict, Final
 from functools import partial
 from enum import Enum, auto
 
@@ -57,8 +57,8 @@ class Irqs:
     # Gestion des interruptions
     # gerees par le Systeme d'exploitation
 
-    __irqs: dict[Irq, dict[Executable, Callable]] = dict()
-    __irqsForInstanceOnly: dict[Irq, dict[Executable, Callable]] = dict()
+    __irqs: Dict[Irq, Dict[Executable, Callable]] = dict()
+    __irqsForInstanceOnly: Dict[Irq, Dict[Executable, Callable]] = dict()
 
     @classmethod
     def getAll(cls):
@@ -151,7 +151,7 @@ class Interrupts:
     # Afin de gerer les interruptions
     # qu'elles veulent enregistrer / suivre
 
-    __executable: Executable
+    __executable: Final[Executable]
 
     def __init__(self, executable: Executable):
         # Initialisation de l'objet interruption
@@ -231,7 +231,7 @@ def test_interrupts():
 
 class Registres:
     __filename: str = "registres.json"
-    __data: dict
+    __data: Dict
     __modified: bool
 
     def __init__(self, application: str):
@@ -316,6 +316,8 @@ class Registres:
 class Variable:
 
     DEBUG: bool = False
+    SYS_FONT: Optional[pygame.font.Font] = None
+    
     window: object
 
 
@@ -477,6 +479,7 @@ class Tools:
 
 
 class SysTray(metaclass=ABCMeta):
+
     tools: Tools
     theme: Theme
     registre: Registres
@@ -537,6 +540,7 @@ class SysTray(metaclass=ABCMeta):
 
 
 class Application(metaclass=ABCMeta):
+    
     MIN_SIZE = (400, 200)
     title = ""
     tools: Tools

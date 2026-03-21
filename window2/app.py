@@ -9,12 +9,12 @@ from audio import Audio
 from mouse import Mouse
 from keyboard import Keyboard
 from colors import Colors
-from classes import Application, Irq, Irqs, SysTray, Variable, Tools, get_all_classes, Theme, Registres, fprint
-from typing import Callable, Tuple, Optional
+from classes import Application, Irq, Irqs, SysTray, Variable
+from classes import Tools, get_all_classes, Theme, Registres, fprint
+from typing import Callable, Tuple, Optional, List, Dict
 
 
 DEBUG: bool = False
-SYS_FONT: pygame.font.Font
 
 
 def get_pygame_const_name(index):
@@ -51,7 +51,7 @@ class Icone:
         self.icone_surf = self.screen_surf.subsurface(self.icone_rect)
 
     def update_theme(self):
-        self.text_surf = SYS_FONT.render(self.title, False, Theme.get("FORE_COLOR"))
+        self.text_surf = Variable.SYS_FONT.render(self.title, False, Theme.get("FORE_COLOR"))
 
     def move(self, dx: int=0, dy: int=0, liste_icones=None):
         if dx or dy:
@@ -106,8 +106,8 @@ class Window:
     THEME_ERROR_COLOR = (200, 20, 20)
 
     app: type[Application]
-    statut: list
-    sounds: dict
+    statut: List
+    sounds: Dict
 
     def __init__(self, x: int, y: int, w: int, h: int, text: str, colour: Tuple, 
             app: type[Application], *args) -> None:
@@ -126,6 +126,7 @@ class Window:
                 nb_channels = 1
             self.sound_id = Audio.new_application()
             Audio.init_application(self.sound_id, nb_channels)
+            
         self.statut = []
         self.on_error = False
         self.title = text
@@ -287,7 +288,7 @@ class Window:
 
     def set_title(self, title: str):
         self.title = title
-        self.text_surf = SYS_FONT.render(self.title, False, (255, 255, 255))
+        self.text_surf = Variable.SYS_FONT.render(self.title, False, (255, 255, 255))
 
     def set_error(self):
         self.on_error = True
@@ -429,7 +430,7 @@ class Tache:
         self.get_theme()
 
     def get_theme(self):
-        self.text_surf = SYS_FONT.render(self.title, False, Theme.get("FORE_COLOR"))
+        self.text_surf = Variable.SYS_FONT.render(self.title, False, Theme.get("FORE_COLOR"))
         if self.window.on_error:
             self.couleur = Window.THEME_ERROR_COLOR
         else:
@@ -454,7 +455,7 @@ class Tache:
 
     def set_title(self, title: str):
         self.title = title
-        self.text_surf = SYS_FONT.render(self.title, False, Theme.get("FORE_COLOR"))
+        self.text_surf = Variable.SYS_FONT.render(self.title, False, Theme.get("FORE_COLOR"))
 
     def update(self):
         if self.window.on_error and self.couleur != Window.THEME_ERROR_COLOR:
@@ -475,6 +476,11 @@ class Tache:
 
 
 class OperatingSystem:
+    liste_fenetres: List = list()
+    liste_icones: List = list()
+    liste_systray: List = list()
+    liste_taches: List = list()
+
     TASK_BAR_HEIGHT: int = 25
     TASK_BAR_DECAL: int = 1
     TASK_BAR_MENU_WIDTH: int = 3
@@ -484,18 +490,14 @@ class OperatingSystem:
     def __init__(self):
         Tache.TASK_HEIGHT = OperatingSystem.TASK_BAR_HEIGHT
         self.running = True
-
-        # define display/window height based on (the first) desktop size
-        self.liste_fenetres = []
-        self.liste_icones = []
-        self.liste_systray = []
         self.ico_posX, self.ico_posY = 10, 10-(Icone.ICONE_DECAL+Icone.ICONE_HEIGHT)
         self.icone_catched_by_mouse = None
         self.window_catch_by_mouse = None
-        self.liste_taches = []
         self.tick = 0
 
     def initialize(self):
+        # change le repertoire courant afin de trouver 
+        # toutes les applications et le parametrage
         directory = separator.join(__file__.split(separator)[:-1])
         if directory != getcwd():
             print(f"change current directory to : {directory}")
@@ -503,8 +505,7 @@ class OperatingSystem:
 
         pygame.init()
 
-        global SYS_FONT
-        SYS_FONT = pygame.font.SysFont("courier", 12)
+        Variable.SYS_FONT = pygame.font.SysFont("courier", 12)
 
         self.registre = Registres("OS")
         self.irqs = Irqs()
@@ -634,19 +635,16 @@ class OperatingSystem:
     def close_all_systray_apps(self):
         # Enregistrement de la base de registre des systrays
         for systray in self.liste_systray:
-            # print("check:", systray.DEFAULT_CONFIG[0], end=" = ")
-            # print(systray.registre.get_all())
             systray.registre.save_file()
 
             # Suppression de l'enregistrement des interruptions
-            # self.irqs.close_application(systray.DEFAULT_CONFIG[0])
             self.irqs.close_application(systray)
 
         self.liste_systray.clear()
 
     def load_systrays(self) -> None:
         total: int = 0
-        classes: list = []
+        classes: List = []
         for une_classe in get_all_classes("SysTray"):
             classes.append(une_classe)
 
@@ -1439,9 +1437,9 @@ class OperatingSystem:
             self.get_systrays_actions()
             self.get_windows_actions()
             self.check_keyboard_events()
+            self.get_pygame_events()
             self.update()
             self.draw()
-            self.get_pygame_events()
 
         self.shutdown()
 

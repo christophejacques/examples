@@ -183,7 +183,7 @@ def somme[T: (int, str)](a: T, b: T) -> T:
 
 
 @ctrlVars
-def ajout_decorateur(classe: type, decorateur: type):
+def ajout_decorateur(classe: type, decorateur: type) -> str:
     """
     Ajout le decorateur 'ctrlVars' a chaque methode d'une classe
     """
@@ -208,7 +208,7 @@ def ajout_decorateur(classe: type, decorateur: type):
         # ajoute manuellement (ne fonctionne pas lors de l'ajout ici)
         getattr(classe, methode).__set_name__(classe, methode)
 
-    print(f"Classe {classe.__name__!r} mise à jour !")
+    return f"Classe {classe.__name__!r} mise à jour !"
 
 
 
@@ -217,8 +217,8 @@ def main():
     global somme
     somme = ctrlVars(somme)
     
-    somme(1, 2)
-    assert somme("<1>", "<2>") == "<1><2>"
+    assert somme(1, 2) == 3, "La somme doit être de 3."
+    assert somme("<1>", "<2>") == "<1><2>", "Les chaines doivent être concaténées"
     try:
         somme(1, "<2>")
     except Exception as erreur:

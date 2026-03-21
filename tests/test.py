@@ -3,6 +3,7 @@ import sys
 
 from typing import Type
 
+
 # 1. Ajouter le dossier contenant le module au sys.path
 # import os
 # path_to_lib = os.path.abspath("../p5/lib")
