@@ -45,10 +45,9 @@ class Firework(Application):
         self.action = ""
         self.fusees = []
         self.particles = []
-
+        self.resize()
 
     def post_init(self):
-        self.resize()
         nombre = self.registre.load("nombre")
         if nombre is None:
             self.nombre = self.tools.get_size()[0]//300 

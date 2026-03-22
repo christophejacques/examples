@@ -9,9 +9,6 @@ class NoApplication(Application):
     def __init__(self, *args):
         self.title = self.DEFAULT_CONFIG[0]
         self.action = ""
-
-    def post_init(self):
-        # self.resize(screen)
         self.get_theme()
 
     def get_theme(self):

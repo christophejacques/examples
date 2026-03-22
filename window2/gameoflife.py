@@ -19,8 +19,6 @@ class GameOfLife(Application):
         self.grid = []
         self.action = ""
         self.mouse_button_state = 0
-
-    def post_init(self):
         self.resize()
         self.get_theme()
 

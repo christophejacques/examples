@@ -246,7 +246,7 @@ class ListBoutons:
         self.style = style
         self.x, self.y = coords
         self.mouse_over: bool = False
-        self.boutons: list[ButtonStyle] = list()
+        self.boutons: List[ButtonStyle] = list()
         self.index: int = default
         self.visible: bool = visible
         self.color = color
@@ -291,7 +291,7 @@ class ListBoutons:
         elif self.style != Check:
             return None
 
-        lst_index: list = list()
+        lst_index: List = list()
         for index, btn in enumerate(self.boutons):
             if btn.on:
                 lst_index.append(index)
@@ -406,20 +406,22 @@ class Librairie(Application):
 
     DEFAULT_CONFIG: tuple = ("Switch", (50, 150, 150))
     MIN_SIZE: tuple = (810, 300)
-    WINDOW_PROPERTIES: list = ["CENTER"]
+    WINDOW_PROPERTIES: List = ["CENTER"]
 
     def __init__(self, *args):
         self.title = self.DEFAULT_CONFIG[0]
         self.action = ""
-        self.objets: list = list()
-
-    def post_init(self):
+        self.objets: List = list()
+        
         self.get_theme()
         self.set_title(self.title)
 
+    def post_init(self):
+
         visible1 = self.registre.load("RadioBoutons.visible0", True)
-        visible2 = self.registre.load("RadioBoutons.visible1", False)
+        visible2 = self.registre.load("RadioBoutons.visible1", True)
         visible3 = self.registre.load("RadioBoutons.visible2", True)
+        visible4 = self.registre.load("RadioBoutons.visible3", True)
 
         selected1 = self.registre.load("RadioBoutons.selected0", 0)
         selected2 = self.registre.load("RadioBoutons.selected1", [])
@@ -470,9 +472,9 @@ class Librairie(Application):
         self.objets.append(sw3)
         self.objets.append(rbs)
 
-        sw4: Switch = Switch(self, Colors.RED, (640, 30, 50, 20), (160, 220), True)
+        sw4: Switch = Switch(self, Colors.RED, (640, 30, 50, 20), (160, 220), visible4)
 
-        rbs = ListBoutons(Liste, (640, 70), visible=True, color=(250, 20, 20))
+        rbs = ListBoutons(Liste, (640, 70), visible=visible4, color=(250, 20, 20))
         rbs.add(Liste(self, Tiret, "First", (0, 0, 20, 20)))
         rbs.add(Liste(self, Tiret, "Second", (0, 30, 20, 20)))
         rbs.add(Liste(self, Tiret, "Third", (0, 60, 20, 20)))
@@ -486,17 +488,21 @@ class Librairie(Application):
 
 
     def save_registres(self):
+        # fprint("save registre:")
         index: int = -1
         for obj in self.objets:
             if not isinstance(obj, ListBoutons):
                 continue
+
             index += 1
             if obj.visible != self.registre.load(f"RadioBoutons.visible{index}", True):
                 self.registre.save(f"RadioBoutons.visible{index}", obj.visible)
+                # fprint(f"RadioBoutons.visible{index}", obj.visible)
 
             rb_index = obj.get()
             if rb_index != self.registre.load(f"RadioBoutons.selected{index}", 0):
                 self.registre.save(f"RadioBoutons.selected{index}", rb_index)
+                # fprint(f"RadioBoutons.selected{index}", rb_index)
 
     def resize(self):
         for obj in self.objets:

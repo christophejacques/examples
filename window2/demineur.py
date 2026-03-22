@@ -45,6 +45,8 @@ class Demineur(Application):
     def __init__(self, *args):
         self.grid = []
         self.cursor_cell_over = None
+        self.get_theme()
+        self.SYS_FONT = self.tools.font("comicsans", 30)
 
     def get_theme(self):
         if self.theme.get_theme() == "CLAIR":
@@ -57,9 +59,6 @@ class Demineur(Application):
             self.MARKED = (100, 100, 20)
 
     def post_init(self):
-        self.get_theme()
-
-        self.SYS_FONT = self.tools.font("comicsans", 30)
         w, h = self.tools.get_size()
         longueur = min(w, h)//Cell.size * Cell.size
         self.win_resize("BOTTOM RIGHT", -(w-longueur), -(h-longueur))

@@ -50,7 +50,6 @@ class Laby(Application):
         self.touche = ""
         self.action = ""
 
-    def post_init(self):
         w, h = self.tools.get_size()
         self.set_size(w, h)
         self.generate()

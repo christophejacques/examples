@@ -132,10 +132,10 @@ class Calculatrice(Application):
 
         self.touches: list = list()
 
-    def post_init(self):
         nombre = self.registre.load("Utilisation", 0)
         self.registre.save("Utilisation", 1+nombre)
 
+    def post_init(self):
         self.ecran = Ecran(self)
         self.memory = Ecran(self, False, "GRAY_COLOR", (20, 10, 200, 70))
 

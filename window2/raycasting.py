@@ -213,7 +213,6 @@ class RayCasting(Application):
         self.nb_sources = args[0]
         self.activated = True
 
-    def post_init(self):
         self.set_zone(self.tools.get_size())
         self.get_theme()
 

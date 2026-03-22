@@ -5,9 +5,10 @@ import json
 
 from abc import abstractmethod, ABCMeta
 from os import path
-from typing import Callable, Optional, Dict, Final
+from typing import Callable, Optional, Dict, Final, final
 from functools import partial
 from enum import Enum, auto
+from pprint import pprint
 
 from mouse import Mouse
 # from os.path import sep as separateur
@@ -250,6 +251,8 @@ class Registres:
         try:
             with open(self.__filename, encoding="utf-8") as reg:
                 self.__data = json.load(reg).get(self.__application, None)
+                # print("load_file")
+                # pprint(self.__data)
 
             if self.__data is None:
                 print("Initialisation de l'application dans la base de registres", flush=True)
@@ -268,7 +271,8 @@ class Registres:
         if not self.__modified:
             return
 
-        print("save registres:", self.__application, flush=True)
+        print("Save registres:", self.__application, flush=True)
+        # pprint(self.__data)
         with open(self.__filename, encoding="utf-8") as reg:
             self.__reg = json.load(reg)
 
@@ -285,14 +289,18 @@ class Registres:
 
     def load(self, chemin_registre, default=None) -> object:
         res : dict = self.__data
+        # fprint("load >", chemin_registre, end= " = ")
         # Recuperation des informations du chemin_registre
         for registre in chemin_registre.split("."):
-            res = res.get(registre, {})
-            if not res:
+            if not registre in res:
                 self.save(chemin_registre, default)
+                # fprint("default: ", default)
                 return default
 
+            res = res.get(registre, {})
+
         # Lecture de la cle de registre finale
+        # fprint(res)
         return res
 
     def save(self, chemin_registre, valeur) -> None:
@@ -557,12 +565,13 @@ class Application(metaclass=ABCMeta):
     def __init__(self, args):
         pass
 
+    @final
     def __initinstance__(self, screen, window):
         if hasattr(self, "__is_initialized"):
             return
 
         if Variable.DEBUG:
-            print(f"Initialisation de l'application {self.DEFAULT_CONFIG[0]}", flush=True)
+            fprint(f"Initialisation de l'application {self.DEFAULT_CONFIG[0]}")
             
         self.__is_initialized = True
 

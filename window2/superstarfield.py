@@ -15,17 +15,15 @@ class SuperStarfield(Application):
         # set up a random batch of stars for the background
         self.z_range = (50, 2000)  # range for Z coordinates of stars
         self.action = ""
-        
+
+        self.get_theme()
+        self.resize()    
 
     def get_theme(self):
         if self.theme.get_theme() == "CLAIR":
             self.background_color = Colors.WHITE
         else:
             self.background_color = Colors.BLACK
-
-    def post_init(self):
-        self.get_theme()
-        self.resize()
 
     def resize(self):
         w, h = self.tools.get_size()

@@ -11,7 +11,7 @@ from keyboard import Keyboard
 from colors import Colors
 from classes import Application, Irq, Irqs, SysTray, Variable
 from classes import Tools, get_all_classes, Theme, Registres, fprint
-from typing import Callable, Tuple, Optional, List, Dict
+from typing import Callable, Tuple, Optional, List, Dict, Type, Any
 
 
 DEBUG: bool = False
@@ -137,14 +137,32 @@ class Window:
         self.sound_index = 0
         self.sounds = {}
         try:
-            self.instance = self.app(args)
-            Application.__initinstance__(self.instance, self.window_draw_surf, self)
+            # self.instance = self.app(args)
+            # Application.__initinstance__(self.instance, self.window_draw_surf, self)
+
+            self.instance = self.initialise_classe(
+                self.app, self.window_draw_surf, self, args)
             self.instance.post_init()
 
         except Exception as e:
             self.set_error()
             print("Window.__init__() Error:", e)
             traceback.print_exc()
+
+    def initialise_classe(self,
+            nom_classe: Type[Any], 
+            screen, 
+            window, 
+            *args, **kwargs) -> Type:
+
+        init_method = nom_classe.__init__
+        nom_classe.__init__ = nom_classe.__initinstance__
+        instance = nom_classe(screen, window)
+
+        nom_classe.__init__= init_method
+        nom_classe.__init__(instance, *args, **kwargs)
+
+        return instance
 
     def set_size(self, x: int, y: int, w: int, h: int, update_app=True):
         self.border_size = 0 if self.last_statut() == "MAXIMIZED" else self.WINDOW_BORDER_SIZE

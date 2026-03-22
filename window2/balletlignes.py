@@ -46,7 +46,6 @@ class BalletLignes(Application):
         self.action = ""
         self.activated = True
 
-    def post_init(self):
         self.resize()
         nombre = self.registre.load("nombre")
         if nombre is None:

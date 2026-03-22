@@ -1,4 +1,4 @@
-from classes import Application, fprint
+# from classes import Application, fprint
 
 
 # class Modele("Application"):
