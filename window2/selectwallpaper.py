@@ -7,6 +7,7 @@ from threading import Thread
 from typing import Optional
 
 
+
 class Box:
 
     def __init__(self, parent, color, coords):
@@ -298,7 +299,7 @@ class ListDirectoryFile(Box):
         self.decal: int
 
         self.scan()
-        filename = parent.registre.load("fichier", "")
+        filename = os.sep.join(parent.registre.load("fichier", []))
         self.select("files", filename[1+filename.rindex(os.path.sep):])
 
     def select(self, item_type: str, item: str) -> None:
@@ -686,7 +687,8 @@ class SelectWallpaper(Application):
         nombre = self.registre.load("Utilisation", 0)
         self.registre.save("Utilisation", 1+nombre)
         self.get_theme()
-        self.img_filename = self.registre.load("fichier", None)
+        print(self.registre.load("fichier", []))
+        self.img_filename = os.sep.join(self.registre.load("fichier", []))
         self.decal_sep_x = self.registre.load("decal_sep_x", 410)
 
         # couleur_fond = (220, 220, 220)
@@ -940,7 +942,7 @@ class SelectWallpaper(Application):
 
             case ["SET", "WALLPAPER"]:
                 self.action = f"{action}:{self.img_filename};QUIT"
-                self.registre.save("fichier", self.img_filename)
+                self.registre.save("fichier", self.img_filename.split(os.sep))
                 
                 if self.decal_sep_x != self.separation.rect.x:
                     self.registre.save("decal_sep_x", self.separation.rect.x)

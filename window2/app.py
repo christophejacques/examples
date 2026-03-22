@@ -3,7 +3,7 @@ import json
 import traceback
 import pygame._sdl2.audio as sdl2_audio
 
-from os import getcwd, chdir
+from os import getcwd, chdir, sep as separator
 from os.path import sep as separator
 from audio import Audio
 from mouse import Mouse
@@ -609,7 +609,7 @@ class OperatingSystem:
         self.load_background_image()
 
     def load_background_image(self):
-        image_file = self.registre.load("Wallpaper", "pornstar.jpg")
+        image_file = separator.join(self.registre.load("Wallpaper", ["pornstar.jpg"]))
         try:
             image = pygame.image.load(image_file)
             *_, img_width, img_height = image.get_rect()
@@ -963,7 +963,7 @@ class OperatingSystem:
                         self.close(fenetre)
 
                     case ["SET", "WALLPAPER", filename]:
-                        self.registre.save("Wallpaper", filename)
+                        self.registre.save("Wallpaper", filename.split(separator))
                         self.load_background_image()
 
     def check_keyboard_events(self):
