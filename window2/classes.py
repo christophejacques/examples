@@ -277,7 +277,7 @@ class Registres:
             self.__reg = json.load(reg)
 
         self.__reg[self.__application] = self.__data
-        with open(self.__filename, "w", encoding="utf-8") as reg:
+        with open(self.__filename, "w", indent=4, encoding="utf-8") as reg:
             json.dump(self.__reg, reg)
 
     def clear(self) -> None:
