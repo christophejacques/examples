@@ -4,14 +4,15 @@ import traceback
 import pygame._sdl2.audio as sdl2_audio
 
 from os import getcwd, chdir, sep as separator
-from os.path import sep as separator
+
 from audio import Audio
 from mouse import Mouse
 from keyboard import Keyboard
 from colors import Colors
-from classes import Application, Irq, Irqs, SysTray, Variable
+from classes import Application, Irq, Irqs, SysTray, Variable, Fonction
 from classes import Tools, get_all_classes, Theme, Registres, fprint
-from typing import Callable, Tuple, Optional, List, Dict, Type, Any
+from classes import Keys, Sound, Interrupts  # , Communication
+from typing import Callable, Tuple, Optional, List, Dict, Any
 
 
 DEBUG: bool = False
@@ -53,7 +54,7 @@ class Icone:
     def update_theme(self):
         self.text_surf = Variable.SYS_FONT.render(self.title, False, Theme.get("FORE_COLOR"))
 
-    def move(self, dx: int=0, dy: int=0, liste_icones=None):
+    def move(self, dx: int = 0, dy: int = 0, liste_icones=None):
         if dx or dy:
             w, h = self.screen_surf.get_size()
             if self.icone_rect.x + dx < 0:
@@ -137,11 +138,7 @@ class Window:
         self.sound_index = 0
         self.sounds = {}
         try:
-            # self.instance = self.app(args)
-            # Application.__initinstance__(self.instance, self.window_draw_surf, self)
-
-            self.instance = self.initialise_classe(
-                self.app, self.window_draw_surf, self, args)
+            self.initialise_classe(args)
             self.instance.post_init()
 
         except Exception as e:
@@ -149,20 +146,38 @@ class Window:
             print("Window.__init__() Error:", e)
             traceback.print_exc()
 
-    def initialise_classe(self,
-            nom_classe: Type[Any], 
-            screen, 
-            window, 
-            *args, **kwargs) -> Type:
+    def initialise_classe(self, *args, **kwargs):
 
-        init_method = nom_classe.__init__
-        nom_classe.__init__ = nom_classe.__initinstance__
-        instance = nom_classe(screen, window)
+        init_method: Callable = self.app.__init__
+        setattr(self.app, "__init__", self.app.__initinstance__)
 
-        nom_classe.__init__= init_method
-        nom_classe.__init__(instance, *args, **kwargs)
+        self.instance = self.app(self)
+        setattr(self.app, "__init__", init_method)
+        self.app.__init__(self.instance, *args, **kwargs)
 
-        return instance
+    def get_fonction(self, fonction: Fonction, instance: Any = None) -> Any:
+        if not isinstance(fonction, Fonction):
+            raise TypeError("Le paramètre 'fonction' doit être de type 'Fonction'.")
+
+        match fonction:
+            case Fonction.TOOLS:
+                return Tools(self.window_draw_surf)
+            case Fonction.KEYS:
+                return Keys(self)
+            case Fonction.SOUND:
+                return Sound(self)
+            case Fonction.THEME:
+                return Theme()
+            case Fonction.REGISTRE:
+                return Registres(self.app.DEFAULT_CONFIG[0])
+            case Fonction.IRQ:
+                return Interrupts(instance)
+            case Fonction.MOUSE:
+                return Mouse()
+            # case Fonction.COMMUNICATION:
+            #     return Communication()
+
+        raise TypeError("La fonctionnalite {fonc!r} n'existe pas.")
 
     def set_size(self, x: int, y: int, w: int, h: int, update_app=True):
         self.border_size = 0 if self.last_statut() == "MAXIMIZED" else self.WINDOW_BORDER_SIZE
@@ -211,10 +226,12 @@ class Window:
 
         self.set_surface_color()
 
-    def resize(self, direction: str, dx: int=0, dy: int=0, width: Optional[int]=None, height: Optional[int]=None) -> None:
+    def resize(self, 
+      direction: str, dx: int = 0, dy: int = 0, 
+      width: Optional[int] = None, height: Optional[int] = None) -> None:
         # print(f"{dx=}, {dy=}, {width=}, {height=}", flush=True)
         x, y = self.window.topleft
-        if not width is None and not height is None :
+        if width is not None and height is not None:
             self.set_size(x, y, width, height)
             return 
             
@@ -254,7 +271,7 @@ class Window:
             return False
         return Audio.load_sound(self.sound_id, fichier, volume)
 
-    def play_sound(self, index, callback: Optional[Callable]=None):
+    def play_sound(self, index, callback: Optional[Callable] = None):
         if self.sound_id:
             Audio.play_sound(self.sound_id, index, callback)
         return False
@@ -312,7 +329,7 @@ class Window:
         self.on_error = True
         self.set_surface_color()
 
-    def theme_color(self, active_color: Optional[Tuple]=None, inactive_color: Optional[Tuple]=None, check_error: bool=False):
+    def theme_color(self, active_color: Optional[Tuple] = None, inactive_color: Optional[Tuple]=None, check_error: bool=False):
         if check_error and self.on_error:
             return self.THEME_ERROR_COLOR
             
@@ -377,7 +394,7 @@ class Window:
             screen_size = pygame.display.get_window_size()
             self.set_size(0, 0, screen_size[0], screen_size[1]-OperatingSystem.TASK_BAR_HEIGHT)
 
-    def move(self, x: int=0, y: int=0):
+    def move(self, x: int = 0, y: int = 0):
         if x or y:
             self.window = self.window.move(x, y)
             self.window_draw = self.window_draw.move(x, y)
@@ -416,7 +433,8 @@ class Window:
         if not self.on_error:
             try:
                 self.instance.close()
-                self.instance.registre.save_file()
+                if Fonction.REGISTRE in self.instance.FONCTIONS:
+                    self.instance.registre.save_file()
             except Exception as erreur:
                 self.set_error()
                 print("Erreur:", erreur, flush=True)
@@ -702,7 +720,6 @@ class OperatingSystem:
             return 0
 
     def update_systray_pos(self):
-        total = 0
         for systray in self.liste_systray:
             systray_size = systray.tools.screen.get_size()[0]
             systray_width = systray.get_width()
@@ -741,7 +758,7 @@ class OperatingSystem:
             Tache.TASK_WIDTH = Tache.TASK_WIDTH_MAX
         else:
             if (1+len(self.liste_taches))*(Tache.TASK_WIDTH+self.TASK_BAR_DECAL) > \
-                self.barre_taches_rect[2] - self.TASK_BAR_MENU_WIDTH - systrays_width:
+              self.barre_taches_rect[2] - self.TASK_BAR_MENU_WIDTH - systrays_width:
 
                 Tache.TASK_WIDTH = (self.barre_taches_rect[2] - self.TASK_BAR_MENU_WIDTH - systrays_width) // \
                                    (1+len(self.liste_taches)) - self.TASK_BAR_DECAL
@@ -792,7 +809,7 @@ class OperatingSystem:
                         Tache.TASK_WIDTH = Tache.TASK_WIDTH_MAX
                     else:
                         Tache.TASK_WIDTH = min(Tache.TASK_WIDTH_MAX, 
-                            (self.barre_taches_rect[2] - self.TASK_BAR_MENU_WIDTH - systray_width) // \
+                            (self.barre_taches_rect[2] - self.TASK_BAR_MENU_WIDTH - systray_width) // 
                             len(self.liste_taches) - self.TASK_BAR_DECAL)
                     self.resize_taches()
                 else:
@@ -1162,7 +1179,7 @@ class OperatingSystem:
                     elif "RESIZABLE" in fen_active.properties:
                         # Click sur btn Maximiser
                         if (fen_active.max_rect.collidepoint(Mouse.get_saved_pos())) and (
-                            fen_active.max_rect.collidepoint(mouse_position)):
+                          fen_active.max_rect.collidepoint(mouse_position)):
                             window_spotted = True
                             if fen_active.last_statut() == "MAXIMIZED":
                                 fen_active.restaure()
@@ -1354,7 +1371,7 @@ class OperatingSystem:
 
         Mouse.set_pos(mouse_position)
 
-    def mouse_enter_leave(self, check_mouse_over: bool=True):
+    def mouse_enter_leave(self, check_mouse_over: bool = True):
         # Mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
         Mouse.cursor_over = None
         self.unselect_all_taches()
@@ -1395,13 +1412,13 @@ class OperatingSystem:
                     Keyboard.add_key_to_buffer(event.key)
                     self.keyreleased(event)
 
-                case (  pygame.AUDIO_S8 | 
+                case (pygame.AUDIO_S8 | 
                         pygame.AUDIO_S16 | 
                         pygame.WINDOWENTER | 
                         pygame.ACTIVEEVENT):
                     self.mouse_enter_leave()
 
-                case (  pygame.WINDOWMAXIMIZED |
+                case (pygame.WINDOWMAXIMIZED |
                         pygame.WINDOWRESTORED |
                         pygame.VIDEORESIZE):
                     self.update_screen()
@@ -1409,7 +1426,7 @@ class OperatingSystem:
                 case pygame.QUIT:
                     self.running = False
 
-                case (  pygame.WINDOWSHOWN | 
+                case (pygame.WINDOWSHOWN | 
                         pygame.VIDEOEXPOSE | 
                         pygame.WINDOWFOCUSGAINED):
                     pass
@@ -1434,7 +1451,7 @@ class OperatingSystem:
                         for device in devices:
                             fprint("-", device)
 
-                case default:
+                case _:
                     fprint(event.type, get_pygame_const_name(event.type))
                     pass
 

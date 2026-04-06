@@ -1,10 +1,11 @@
-from classes import Application
+from classes import Application, Fonction
 
 
 class NoApplication(Application):
 
     DEFAULT_CONFIG = ("No Application", (50, 50, 50))
     WINDOW_PROPERTIES = []
+    FONCTIONS = [Fonction.TOOLS, Fonction.THEME, Fonction.KEYS]
 
     def __init__(self, *args):
         self.title = self.DEFAULT_CONFIG[0]

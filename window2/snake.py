@@ -1,5 +1,5 @@
 import random
-from classes import Application
+from classes import Application, Fonction
 from colors import Colors
 
 
@@ -80,6 +80,7 @@ class SnakeGame(Application):
 
     WINDOW_PROPERTIES = ["RESIZABLE"]
     DEFAULT_CONFIG = ("Jeu du Serpent", Colors.GREEN)
+    FONCTIONS = [Fonction.TOOLS, Fonction.KEYS, Fonction.THEME]
 
     size = 10
     w, h = 0, 0

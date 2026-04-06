@@ -1,7 +1,7 @@
 import random
 import math
 
-from classes import Application, make_path
+from classes import Application, make_path, Fonction
 from colors import Colors
 from p5 import Vector, StaticVector
 
@@ -40,6 +40,8 @@ class Firework(Application):
 
     DEFAULT_CONFIG = ("Feu d'artifice", Colors.MIDDLE_BLUE)
     WINDOW_PROPERTIES = ["SOUND(60)", "RESIZABLE"]
+    FONCTIONS = [Fonction.TOOLS, Fonction.KEYS, Fonction.THEME, 
+        Fonction.REGISTRE, Fonction.SOUND]
 
     def __init__(self, args):
         self.action = ""

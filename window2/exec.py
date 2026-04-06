@@ -6,7 +6,8 @@ from os.path import sep as separator
 from mouse import Mouse
 from audio import Audio
 from keyboard import Keyboard
-from classes import Tools, Application
+from classes import Tools, Fonction
+from classes import Keys, Sound, Theme, Registres, Interrupts
 from typing import Type, Any
 
 
@@ -79,12 +80,36 @@ class Window:
 
         init_method = nom_classe.__init__
         nom_classe.__init__ = nom_classe.__initinstance__
-        instance = nom_classe(screen, window)
+        instance = nom_classe(window)
 
-        nom_classe.__init__= init_method
+        nom_classe.__init__ = init_method
         nom_classe.__init__(instance, *args, **kwargs)
 
         return instance
+
+    def get_fonction(self, fonction: Fonction, instance: Any = None) -> Any:
+        if not isinstance(fonction, Fonction):
+            raise TypeError("Le paramètre 'fonction' doit être de type 'Fonction'.")
+
+        match fonction:
+            case Fonction.TOOLS:
+                return Tools(self.window_draw_surf)
+            case Fonction.KEYS:
+                return Keys(self)
+            case Fonction.SOUND:
+                return Sound(self)
+            case Fonction.THEME:
+                return Theme()
+            case Fonction.REGISTRE:
+                return Registres(self.app.DEFAULT_CONFIG[0])
+            case Fonction.IRQ:
+                return Interrupts(instance)
+            case Fonction.MOUSE:
+                return Mouse()
+            # case Fonction.COMMUNICATION:
+            #     return Communication()
+
+        raise TypeError("La fonctionnalite {fonc!r} n'existe pas.")
 
     def set_size(self, x, y, w, h, update_app=True):
         self.border_size = 0 if self.last_statut() == "MAXIMIZED" else self.WINDOW_BORDER_SIZE
@@ -206,7 +231,8 @@ class Window:
     def close(self):
         try:
             self.instance.close()
-            self.instance.registre.save_file()
+            if Fonction.REGISTRE in self.instance.FONCTIONS:
+                self.instance.registre.save_file()
         except Exception as erreur:
             self.set_error()
             print("Erreur:", erreur, flush=True)
@@ -221,7 +247,7 @@ def get_application_classe(applications):
     liste_classes = list(filter(lambda x: not x.startswith("__"), applications))
     liste_classes.remove("Application")
     for classe in liste_classes:
-        classe_courante = applications.get(classe,{})
+        classe_courante = applications.get(classe, {})
         if not hasattr(classe_courante, "__bases__"):
             continue
 
@@ -268,7 +294,8 @@ def run(application=None):
                 match action:
                     case "QUIT":
                         instance.close()
-                        instance.registre.save_file()
+                        if Fonction.REGISTRE in instance.FONCTIONS:
+                            instance.registre.save_file()
                         running = False
 
         pygame.display.update()

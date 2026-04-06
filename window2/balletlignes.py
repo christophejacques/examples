@@ -1,5 +1,5 @@
 import random
-from classes import Application, Irq, fprint
+from classes import Application, Irq, fprint, Fonction
 from colors import Colors
 
 
@@ -39,6 +39,8 @@ class BalletLignes(Application):
     MIN_SIZE = (300, 200)
 
     DEFAULT_CONFIG = ("BalletLignes 500", Colors.MIDDLE_RED, 500)
+    FONCTIONS = [Fonction.TOOLS, Fonction.KEYS, Fonction.THEME, 
+        Fonction.REGISTRE, Fonction.IRQ]
 
     def __init__(self, args):
         self.lignes = list()

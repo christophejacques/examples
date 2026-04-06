@@ -1,7 +1,7 @@
 import random
 
 from colors import Colors
-from classes import Application
+from classes import Application, Fonction
 
 
 class Cellule:
@@ -39,6 +39,7 @@ DIRECTION = {
 class Laby(Application):
 
     DEFAULT_CONFIG = ("Labyrinthe 10", Colors.MIDDLE_ORANGE, 10)
+    FONCTIONS = [Fonction.TOOLS, Fonction.KEYS, Fonction.THEME]
 
     MIN_SIZE = (400, 300)
     

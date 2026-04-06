@@ -1,6 +1,6 @@
 import math
 import random
-from classes import Application, Irq
+from classes import Application, Irq, Fonction
 from colors import Colors
 
 
@@ -204,6 +204,7 @@ class Source:
 class RayCasting(Application):
 
     DEFAULT_CONFIG = ("Ray Casting 2", Colors.MIDDLE_GREEN, 2, 10)
+    FONCTIONS = [Fonction.TOOLS, Fonction.KEYS, Fonction.THEME, Fonction.IRQ]
 
     MIN_SIZE = (400, 300)
 
@@ -293,7 +294,7 @@ class RayCasting(Application):
                     self.tools.line(couleur, source.to_point(), rayon.to_dest())
 
         for wall in self.walls:
-            self.tools.line( (10, 200, 30), *wall.to_line())
+            self.tools.line((10, 200, 30), *wall.to_line())
 
         for cercle in self.cercles:
             self.tools.circle(self.color, *cercle.to_dest())

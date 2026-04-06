@@ -1,6 +1,6 @@
 from abc import abstractmethod, ABCMeta
-from classes import Application, fprint
-from typing import Self, Optional, Callable, List, Tuple, Any
+from classes import Application, Fonction
+from typing import Self, Optional, Callable, List, Tuple
 from colors import Colors, darker
 from functools import partial
 
@@ -407,6 +407,7 @@ class Librairie(Application):
     DEFAULT_CONFIG: tuple = ("Switch", (50, 150, 150))
     MIN_SIZE: tuple = (810, 300)
     WINDOW_PROPERTIES: List = ["CENTER"]
+    FONCTIONS = [Fonction.TOOLS, Fonction.KEYS, Fonction.THEME, Fonction.REGISTRE]
 
     def __init__(self, *args):
         self.title = self.DEFAULT_CONFIG[0]
@@ -485,7 +486,6 @@ class Librairie(Application):
         self.objets.append(rbs)
 
         self.win_resize("BOTTOM RIGHT", 0, 0, *self.MIN_SIZE)
-
 
     def save_registres(self):
         # fprint("save registre:")

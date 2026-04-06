@@ -1,6 +1,6 @@
 import numpy as np
 
-from classes import Application
+from classes import Application, Fonction
 from colors import Colors
 
 
@@ -10,6 +10,7 @@ class SuperStarfield(Application):
 
     DEFAULT_CONFIG = ("Super Starfield", Colors.ORANGE)
     WINDOW_PROPERTIES = ["RESIZABLE"]
+    FONCTIONS = [Fonction.TOOLS, Fonction.KEYS, Fonction.THEME]
 
     def __init__(self, args):
         # set up a random batch of stars for the background

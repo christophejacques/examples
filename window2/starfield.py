@@ -1,6 +1,6 @@
 import math
 import random
-from classes import Application
+from classes import Application, Fonction
 from colors import Colors
 
 
@@ -17,6 +17,7 @@ class StarField(Application):
 
     DEFAULT_CONFIG = ("Starfiel 50", Colors.DARK_ORANGE, 50)
     MIN_SIZE = (400, 300)
+    FONCTIONS = [Fonction.TOOLS, Fonction.KEYS]
 
     def __init__(self, args):
         self.title = self.DEFAULT_CONFIG[0]

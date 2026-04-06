@@ -1,11 +1,10 @@
 import time
 import os
 
-from classes import Application, fprint
+from classes import Application, fprint, Fonction
 from functools import partial
 from threading import Thread
-from typing import Optional
-
+from typing import Optional, List
 
 
 class Box:
@@ -22,8 +21,10 @@ class Box:
 
     def resize(self, parent, new_size=None, **options):
         if len(options) > 0:
-            if "dx" in options: self.rect.x += options["dx"]
-            if "dwidth" in options: self.rect.width += options["dwidth"]
+            if "dx" in options: 
+                self.rect.x += options["dx"]
+            if "dwidth" in options: 
+                self.rect.width += options["dwidth"]
         elif new_size:
             self.rect = self.tools.Rect(new_size)
 
@@ -299,7 +300,14 @@ class ListDirectoryFile(Box):
         self.decal: int
 
         self.scan()
+        if not os.path.exists(self.directory):
+            self.directory = "."
+            return
+
         filename = os.sep.join(parent.registre.load("fichier", []))
+        if not os.path.exists(filename):
+            return
+
         self.select("files", filename[1+filename.rindex(os.path.sep):])
 
     def select(self, item_type: str, item: str) -> None:
@@ -332,9 +340,14 @@ class ListDirectoryFile(Box):
         self.is_clicked = False
         self.ascenseur_is_clicked = False
         self.mouse_over_ascenseur = False
-        self.action = "CD:" + self.directory
 
-        for file in os.scandir(self.directory):
+        if self.directory: 
+            directory = self.directory 
+            self.action = "CD:" + self.directory
+        else:
+            directory = "."
+
+        for file in os.scandir(directory):
             if file.is_dir() and file.name[0] not in (".", "_"): 
                 self.liste["dirs"].append(f"[{file.name}]")
             elif file.is_file() and file.name.lower().endswith(".jpg"):
@@ -396,7 +409,7 @@ class ListDirectoryFile(Box):
 
         index = (position[1] - self.BORDER_SIZE) // 21 
         if index < 0 or index >= self.len_dirs+self.len_files or index > self.MAX_FILES or (
-            position[0] >= self.rect.width-self.largeur_ascenseur):
+          position[0] >= self.rect.width-self.largeur_ascenseur):
             self.index = -1
             return
 
@@ -500,7 +513,7 @@ class ListDirectoryFile(Box):
                     self.selected_index += 1
 
             case "DOWN":
-                if self.decal+self.index +1 < self.len_dirs + self.len_files:
+                if self.decal+self.index + 1 < self.len_dirs + self.len_files:
                     if self.index < self.MAX_FILES:
                         self.index += 1
                     else:
@@ -512,7 +525,7 @@ class ListDirectoryFile(Box):
                     if self.MAX_FILES < self.len_dirs+self.len_files:
                         self.index = self.MAX_FILES 
                     else:
-                        self.index = self.len_dirs+self.len_files -1
+                        self.index = self.len_dirs+self.len_files - 1
 
                 elif self.index+self.decal < self.len_dirs+self.len_files:
                     if self.decal+self.index+self.MAX_FILES < self.len_dirs+self.len_files:
@@ -563,7 +576,6 @@ class ListDirectoryFile(Box):
         if self.ascenseur:
             ascenseur_color: tuple = (200, 200, 200)
             x1: int = self.rect.width - self.largeur_ascenseur
-            x2: int = self.rect.width-2
 
             # cadre de l'ascenseur
             self.tools.rect(ascenseur_color, (x1, 0, self.largeur_ascenseur, self.rect.height))
@@ -660,7 +672,9 @@ class SelectWallpaper(Application):
 
     DEFAULT_CONFIG: tuple = ("SelectWallpaper", (100, 100, 100))
     MIN_SIZE: tuple = (1200, 545)
-    WINDOW_PROPERTIES: list = ["CENTER", "UNIQUE"]
+    WINDOW_PROPERTIES: List = ["CENTER", "UNIQUE"]
+    FONCTIONS: List = [Fonction.TOOLS, Fonction.KEYS, Fonction.THEME, 
+        Fonction.REGISTRE, Fonction.MOUSE]
 
     def __init__(self, *args):
         self.title = self.DEFAULT_CONFIG[0]
@@ -673,7 +687,7 @@ class SelectWallpaper(Application):
         self.compteur_tache = 0
 
     @property
-    def directory(self):
+    def directory(self) -> str:
         if self.img_filename is None:
             return ""
         elif len(self.img_filename) > 1:
@@ -684,11 +698,13 @@ class SelectWallpaper(Application):
         self.set_title(self.title)
         self.win_resize("CENTER", 0, 0, *self.MIN_SIZE)
 
-        nombre = self.registre.load("Utilisation", 0)
-        self.registre.save("Utilisation", 1+nombre)
         self.get_theme()
-        print(self.registre.load("fichier", []))
         self.img_filename = os.sep.join(self.registre.load("fichier", []))
+
+        if self.img_filename is None or not os.path.exists(self.img_filename):
+            # si le fichier 
+            self.img_filename = None
+
         self.decal_sep_x = self.registre.load("decal_sep_x", 410)
 
         # couleur_fond = (220, 220, 220)
@@ -708,7 +724,6 @@ class SelectWallpaper(Application):
         self.width, self.height = self.tools.get_size()
         self.check_actions()
 
-
         cx = self.liste_dirs_files.rect.centerx
 
         # Bouton Valider
@@ -717,11 +732,11 @@ class SelectWallpaper(Application):
         self.boutons.append(self.valider)
 
         # Bouton Annuler
-        self.annuler = Bouton(self, "Annuler", (10 , 470, cx-20, 40), self.close)
+        self.annuler = Bouton(self, "Annuler", (10, 470, cx-20, 40), self.close)
         self.boutons.append(self.annuler)
 
         # Bouton Parent
-        self.parent = Bouton(self, "Par", (10 , 10, 40, 40), 
+        self.parent = Bouton(self, "Par", (10, 10, 40, 40), 
             self.liste_dirs_files.set_action, "PARENT")
         self.boutons.append(self.parent)
 
@@ -774,7 +789,6 @@ class SelectWallpaper(Application):
 
     def mouse_exit(self):
         pass
-
 
     def set_action_keypressed(self, action, delay):
         self.liste_dirs_files.set_action(action)
@@ -931,7 +945,7 @@ class SelectWallpaper(Application):
 
                 cx = self.liste_dirs_files.rect.centerx
                 self.valider.resize(self, (cx+10, self.valider.rect.y, cx-20, 40))
-                self.annuler.resize(self, (10 , self.annuler.rect.y, cx-20, 40))
+                self.annuler.resize(self, (10, self.annuler.rect.y, cx-20, 40))
 
             case ["CD", repertoire]:                
                 self.textDirectory.set_texte(repertoire)
@@ -942,15 +956,17 @@ class SelectWallpaper(Application):
 
             case ["SET", "WALLPAPER"]:
                 self.action = f"{action}:{self.img_filename};QUIT"
+                nombre = self.registre.load("Utilisation", 0)
+                self.registre.save("Utilisation", 1+nombre)
                 self.registre.save("fichier", self.img_filename.split(os.sep))
                 
                 if self.decal_sep_x != self.separation.rect.x:
                     self.registre.save("decal_sep_x", self.separation.rect.x)
 
-
     def close(self):
         self.action = "QUIT"
         if self.decal_sep_x != self.separation.rect.x:
+            print("registre.save decal_sep_x")
             self.registre.save("decal_sep_x", self.separation.rect.x)
 
     def get_action(self):

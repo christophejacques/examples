@@ -1,5 +1,4 @@
-import random
-from classes import Application
+from classes import Application, Fonction
 from colors import Colors
 
 
@@ -9,12 +8,12 @@ class TicTacToe(Application):
 
     WINDOW_PROPERTIES = ["NO_MAX"]
     DEFAULT_CONFIG = ("Tic Tac Toe", Colors.DARK_BLUE)
+    FONCTIONS = [Fonction.TOOLS, Fonction.KEYS, Fonction.THEME]
 
     def __init__(self, args):
         self.action = ""
         self.grid = []
         self.tour = "X"
-
 
     def get_theme(self):
         self.fore_color = self.theme.get("FORE_COLOR")

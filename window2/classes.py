@@ -5,10 +5,10 @@ import json
 
 from abc import abstractmethod, ABCMeta
 from os import path
-from typing import Callable, Optional, Dict, Final, final
+from typing import Callable, Optional, Dict, Final, final, List
 from functools import partial
 from enum import Enum, auto
-from pprint import pprint
+# from pprint import pprint
 
 from mouse import Mouse
 # from os.path import sep as separateur
@@ -20,7 +20,21 @@ def fprint(*args, **kwargs):
     print(*args, **kwargs, flush=True)
 
 
-class InstanceOnly: ...
+class Fonction(Enum):
+    COMMUNICATION = auto()
+    IRQ = auto()
+    KEYS = auto()
+    MOUSE = auto()
+    REGISTRE = auto()
+    SOUND = auto()
+    THEME = auto()
+    TOOLS = auto()
+
+
+class InstanceOnly: 
+    pass
+
+
 class MonEnum(Enum):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -183,12 +197,17 @@ def test_interrupts():
         def __init__(self, args):
             self.nom = args
 
-        def draw(self): ...
-        def resize(self): ...
-        def update(self): ...
+        def draw(self): 
+            pass
+
+        def resize(self): 
+            pass
+
+        def update(self): 
+            pass
+
         def interrupt(self, *args, **kwargs):
             print("->", self.nom, "interrupted by", *args, kwargs)
-
 
     print()
     os_irqs = Irqs()
@@ -259,7 +278,7 @@ class Registres:
                 self.__modified = True
                 self.__data = dict()
 
-        except FileNotFoundError as fnfe:
+        except FileNotFoundError:
             print("Initialisation de la base de registres", flush=True)
             self.__modified = True
             with open(self.__filename, "w", encoding="utf-8") as reg:
@@ -277,8 +296,8 @@ class Registres:
             self.__reg = json.load(reg)
 
         self.__reg[self.__application] = self.__data
-        with open(self.__filename, "w", indent=4, encoding="utf-8") as reg:
-            json.dump(self.__reg, reg)
+        with open(self.__filename, "w", encoding="utf-8") as reg:
+            json.dump(self.__reg, reg, indent=4)
 
     def clear(self) -> None:
         self.__modified = True
@@ -288,11 +307,11 @@ class Registres:
         return self.__data
 
     def load(self, chemin_registre, default=None) -> object:
-        res : dict = self.__data
+        res: dict = self.__data
         # fprint("load >", chemin_registre, end= " = ")
         # Recuperation des informations du chemin_registre
         for registre in chemin_registre.split("."):
-            if not registre in res:
+            if registre not in res:
                 self.save(chemin_registre, default)
                 # fprint("default: ", default)
                 return default
@@ -304,7 +323,7 @@ class Registres:
         return res
 
     def save(self, chemin_registre, valeur) -> None:
-        res : dict = self.__data
+        res: dict = self.__data
         self.__modified = True
 
         # Creation / Recuperation des informations du chemin_registre
@@ -560,13 +579,14 @@ class Application(metaclass=ABCMeta):
 
     WINDOW_PROPERTIES = ["RESIZABLE"]
     DEFAULT_CONFIG: tuple = ("?", (0, 0, 0))
+    FONCTIONS: List = list()
 
     @abstractmethod
     def __init__(self, args):
         pass
 
     @final
-    def __initinstance__(self, screen, window):
+    def __initinstance__(self, window):
         if hasattr(self, "__is_initialized"):
             return
 
@@ -575,17 +595,25 @@ class Application(metaclass=ABCMeta):
             
         self.__is_initialized = True
 
-        self.tools = Tools(screen)
-        self.keys = Keys(window)
-        self.sound = Sound(window)
-        self.theme = Theme()
-        self.registre = Registres(self.DEFAULT_CONFIG[0])
-        self.interrupt = Interrupts(self)
-        self.mouse = Mouse()
-
-        # window = Variable.window
         self.set_title = window.set_title
         self.win_resize = window.resize
+
+        for fonction in self.FONCTIONS:
+            match fonction:
+                case Fonction.IRQ:
+                    self.interrupt = window.get_fonction(fonction, self)
+                case Fonction.KEYS:
+                    self.keys = window.get_fonction(fonction)
+                case Fonction.MOUSE:
+                    self.mouse = window.get_fonction(fonction)
+                case Fonction.REGISTRE:
+                    self.registre = window.get_fonction(fonction)
+                case Fonction.SOUND:
+                    self.sound = window.get_fonction(fonction)
+                case Fonction.THEME:
+                    self.theme = window.get_fonction(fonction)
+                case Fonction.TOOLS:
+                    self.tools = window.get_fonction(fonction)
 
     def post_init(self):
         pass
@@ -648,18 +676,23 @@ def make_path(*args):
 def get_classes_from_file(type_classe, fichier):
     try:
         mon_app = __import__(fichier)
-    except Exception as erreur:
+    except Exception:
         print("Erreur de chargement:", fichier)
         return
         
     for classe_name in dir(mon_app):
-        if not hasattr(mon_app, type_classe): continue
+        if not hasattr(mon_app, type_classe): 
+            continue
         classe = getattr(mon_app, classe_name)
-        if not callable(classe): continue
-        if not classe.__class__.__name__ == "ABCMeta": continue
+        if not callable(classe): 
+            continue
+        if not classe.__class__.__name__ == "ABCMeta": 
+            continue
         lookup_classe = getattr(mon_app, type_classe)
-        if not issubclass(classe, lookup_classe): continue
-        if classe == lookup_classe: continue
+        if not issubclass(classe, lookup_classe): 
+            continue
+        if classe == lookup_classe: 
+            continue
         yield classe
 
 

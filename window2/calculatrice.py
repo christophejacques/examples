@@ -1,4 +1,4 @@
-from classes import Application
+from classes import Application, Fonction
 
 
 class Ecran:
@@ -120,6 +120,7 @@ class Calculatrice(Application):
     MIN_SIZE = (325, 405)
     WINDOW_PROPERTIES = []
     ESPACE_BTN: int = 5
+    FONCTIONS = [Fonction.TOOLS, Fonction.KEYS, Fonction.THEME, Fonction.REGISTRE]
 
     def __init__(self, *args):
         self.title = self.DEFAULT_CONFIG[0]

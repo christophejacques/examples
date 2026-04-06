@@ -1,7 +1,7 @@
 import random
 
 from colors import Colors
-from classes import Application
+from classes import Application, Fonction
 
 
 class Cell:
@@ -33,6 +33,7 @@ class Cell:
 class Demineur(Application):
 
     DEFAULT_CONFIG = ("Démineur", Colors.LIGHT_BLUE)
+    FONCTIONS = [Fonction.TOOLS, Fonction.KEYS, Fonction.THEME]
 
     MIN_SIZE = (200, 200)
     TAILLE = 10

@@ -1,9 +1,12 @@
 from __future__ import annotations
 from typing import Optional, Callable, Dict, List, Self, Generator, Any
+from enum import Enum, auto
+from functools import wraps
 
 
 def definition_types(*params):
     def get_fct(fonction):
+        @wraps(fonction)
         def ctrl_params(*args, **kwargs):
             for index, arg in enumerate(args):
                 if params[index] is Self:
@@ -84,7 +87,7 @@ class Communication:
 
     @definition_types(Self, int, int)
     def close_communication(self, client_id: int, port: int) -> None:
-        if not client_id in Communication.session.get(port, {}):
+        if client_id not in Communication.session.get(port, {}):
             raise Exception(f"Le port {port} n'est pas initialisé pour {client_id}")
 
         del Communication.session[port][client_id]
@@ -132,6 +135,30 @@ class Communication:
             fonction(data)
 
 
+class Fonction(Enum):
+    COMMUNICATION = auto()
+    TOOLS = auto()
+    KEYS = auto()
+    SOUND = auto()
+    THEME = auto()
+    REGISTRE = auto()
+    IRQ = auto()
+    MOUSE = auto()
+
+
+class OS:
+    @classmethod
+    def get_fonction(cls, fonction: Fonction) -> Any:
+        if not isinstance(fonction, Fonction):
+            raise TypeError("Le parametre doit être de type 'Fonction'.")
+            
+        match fonction:
+            case Fonction.COMMUNICATION:
+                return Communication()
+
+        raise TypeError("La fonctionnalite {fonc!r} n'existe pas.")
+
+
 class Server:
     DEBUG: bool = False
     PORT: int = 32165
@@ -141,7 +168,8 @@ class Server:
     def __init__(self, name: str):
         self.name = name
         self.action = Action()
-        self.communication = Communication()
+        self.os = OS()
+        self.communication = self.os.get_fonction(Fonction.COMMUNICATION)
         self.communication.init_port(self.action, Server.PORT, self.receive)
 
         if Server.DEBUG:
@@ -174,7 +202,7 @@ class Server:
     @definition_types(Self, int, Action)
     def send(self, client_id: int, action: Action) -> None:
         if Server.DEBUG:
-            print("  >", self.name,":", "send to", f"id:{client_id}", "...", action)
+            print("  >", self.name, ":", "send to", f"id:{client_id}", "...", action)
         self.communication.sendTo(client_id, Server.PORT, action)
 
     @definition_types(Self, Action)
@@ -192,8 +220,6 @@ class Server:
 
         if client_id not in self.clients:
             self.clients.append(client_id)
-
-            client_name = action.data.get("name", "?")
 
             # print("#", self.name, f"New client {client_name} added (id:{client_id})")
             self.action.update("SERVER_RESPONSE", {"connected": True})
@@ -234,7 +260,8 @@ class Client:
     
     def __init__(self, name: str):
         self.name = name
-        self.communication = Communication()
+        self.os = OS()
+        self.communication = self.os.get_fonction(Fonction.COMMUNICATION)
         self.action = Action()
         self.isConnected = False
 
@@ -280,7 +307,7 @@ class Client:
 
             case "MESSAGE":
                 if not self.isConnected:
-                    print("client", self.name ,"is not connected")
+                    print("client", self.name, "is not connected")
                     return
 
             case _:  # INIT

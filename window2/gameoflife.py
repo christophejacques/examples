@@ -1,11 +1,12 @@
 import random
-from classes import Application
+from classes import Application, Fonction
 from colors import Colors
 
 
 class GameOfLife(Application):
 
     DEFAULT_CONFIG = ("Jeu de la vie", Colors.BLUE)
+    FONCTIONS = [Fonction.TOOLS, Fonction.KEYS, Fonction.THEME]
 
     MIN_SIZE = (300, 200)
 
