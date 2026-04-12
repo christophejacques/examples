@@ -74,7 +74,7 @@ def eprint(*args, **kwargs):
 # ------------------------------------------------------------
 # Recursive Config Loader
 # ------------------------------------------------------------
-def decodage_regle(source: dict, operator: Optional[str]=None) -> Predicate[Any]:
+def decodage_regle(source: dict, operator: Optional[str] = None) -> Predicate[Any]:
     result: Optional[Predicate[Any]] = None
     first: bool = True
 
@@ -138,7 +138,7 @@ def decodage_regle(source: dict, operator: Optional[str]=None) -> Predicate[Any]
 
             else:
                 # c'est une fonction
-                args = tuple(element.get("args",()))
+                args = tuple(element.get("args", ()))
                 eprint(args)
 
                 factory = RULES[fonc_name]
@@ -156,7 +156,6 @@ def decodage_regle(source: dict, operator: Optional[str]=None) -> Predicate[Any]
                     result = result | fonction
                 else:
                     raise Exception("Erreur", f"operateur inconnu {operator}")
-
 
             first = False
 

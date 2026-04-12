@@ -46,7 +46,7 @@ class Action:
             self.ident = ident
 
     @definition_types(Self, str, Dict)
-    def update(self, code: str, data=None) -> None:
+    def update(self, code: str, data: Optional[Any] = None) -> None:
         self.code = code
         self.data = data
 
@@ -244,6 +244,8 @@ class Server:
                 self.register_client(action)
 
             case "CLOSE":
+                if action.ident != action.data.get("id", 0):
+                    raise Exception("Opération interdite !")
                 self.unregister_client(action.ident)
 
             case "MESSAGE":

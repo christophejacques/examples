@@ -174,7 +174,8 @@ class Window:
                 return Interrupts(instance)
             case Fonction.MOUSE:
                 return Mouse()
-            # case Fonction.COMMUNICATION:
+            case Fonction.COMMUNICATION:
+                return
             #     return Communication()
 
         raise TypeError("La fonctionnalite {fonc!r} n'existe pas.")

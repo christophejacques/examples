@@ -1,9 +1,8 @@
 from typing import Optional
 from json import load
-from pprint import pprint
 
 
-def decodage_regle(source: dict, operator: Optional[str]=None):
+def decodage_regle(source: dict, operator: Optional[str] = None):
     result: str = ""
     first: bool = True
 
@@ -30,13 +29,14 @@ def decodage_regle(source: dict, operator: Optional[str]=None):
                 result += decodage_regle(element)
 
             else:
-                args = tuple(element.get("args",()))
+                args = tuple(element.get("args", ()))
                 result += f"{fonction}{args}"
 
     else:
         raise Exception("Erreur", "type source inconnu")
 
     return result
+
 
 try:
     with open("rule_test.json") as file_handle:

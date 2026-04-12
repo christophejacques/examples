@@ -5,6 +5,7 @@ from rules import rule, load_recursive_rule_from_config, eprint
 
 DEBUG: bool = False
 
+
 @dataclass
 class User:
     is_admin: bool
@@ -82,6 +83,8 @@ api_check = is_admin() | (
 # ---------------------------------------------------------------------------
 # EXAMPLE SYSTEM USAGE
 # ---------------------------------------------------------------------------
+
+
 def reporting(users: list[User]) -> list[User]:
     return [u for u in users if api_check(u)]
 
@@ -103,19 +106,21 @@ def main() -> None:
         User(False, True, 60, True, "NL", 900, False),
     ]
 
-    if True:
+    if False:
         print("=== Access via Python DSL ===")
         for u in users:
             print(u, "=>", api_check(u))
 
-    # If rule_config.json exists, load dynamic rule:
+    # If rule_test.json exists, load dynamic rule:
     try:
         eprint("\n=== Access via Recursive Config Rule ===")
         print("\nrule = ", end="")
         recursive_rule = load_recursive_rule_from_config("rule_test.json")
         print("\n")
         for u in users:
-            print(u, "=>", recursive_rule(u))
+            print("API ", u, "=>", api_check(u))
+            print("RULE", u, "=>", recursive_rule(u))
+            print()
 
     except FileNotFoundError:
         print("\n(No rule_config.json found — skipping dynamic demo)")

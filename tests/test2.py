@@ -1,43 +1,36 @@
-from typing import Type, Any
+from typing import Type, Any, List, Dict, Optional
+from dataclasses import dataclass, field
+from typing import LiteralString
 
+
+@dataclass(frozen=True)
 class ClasseMere:
-    def __init__(self, *args):
-        print("ClasseMere: init  =>", args)
-        self.args = args
-
-    def __initinstance__(self, screen, window):
-        print("ClasseMere: initialisation instance =>", screen, window)
-        self.screen = screen
-        self.window = window
-
-    def __str__(self):
-        return f"{self.screen=} {self.window=}"
+    screen: LiteralString
+    window: LiteralString
 
 
-class UneClasse(ClasseMere):
-    def __init__(self, *args):
-        print("UneClasse: init instance", args)
-        self.args = args
+@dataclass
+class UneClasse:
+    args: List[Any]
+    kwargs: Optional[Dict[str, Any]] = field(default_factory=Dict)
 
     def __str__(self):
-        return super().__str__() + f" - {self.args=}"
+        screen, window, args, kwargs = self.screen, self.window, self.args, self.kwargs
+        return f"UneClasse({screen=}, {window=}, {args=}, {kwargs=})"
 
 
-def initialise_classe(
-        nom_classe: Type[Any], 
-        screen, 
-        window, 
+def initialise_classe(nom_classe: Type[Any], screen: str, window: str, 
         *args, **kwargs) -> Type:
 
     init_method = nom_classe.__init__
-    nom_classe.__init__ = nom_classe.__initinstance__
+    nom_classe.__init__ = ClasseMere.__init__
     instance = nom_classe(screen, window)
 
-    nom_classe.__init__= init_method
-    nom_classe.__init__(instance, *args, **kwargs)
+    nom_classe.__init__ = init_method
+    nom_classe.__init__(instance, args, kwargs)
 
     return instance
 
 
-uc = initialise_classe(UneClasse, "screen", "window", 5)
+uc = initialise_classe(UneClasse, "screen", "window", 5, retry=False)
 print(uc)

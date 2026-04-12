@@ -5,7 +5,7 @@ import json
 
 from abc import abstractmethod, ABCMeta
 from os import path
-from typing import Callable, Optional, Dict, Final, final, List
+from typing import Callable, Optional, Dict, Final, final, List, Union
 from functools import partial
 from enum import Enum, auto
 # from pprint import pprint
@@ -13,7 +13,7 @@ from enum import Enum, auto
 from mouse import Mouse
 # from os.path import sep as separateur
 
-type Executable = Application | SysTray
+type Executable = Union[Application, SysTray]
 
 
 def fprint(*args, **kwargs):
