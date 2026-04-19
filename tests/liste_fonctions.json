@@ -1,0 +1,107 @@
+[
+    {
+        "fonction": "exists",
+        "parametres": ""
+    },
+    {
+        "fonction": "is_adult",
+        "parametres": ""
+    },
+    {
+        "operateur": "NOT",
+        "content":
+        [
+            {
+                "fonction": "is_adult",
+                "parametres": ""
+            }
+        ]
+    },
+    {
+        "operateur": "NOT",
+        "content":
+        []
+    },
+    {
+        "operateur": "NOT",
+        "content":
+        [
+            {
+                "fonction": "is_adult",
+                "parametres": ""
+            },
+            {
+                "fonction": "is_adult",
+                "parametres": ""
+            }
+        ]
+    },
+    {
+        "operateur": "AND",
+        "content":
+        [
+            {
+                "operateur": "OR",
+                "content":
+                [
+                    {
+                        "operateur": "AND",
+                        "content":
+                        [
+                            {
+                                "operateur": "NOT",
+                                "content":
+                                [
+                                    {
+                                        "fonction": "is_adult",
+                                        "parametres": ""
+                                    }
+                                ]
+                            },
+                            {
+                                "fonction": "has_sexe",
+                                "parametres": "H"
+                            }
+                        ]
+                    },
+                    {
+                        "operateur": "AND",
+                        "content":
+                        [
+                            {
+                                "fonction": "is_adult",
+                                "parametres": ""
+                            },
+                            {
+                                "fonction": "has_sexe",
+                                "parametres": "F"
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                "operateur": "NOT",
+                "content":
+                [
+                    {
+                        "fonction": "live_in",
+                        "parametres":
+                        [
+                            "045",
+                            "054"
+                        ]
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "fonction": "is_instance",
+        "parametres": "Femme"
+    },
+    {
+        "fonction": "has_code_postal",
+        "parametres": "45000"
+    }
+]
