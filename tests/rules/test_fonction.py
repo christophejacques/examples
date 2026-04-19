@@ -1,6 +1,5 @@
-# import inspect
 import json
-
+import csv
 from typing import Dict, List, Callable
 from functools import wraps
 
@@ -11,13 +10,6 @@ class Regles:
     @classmethod
     def clear(self):
         self.__liste.clear()
-
-    @classmethod
-    def loadFromJson(self, filename: str):
-        with open(filename) as fhandle:
-            liste_regles = json.load(fhandle)
-            print(len(liste_regles), "règles ont été chargées")
-            return liste_regles
 
     @classmethod
     def get_liste(self):
@@ -89,6 +81,39 @@ class Femme(Personne):
     sexe: str = "F"
 
 
+class Outils:
+
+    @classmethod
+    def loadFromJson(self, nom_fichier: str) -> List[Dict]:
+        with open(nom_fichier) as fhandle:
+            liste_regles = json.load(fhandle)
+            print(len(liste_regles), "règles ont été chargées")
+            return liste_regles
+
+    @classmethod
+    def loadFromCsv(self, nom_fichier: str) -> List[Personne]:
+        content: List = list()
+        personne: Personne
+
+        with open(nom_fichier, encoding="utf-8") as fhandle:
+
+            donnees = csv.reader(fhandle, delimiter=";")
+
+            for ligne in donnees:
+                sexe, nom, prenom, age, dept, rue, cp, ville = ligne
+                if sexe.upper() == "HOMME":
+                    personne = Homme(nom, prenom, int(age), dept, rue, cp, ville)
+                elif sexe.upper() == "FEMME":
+                    personne = Femme(nom, prenom, int(age), dept, rue, cp, ville)
+                else:
+                    raise TypeError(f"Type de personne {sexe} inconnu.")
+
+                content.append(personne)
+
+        print(len(content), "personnes ont été chargées")
+        return content
+
+
 @regle
 def exists(personne: Personne) -> bool:
     return True
@@ -133,12 +158,15 @@ def eprint(*args, **kwargs):
     print(*args, **kwargs, end="")
 
 
-class Fonctions:
+class Fonction:
     definition: str 
     fonction: Callable
 
     def __init__(self):
         self.clear()
+
+    def __call__(self, classe):
+        return self.fonction(classe)
 
     def clear(self):
         self.definition = ""
@@ -147,12 +175,6 @@ class Fonctions:
     def decoder(self, regle: Dict):
         self.fonction = self.decoder_regle(regle)
         eprint(self.definition)
-
-    def __call__(self, classe):
-        return self.fonction(classe)
-
-    def run(self, classe):
-        return self.fonction(classe)
 
     def fusion_fonction(self, f1, f2, operateur) -> Callable:
         match operateur:
@@ -224,15 +246,9 @@ class Fonctions:
 
 
 def main():
-    liste_personnes: list = list()
-    liste_personnes.append(Homme("Jack", "Chris", 50, "040", "rue Dupanloup", "45000", "Orleans"))
-    liste_personnes.append(Homme("Jack", "chris", 15, "087", "rue Dupanloup", "87000", "Limoges"))
-    liste_personnes.append(Homme("Jack", "Chris", 50, "045", "rue Dupanloup", "45000", "Orleans"))
-    liste_personnes.append(Femme("Jack", "sylva", 50, "087", "rue Dupanloup", "87000", "Limoges"))
-    liste_personnes.append(Femme("Jack", "Sylva", 15, "040", "rue Dupanloup", "45000", "Orleans"))
-
-    liste_regles: list = Regles.loadFromJson("liste_fonctions.json")
-    fonction = Fonctions()
+    fonction: Fonction = Fonction()
+    liste_personnes: list = Outils.loadFromCsv("liste_personnes.csv")
+    liste_regles: list = Outils.loadFromJson("liste_fonctions.json")
 
     for une_regle in liste_regles:
 
