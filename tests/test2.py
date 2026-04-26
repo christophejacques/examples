@@ -20,7 +20,7 @@ class UneClasse:
 
 
 def initialise_classe(nom_classe: Type[Any], screen: str, window: str, 
-        *args, **kwargs) -> Type:
+        *args, **kwargs) -> Any:
 
     init_method = nom_classe.__init__
     nom_classe.__init__ = ClasseMere.__init__

@@ -201,8 +201,18 @@ class BaseDeDonnees:
         print("Ouverture de la BD")
         return self
 
-    def __exit__(self, *args) -> None:
-        print("Fermeture de la BD", args)
+    def __exit__(self, exc_type, exc_val, exc_tb) -> bool:
+        print("Fermeture de la BD:", end="")
+        if exc_type is None:
+            print(" OK")
+        else:
+            print()
+            print("-", exc_type)
+            print("-", exc_val)
+            print("-", exc_tb)
+
+        # ne renvoi pas l'erreur si une est interceptee
+        return True
 
     def set_schema(self, schema: str) -> None:
         self.current_schema = schema
@@ -302,14 +312,16 @@ with BaseDeDonnees() as bd:
         [Champ("travailID", TypeChamp("entier", ["primary", "auto"])), 
         Champ("code", TypeChamp("texte", ["not null", "unique"])), 
         Champ("libelle", TypeChamp("texte", ["not null"]))]))
-    print(bd.getTableByName("travail"))
+    T_Travail = bd.getTableByName("travail")
+    print(T_Travail)
 
     bd.add_table(Table("fonctions", 
         [Champ("fonctionid", TypeChamp("entier", ["primary", "auto"])), 
         Champ("code",  TypeChamp("string", ["not null", "unique"])), 
         Champ("libelle",  TypeChamp("string", ["not null"])), 
         Champ("date", TypeChamp("texte", ["not null"], ["current"]))]))
-    print(bd.getTableByName("fonctions"))
+    T_Fonctions = bd.getTableByName("fonctions")
+    print(T_Fonctions)
 
     bd.add_table(Table("asp.users", [
         Champ("userid", TypeChamp("entier", ["primary", "auto"])), 
@@ -324,17 +336,18 @@ with BaseDeDonnees() as bd:
 
     print()
     bd.set_schema("asp")
-    bd.getTableByName("users").add_relations([
-        Relation("primary", [bd.getTableByName("users").getChamp("userid")]), 
-        Relation("foreign", [bd.getTableByName("users").getChamp("travailid")], 
-        [bd.getTableByName("ref.travail").getChamp("travailID"), 
+    T_Users = bd.getTableByName("users")
+    T_Users.add_relations([
+        Relation("primary", [T_Users.getChamp("userid")]), 
+        Relation("foreign", [T_Users.getChamp("travailid")], 
+        [T_Travail.getChamp("travailID"), 
         "ON DELETE CASCADE", "ON UPDATE NO ACTION"]), 
-        Relation("foreign", [bd.getTableByName("users").getChamp("fonctionid")], 
-        [bd.getTableByName("ref.fonctions").getChamp("fonctionID"), 
+        Relation("foreign", [T_Users.getChamp("fonctionid")], 
+        [T_Fonctions.getChamp("fonctionID"), 
         "ON DELETE CASCADE", "ON UPDATE NO ACTION"]), 
-        Relation("unique", [bd.getTableByName("users").getChamp("email")])])
+        Relation("unique", [T_Users.getChamp("email")])])
 
-    print(bd.getTableByName("users"))
+    print(T_Users)
     print()
 
     print("Liste des schémas:", bd.getSchemas())
@@ -350,3 +363,6 @@ with BaseDeDonnees() as bd:
     bd.dropTableByName("fonctions")
     bd.dropTableByName("travail")
     bd.dropTableByName("grade")
+
+    # Erreur capturee par le with
+    # print(1/0)

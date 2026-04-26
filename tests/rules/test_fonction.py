@@ -1,43 +1,5 @@
-import json
-import csv
-from typing import Dict, List, Callable
-from functools import wraps
-
-
-class Regles:
-    __liste: Dict[str, Callable] = dict()
-
-    @classmethod
-    def clear(self):
-        self.__liste.clear()
-
-    @classmethod
-    def get_liste(self):
-        return self.__liste
-
-    @classmethod
-    def get_fonction(self, fonction: str):
-        return self.__liste[fonction]
-
-    @classmethod
-    def print(self):
-        for regle in self.__liste():
-            print(regle)
-
-    @classmethod
-    def add(self, fonction_name: str, fonction: Callable):
-        # print("add", fonction_name, inspect.signature(fonction))
-        self.__liste[fonction_name] = fonction
-
-
-# Decorateur: Recuperation des regles
-def regle(fonction):
-    Regles.add(fonction.__name__, fonction)
-
-    @wraps(fonction)
-    def parametres(*args, **kwargs):
-        return fonction(*args, **kwargs)
-    return parametres
+from typing import Dict
+from regles import regle, Fonction, Outils
 
 
 class Adresse:
@@ -81,39 +43,6 @@ class Femme(Personne):
     sexe: str = "F"
 
 
-class Outils:
-
-    @classmethod
-    def loadFromJson(self, nom_fichier: str) -> List[Dict]:
-        with open(nom_fichier) as fhandle:
-            liste_regles = json.load(fhandle)
-            print(len(liste_regles), "règles ont été chargées")
-            return liste_regles
-
-    @classmethod
-    def loadFromCsv(self, nom_fichier: str) -> List[Personne]:
-        content: List = list()
-        personne: Personne
-
-        with open(nom_fichier, encoding="utf-8") as fhandle:
-
-            donnees = csv.reader(fhandle, delimiter=";")
-
-            for ligne in donnees:
-                sexe, nom, prenom, age, dept, rue, cp, ville = ligne
-                if sexe.upper() == "HOMME":
-                    personne = Homme(nom, prenom, int(age), dept, rue, cp, ville)
-                elif sexe.upper() == "FEMME":
-                    personne = Femme(nom, prenom, int(age), dept, rue, cp, ville)
-                else:
-                    raise TypeError(f"Type de personne {sexe} inconnu.")
-
-                content.append(personne)
-
-        print(len(content), "personnes ont été chargées")
-        return content
-
-
 @regle
 def exists(personne: Personne) -> bool:
     return True
@@ -140,7 +69,7 @@ def live_in(personne: Personne, depts: list) -> bool:
 
 
 @regle
-def age_add(personne: Personne, annees: int):
+def age_add(personne: Personne, annees: int) -> int:
     return personne.age + annees
 
 
@@ -154,106 +83,23 @@ def is_instance(objet: object, nom_classe: str) -> bool:
     return isinstance(objet, classe)
 
 
-def eprint(*args, **kwargs):
-    print(*args, **kwargs, end="")
-
-
-class Fonction:
-    definition: str 
-    fonction: Callable
-
-    def __init__(self):
-        self.clear()
-
-    def __call__(self, classe):
-        return self.fonction(classe)
-
-    def clear(self):
-        self.definition = ""
-        self.fonction = None
-
-    def decoder(self, regle: Dict):
-        self.fonction = self.decoder_regle(regle)
-        eprint(self.definition)
-
-    def fusion_fonction(self, f1, f2, operateur) -> Callable:
-        match operateur:
-            case "AND":
-                return lambda x: f1(x) and f2(x)
-            case "OR":
-                return lambda x: f1(x) or f2(x)
-            case _:
-                raise Exception(f"Operateur {operateur!r} non géré.")
-
-    def fonction_classe(self, operateur: str, fonction, parametres=None) -> Callable:
-        if operateur == "NOT":
-            if parametres is None or parametres == "":
-                return lambda classe: not Regles.get_fonction(fonction)(classe)
-            else:
-                return lambda classe: not Regles.get_fonction(fonction)(classe, parametres)
-        else:
-            if parametres is None or parametres == "":
-                return lambda classe: Regles.get_fonction(fonction)(classe)
-            else:
-                return lambda classe: Regles.get_fonction(fonction)(classe, parametres)
-
-    def decoder_regle(self, regles: Dict, operateur=None, first: bool = True) -> Callable:
-        return_fonc: Callable
-
-        if not isinstance(regles, Dict):
-            raise Exception("Erreur de decodage", regles)
-
-        fonction = regles.get("fonction", None)
-        if fonction is not None:
-            parametres = regles.get("parametres", None)
-            if first and operateur == "NOT":
-                self.definition += f"{operateur} "
-
-            self.definition += f"{fonction}({parametres})"
-
-            return_fonc = self.fonction_classe(operateur, fonction, parametres)
-
-            return return_fonc
-
-        # Operateur
-        operateur = regles.get("operateur", None)
-
-        if operateur is None:
-            raise Exception("Erreur de decodage", regles)
-
-        self.definition += "["
-
-        content: List = regles.get("content", [])
-        if len(content) > 0:
-            return_fonc = self.decoder_regle(content[0], operateur)
-        else:
-            raise Exception(f"L'operateur {operateur} doit avoir au moins un parametre")
-
-        if len(content) > 1 and operateur == "NOT":
-            raise Exception("L'operateur NOT n'accepte qu'un seul parametre")
-
-        for regle in content[1:]:
-            self.definition += f" {operateur} "
-
-            return_fonc = self.fusion_fonction(
-                return_fonc, 
-                self.decoder_regle(regle, operateur, False), 
-                operateur)
-
-        self.definition += "]"
-
-        return return_fonc
-
-
 def main():
-    fonction: Fonction = Fonction()
-    liste_personnes: list = Outils.loadFromCsv("liste_personnes.csv")
-    liste_regles: list = Outils.loadFromJson("liste_fonctions.json")
+    index: int
+    une_regle: Dict
 
-    for une_regle in liste_regles:
+    classes: Dict = {
+        "HOMME": Homme,
+        "FEMME": Femme
+    }
+
+    fonction: Fonction = Fonction()
+    liste_personnes: list[Personne] = Outils.loadFromCsv("liste_personnes.csv", classes)
+    liste_regles: list[Dict] = Outils.loadFromJson("liste_fonctions.json")
+
+    for index, une_regle in enumerate(liste_regles):
 
         fonction.clear()
-        eprint("Regle: ")
+        print(f"Regle {1+index}: ", end="")
         try:
             fonction.decoder(une_regle)
 

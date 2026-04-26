@@ -48,7 +48,7 @@ def decode_baerer_auth(auth_header: str):
         print("\n## Contenu (Payload) :")
         print(json.dumps(payload_data, indent=2))
         
-        print(f"\n## Signature (NON VÉRIFIÉE)")
+        print("\n## Signature (NON VÉRIFIÉE)")
         print(signature)
         
     except ValueError as e:
@@ -90,7 +90,7 @@ def decode_basic_auth(token: str):
 
 decode_functions: dict = {
     "basic": decode_basic_auth,
-    "bearer" : decode_baerer_auth
+    "bearer": decode_baerer_auth
 }
 
 
