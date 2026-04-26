@@ -6,11 +6,6 @@ from ftplib import FTP
 
 multi: list[str] = ["o ", "Ko", "Mo", "Go", "To", "Po", "??"]
 
-# Informations de connexion à votre serveur FTP
-hostname = "test.rebex.net"
-username = "demo"
-password = "password"
-
 
 def fprint(*args, **kwargs):
     print(*args, flush=True, **kwargs)
@@ -67,7 +62,7 @@ class MyFTP:
             fprint("exit:", param2)
         self.close()
 
-    def scan(self, chemin: str = "", level: int = 0) -> None:
+    def scan(self, chemin: str = "", level: int = 0, callback=None, show: bool = True) -> None:
         rep: str
 
         if level == 0:
@@ -75,7 +70,10 @@ class MyFTP:
             self.nb_files = 0
             self.size_files = 0
 
-        self.getliste(chemin)
+        self.getliste(chemin, show=show)
+
+        if callback:
+            callback()
 
         liste_dirs: list = self.dirs.copy()
         self.nb_dirs += len(liste_dirs)
@@ -87,19 +85,20 @@ class MyFTP:
         while liste_dirs:
             rep = liste_dirs.pop(0)
             level += 1
-            self.scan(f"{chemin}/{rep}", level)
+            self.scan(f"{chemin}/{rep}", level, callback=callback, show=show)
             level -= 1
 
         if level == 0:
-            self.cd(chemin)
-            fprint(f"{self.nb_dirs} répertoire(s) et {self.nb_files} fichier(s) pour :", 
-                int2human(str(self.size_files)))
+            self.cd(chemin, show)
+            if show:
+                fprint(f"{self.nb_dirs} répertoire(s) et {self.nb_files} fichier(s) pour :", 
+                    int2human(str(self.size_files)))
 
-    def getliste(self, remote_path: str = "/"):
+    def getliste(self, remote_path: str = "/", show: bool = True):
         self.dirs.clear()
         self.fichiers.clear()
 
-        self.cd(remote_path)
+        self.cd(remote_path, show)
 
         if False:
             lignes: list = list()
@@ -107,7 +106,8 @@ class MyFTP:
             for ligne in lignes:
                 fprint("*", ligne)
 
-        fprint("List content:")
+        if show:
+            fprint("List content:")
         max_filename_size: int = 0
         # for fichier in self.ftp.mlsd(facts=["type", "size", "perm", "modify"]):
         for fichier in self.ftp.mlsd():
@@ -132,6 +132,9 @@ class MyFTP:
                         self.ftp.voidcmd(f"MDTM {file_name}")[4:].strip()))
 
                     self.fichiers[file_name]["date"] = date_modif
+
+        if not show:
+            return
 
         fprint("Dirs:", self.dirs)
         fprint("Files:")
@@ -187,17 +190,23 @@ class MyFTP:
 
         fprint("Fichier envoyé avec succès !")
 
-    def getfile(self, remote_path, remote_file, local_file):
+    def getfile(self, remote_path, remote_file, local_file=None, show: bool = True) -> bool:
+        if local_file is None:
+            local_file = remote_file
+
         if os.path.exists(local_file):
             os.remove(local_file)
 
         fichier_recupere: bool = False
 
         # Changement de répertoire sur le serveur (si nécessaire)
-        self.cd(remote_path)
+        if self.pwd != remote_path:
+            self.cd(remote_path, show=show)
 
         # Recuperation du fichier
-        fprint(f"ftp.retrbinary({'RETR ' + local_file})")
+        if show:
+            fprint(f"ftp.retrbinary({'RETR ' + remote_file})")
+
         with open(local_file, 'wb') as file:
             try:
                 self.ftp.retrbinary('RETR ' + remote_file, file.write)
@@ -206,16 +215,27 @@ class MyFTP:
                 fprint(erreur)
         
         if fichier_recupere:
-            fprint("Fichier téléchargé avec succès !")
+            if show:
+                fprint("Fichier téléchargé avec succès !")
+            return True
+
         else:
             os.remove(local_file)
+            return False
 
 
-if __name__ != "__main__":
-    exit()
-    
-with MyFTP(hostname, username, password) as my_ftp:
-    my_ftp.scan("/pub")
-    # my_ftp.getliste()
-    # my_ftp.getliste("/pub/example")
-    # my_ftp.getfile("/", "readme.txt", "readme.txt")
+def main():
+    # Informations de connexion à votre serveur FTP
+    hostname = "test.rebex.net"
+    username = "demo"
+    password = "password"
+
+    with MyFTP(hostname, username, password) as my_ftp:
+        my_ftp.scan("/pub")
+        # my_ftp.getliste()
+        # my_ftp.getliste("/pub/example")
+        # my_ftp.getfile("/", "readme.txt", "readme.txt")
+
+
+if __name__ == "__main__":
+    main()

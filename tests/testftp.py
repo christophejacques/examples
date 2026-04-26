@@ -1,68 +1,28 @@
 import os
-from ftplib import FTP
+# from VARIABLES_ENV import password
+from myftp import MyFTP
+
 
 # Informations de connexion à votre serveur FTP
-hostname = "perso.numericable.com"
-username = "cjacques"
-password = "pleinne1"
+hostname = "test.rebex.net"
+username = "demo"
+password = "password"
+
 remote_path = "/"  # Chemin du dossier de destination sur le serveur
-local_file = "mon_fichier.txt"
 
 
-def fprint(*args, **kwargs):
-    print(*args, flush=True, **kwargs)
+def download():
+    directory = ftp.pwd()
+    print(directory)
+    for fichier in ftp.fichiers:
+        if os.path.exists(f"./ftp/{fichier}"):
+            # le fichier existe deja donc on ne le re-telecharge pas
+            continue
 
-def sendfile(hostname, remote_path, local_file, username, password):
-    # Connexion au serveur FTP
-    with FTP(hostname) as ftp:
-        fprint("login", username)
-        ftp.login(username, password)
-
-        fprint(f"ftp.cwd({remote_path})")
-        # Changement de répertoire sur le serveur (si nécessaire)
-        ftp.cwd(remote_path)
-
-        # Envoi du fichier
-        fprint(f"ftp.storbinary({'STOR ' + local_file})")
-        with open(local_file, 'rb') as f:
-            ftp.storbinary('STOR ' + local_file, f)
-
-        fprint("Fichier envoyé avec succès !")
+        print("Downloading:", f"{directory}/{fichier}", flush=True, end=" ... ")
+        if ftp.getfile(directory, f"{fichier}", f"./ftp/{fichier}", show=False):
+            print("Done")
 
 
-def getfile(hostname, remote_path, remote_file, local_file, username, password):
-
-    if os.path.exists(local_file):
-        fprint("Suppression du fichier local:", local_file, end=" .. ")
-        os.remove(local_file)
-        fprint("done")
-
-    fichier_recupere: bool = False
-    # Connexion au serveur FTP
-    with FTP(hostname) as ftp:
-        fprint("login", username, end= " ... ")
-        ftp.login(username, password)
-        fprint("done")
-
-        fprint(f"ftp.cwd({remote_path})", end= " ")
-        # Changement de répertoire sur le serveur (si nécessaire)
-        ftp.cwd(remote_path)
-        fprint("ok")
-
-        # Envoi du fichier
-        fprint(f"ftp.retrbinary({'RETR ' + local_file})")
-        with open(local_file, 'wb') as f:
-            try:
-                ftp.retrbinary('RETR ' + remote_file, f.write)
-                fichier_recupere = True
-            except Exception as erreur:
-                fprint(erreur)
-        
-        if fichier_recupere:
-            fprint("Fichier téléchargé avec succès !")
-        else:
-            os.remove(local_file)
-
-
-# sendfile(hostname, remote_path, local_file, username, password)
-getfile(hostname, remote_path, local_file, local_file, username, password)
+with MyFTP(hostname, username, password) as ftp:
+    ftp.scan("/", callback=download, show=False)

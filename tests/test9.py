@@ -33,4 +33,3 @@ print(string_format("3 {scheme:lower}://{uri}/{img_name:capitalize}",
     scheme="HTTPS",
     uri="www.google.fr",
     img_name="AzErTy.jpg"))
-
