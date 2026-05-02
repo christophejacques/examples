@@ -15,10 +15,10 @@ class mon_iterateur:
 
     @decorateur
     def __init__(self, debut, fin=None):
-        if type(debut) != int:
+        if type(debut) is not int:
             raise TypeError("Le 1er paramêtre n'est pas de type Entier")
 
-        if fin is not None and type(fin) != int:
+        if fin is not None and type(fin) is not int:
             raise TypeError("Le 2ème paramêtre n'est pas de type Entier")
 
         if fin is None:
@@ -42,10 +42,10 @@ class mon_iterateur:
 
 @decorateur
 def mon_generateur(debut, fin=None):
-    if type(debut) != int:
+    if type(debut) is not int:
         raise TypeError("Le 1er paramêtre n'est pas de type Entier")
 
-    if fin is not None and type(fin) != int:
+    if fin is not None and type(fin) is not int:
         raise TypeError("Le 2ème paramêtre n'est pas de type Entier")
 
     if fin is None:

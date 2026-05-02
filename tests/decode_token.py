@@ -45,6 +45,9 @@ def decode_baerer_auth(auth_header: str):
     try:
         header_data, payload_data, signature = decode_jwt_unsafe(auth_header)
                 
+        print("\n## Contenu (Header) :")
+        print(json.dumps(header_data, indent=2))
+        
         print("\n## Contenu (Payload) :")
         print(json.dumps(payload_data, indent=2))
         
@@ -97,7 +100,7 @@ decode_functions: dict = {
 def main():
     tokens: list = list()
 
-    # tokens.append("Basic bW9udXRpbGlzYXRldXI6bW9ubW90ZGVwYXNzZQ==")
+    tokens.append("Basic bW9udXRpbGlzYXRldXI6bW9ubW90ZGVwYXNzZQ==")
     tokens.append("Bearer eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJGOS0yZ2NwNTBqSWZna2NCZ2w1NEJHemdfdkFGZXlEVm1xbFItSDlObHJNIn0.eyJleHAiOjE3NjQ4NTMzOTIsImlhdCI6MTc2NDg1MzA5MiwiYXV0aF90aW1lIjoxNzY0ODUzMDkxLCJqdGkiOiI4NmU2NjRmNy0xZWI2LTQ3M2UtYTE2ZS04NDI0ODNmNjc1NDMiLCJpc3MiOiJodHRwczovL2F1dGhrZXlkZXYuYXNwLXB1YmxpYy5mci9pYW0vcmVhbG1zL3JjaXBhYy1pIiwiYXVkIjoiYWNjb3VudCIsInN1YiI6IjVmMTkwODM3LTIxNjgtNGVkZC05OTZlLTI2Y2RmOGIyNDkyYiIsInR5cCI6IkJlYXJlciIsImF6cCI6IjE5OTk2NmU2MGY5NGE4NzkyNmY4MDdhZTMzMDhkZDBhIiwibm9uY2UiOiJkOWFkYzMwYi04NmI5LTQ3YTItYmJiMC1mNDllMDVjODI2ZGMiLCJzaWQiOiI1ZTRiNzljMS03NWUxLTQyMjctYWE3MC1hNzI1ZTk3MmFkYjYiLCJhY3IiOiIxIiwiYWxsb3dlZC1vcmlnaW5zIjpbImh0dHBzOi8vcmNpcGFjLWludC5hc3AtcHVibGljLmZyIl0sInJlYWxtX2FjY2VzcyI6eyJyb2xlcyI6WyJyZHI0LXJjaXBhYy11c2VyIiwicmRyNC1yY2lwYWMtYWRtaW4iLCJkZWZhdWx0LXJvbGVzLXJjaXBhYy1pIl19LCJyZXNvdXJjZV9hY2Nlc3MiOnsiYWNjb3VudCI6eyJyb2xlcyI6WyJtYW5hZ2UtYWNjb3VudCIsIm1hbmFnZS1hY2NvdW50LWxpbmtzIiwidmlldy1wcm9maWxlIl19fSwic2NvcGUiOiJvcGVuaWQgcHJvZmlsZSBlbWFpbCIsImVtYWlsX3ZlcmlmaWVkIjp0cnVlLCJjb2RlUGFydGVuYWlyZSI6IlBBQyIsImRhdGUtZGVybmllcmUtY29ubmV4aW9uIjoiMjAyNS0xMi0wMlQxMDoxNjo0Ny4wMDArMDE6MDAiLCJuYW1lIjoiQ2hyaXN0b3BoZSBKQUNRVUVTIiwicHJlZmVycmVkX3VzZXJuYW1lIjoiY2hyaXN0b3BoZS5qYWNxdWVzMSIsInNlc3Npb25fc3RhdGUiOiI1ZTRiNzljMS03NWUxLTQyMjctYWE3MC1hNzI1ZTk3MmFkYjYiLCJnaXZlbl9uYW1lIjoiQ2hyaXN0b3BoZSIsImZhbWlseV9uYW1lIjoiSkFDUVVFUyIsImVtYWlsIjoiY2hyaXN0b3BoZS5qYWNxdWVzMUBhc3AtcHVibGljLmZyIn0.QdYnfGAMLnyXV0D8jRUvG0_5ksUpTVuuDwyjx8Nmgw3YnL9ODYbmGubNU-3cqcYuHp1kWwK7gdgHP4wlRXb_ZskSRZIPV7NvfQ6sd7yQkQQleBWE2MUDp7lrH2dAIK36df7ElY1a4F4VJ17UjoMfHzJxsLnXSnNA6grS3zSjJGKLdGXPURkdzLpp-WFn17fnIzjcEpSwsuX6UmdMqPNF9vgTCtCfznl-0bBCrXul2MYPaZmRhoqlGhReAZhctHq2oAMg4P_NBbIDw-pFJ_FExfUzQRgN1GLVF6Bhn19Cjf8l-I9CVGx3uDAaxfF6it9adhTvS-_LLVCQojZZDuFhPw")
     for token in tokens:
         decode_functions.get(

@@ -1,8 +1,10 @@
 from functools import singledispatch
 
+
 @singledispatch
 def surcharger(a, b):
     raise NotImplementedError("Type du premier argument non supporté")
+
 
 # --- Cas où le PREMIER argument est un INT ---
 @surcharger.register(int)
@@ -25,6 +27,7 @@ def _(a, b):
 
     return interne(b)
 
+
 # --- Cas où le PREMIER argument est un STR ---
 @surcharger.register(str)
 def _(a, b):
@@ -41,6 +44,7 @@ def _(a, b):
         return f"Résultat: Deux chaînes -> {a} & {arg_b}"
 
     return interne(b)
+
 
 # --- Cas où le PREMIER argument est un FLOAT ---
 @surcharger.register(float)
@@ -59,6 +63,7 @@ def _(a, b):
 
     return interne(b)
 
+
 # --- Tests ---
 print(surcharger(5, 10))        # int, int
 print(surcharger(3, "Lo"))      # int, str
@@ -69,6 +74,8 @@ print(surcharger(10, 2.5))      # int, float
 print(surcharger(2.0, 3.0))     # float, float
 
 exit()
+
+
 from multipledispatch import dispatch
 
 

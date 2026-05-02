@@ -107,13 +107,12 @@ class ctrlVars:
                 if self.classe:
                     msg += f"de {self.nom_classe}."
                 else:
-                    msg += f"de "
+                    msg += "de "
                 msg += f"{self.fonction.__name__}(), "
                 msg += f"type {args[index].__class__.__name__!r} reçu"
                 msg += f", alors que {type_param.__name__!r} attendu."
 
                 self.error = TypeError(msg)
-
 
         type_result = self.fonction.__annotations__.get("return")
         real_type_result = type_result
@@ -209,7 +208,6 @@ def ajout_decorateur(classe: type, decorateur: type) -> str:
         getattr(classe, methode).__set_name__(classe, methode)
 
     return f"Classe {classe.__name__!r} mise à jour !"
-
 
 
 @ctrlVars

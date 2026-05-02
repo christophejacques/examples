@@ -31,7 +31,7 @@ class Cercle(Form2D):
         print(f"{self.rayon}", end=" : ")
 
     def get_rayon(self):
-        print(dir(self))
+        # print(dir(self))
         return Form2D.get_rayon(self)
 
 

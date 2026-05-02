@@ -11,8 +11,14 @@ couleurMatch = fcolors.GJAUNE
 couleurErreur = fcolors.GROUGE
 
 # détermination du nombre de colonnes du terminal
-_, colstr = os.popen('mode con | findstr Colonne', 'r').read().split()
-colsize = int(colstr)
+try:
+    colsize, _ = os.get_terminal_size()
+except Exception as erreur:
+    # print(erreur)
+    _, colstr = os.popen('mode con | findstr Colonne', 'r').read().split()
+    colsize = int(colstr)
+
+
 longeurMaxFichier = (colsize - 5) // 2
 
 argv = sys.argv.copy()[1:]

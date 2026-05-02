@@ -1,7 +1,8 @@
 import os
 import math
 from ftplib import FTP
-# from VARIABLES_ENV import password
+from VARIABLES_ENV import Coffre
+from typing import Optional
 
 
 multi: list[str] = ["o ", "Ko", "Mo", "Go", "To", "Po", "??"]
@@ -27,26 +28,40 @@ def readable_date(date_param: str) -> str:
 
 
 class MyFTP:
+    OPTIONS: list[str] = ["welcome", "debug"]
 
-    def __init__(self, hostname, username, password):
-        fprint("Initialising FTP", end=" ... ")
+    def __init__(self, hostname, username, password, **options):
+
+        for option in options:
+            if option not in MyFTP.OPTIONS:
+                raise Exception(f"Option {option!r} inconnue.")
+
+        self.debug: bool = options.get("debug", True)
+
+        if self.debug:
+            fprint("Initialising FTP", end=" ... ")
         self.ftp = FTP(timeout=5)
 
-        eprint("connecting to:", hostname, " ... ", flush=True)
+        if self.debug:
+            eprint("connecting to:", hostname, " ... ", flush=True)
         self.ftp.connect(hostname)
 
-        eprint(f"login with {username!r} ... ", flush=True)
+        if self.debug:
+            eprint(f"login with {username!r} ... ", flush=True)
         self.ftp.login(username, password)
 
-        fprint("Done.")
+        if self.debug:
+            fprint("Done.")
 
-        reponse = self.ftp.sendcmd("SYST")
-        if reponse:
-            fprint(f"Serveur : {reponse}")
+        if self.debug:
+            reponse = self.ftp.sendcmd("SYST")
+            if reponse:
+                fprint(f"Serveur : {reponse}")
         
-        welcome = self.ftp.getwelcome()
-        if welcome:
-            fprint(welcome)
+        if options.get("welcome", True):
+            welcome_message = self.ftp.getwelcome()
+            if welcome_message:
+                fprint(welcome_message)
 
         self.dirs: list = list()
         self.fichiers: dict = dict()
@@ -62,8 +77,12 @@ class MyFTP:
             fprint("exit:", param2)
         self.close()
 
-    def scan(self, chemin: str = "", level: int = 0, callback=None, show: bool = True) -> None:
+    def scan(self, chemin: str = "", level: int = 0, callback=None, 
+      show: Optional[bool] = None) -> None:
         rep: str
+
+        if show is None:
+            show = self.debug
 
         if level == 0:
             self.nb_dirs = 0
@@ -72,15 +91,15 @@ class MyFTP:
 
         self.getliste(chemin, show=show)
 
-        if callback:
-            callback()
-
         liste_dirs: list = self.dirs.copy()
         self.nb_dirs += len(liste_dirs)
         self.nb_files += len(self.fichiers)
 
         for nom, attr in self.fichiers.items():
             self.size_files += int(attr.get("size", 0))
+
+        if callback:
+            callback()
 
         while liste_dirs:
             rep = liste_dirs.pop(0)
@@ -94,9 +113,12 @@ class MyFTP:
                 fprint(f"{self.nb_dirs} répertoire(s) et {self.nb_files} fichier(s) pour :", 
                     int2human(str(self.size_files)))
 
-    def getliste(self, remote_path: str = "/", show: bool = True):
+    def getliste(self, remote_path: str = "/", show: Optional[bool] = None):
         self.dirs.clear()
         self.fichiers.clear()
+
+        if show is None:
+            show = self.debug
 
         self.cd(remote_path, show)
 
@@ -145,7 +167,9 @@ class MyFTP:
     def close(self):
         if self.ftp:
             self.ftp.close()
-            fprint("Connection closed.")
+
+            if self.debug:
+                fprint("Connection closed.")
 
     def dir(self, remote_path):
         current_path = self.pwd()
@@ -155,9 +179,11 @@ class MyFTP:
         self.cd(current_path, show=False)
 
     def md(self, remote_path) -> str:
-        fprint("md", remote_path, end=" ... ")
+        if self.debug:
+            fprint("md", remote_path, end=" ... ")
         path = self.ftp.mkd(remote_path)
-        fprint("done.")
+        if self.debug:
+            fprint("done.")
         return path
 
     def cd(self, remote_path, show: bool = True):
@@ -166,9 +192,11 @@ class MyFTP:
         self.ftp.cwd(remote_path)
 
     def rd(self, remote_path):
-        fprint("rd", remote_path, end=" ... ")
+        if self.debug:
+            fprint("rd", remote_path, end=" ... ")
         self.ftp.rmd(remote_path)
-        fprint("done.")
+        if self.debug:
+            fprint("done.")
 
     def pwd(self):
         return self.ftp.pwd()
@@ -184,11 +212,13 @@ class MyFTP:
         self.cd(remote_path)
 
         # Envoi du fichier
-        fprint(f"ftp.storbinary({'STOR ' + local_file})")
+        if self.debug:
+            fprint(f"ftp.storbinary({'STOR ' + local_file})")
         with open(local_file, 'rb') as file:
             self.ftp.storbinary('STOR ' + local_file, file)
 
-        fprint("Fichier envoyé avec succès !")
+        if self.debug:
+            fprint("Fichier envoyé avec succès !")
 
     def getfile(self, remote_path, remote_file, local_file=None, show: bool = True) -> bool:
         if local_file is None:
@@ -228,13 +258,13 @@ def main():
     # Informations de connexion à votre serveur FTP
     hostname = "test.rebex.net"
     username = "demo"
-    password = "password"
+    password = Coffre.get_password(hostname, username)
 
-    with MyFTP(hostname, username, password) as my_ftp:
+    with MyFTP(hostname, username, password, welcome=False, debug=True) as my_ftp:
         my_ftp.scan("/pub")
         # my_ftp.getliste()
         # my_ftp.getliste("/pub/example")
-        # my_ftp.getfile("/", "readme.txt", "readme.txt")
+        # my_ftp.getfile("/", "readme.txt", "./ftp/readme.txt")
 
 
 if __name__ == "__main__":

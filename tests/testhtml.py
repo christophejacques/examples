@@ -31,7 +31,7 @@ class Element:
 
 class XPath:
     __elts: list[Element]
-    __index : int
+    __index: int
 
     def __init__(self):
         self.__elts = list()
@@ -67,9 +67,12 @@ class XPath:
 
     def pop(self) -> Element:
         element = self.__elts.pop()
+        if self.__index >= len(self.__elts):
+            self.__index -= 1
+
         return element
 
-    def begins_with(self, xpath, check_attrs: bool=False) -> bool:
+    def begins_with(self, xpath, check_attrs: bool = False) -> bool:
         if not isinstance(xpath, XPath):
             raise Exception("xpath n'est de type XPath")
 
@@ -87,7 +90,6 @@ class XPath:
             if check_attrs and i1.getAttrs() != i2.getAttrs():
                 print(i1, "(attrs) !=", i2, "(attrs)")
                 return False
-
 
         print(xpath, "in", self)
         return True
@@ -116,3 +118,4 @@ x.begins_with(XPath().add(Element("div", [("class", "button")])), check_attrs=Tr
 
 print(x.pop())
 print(x)
+print("Fin")
