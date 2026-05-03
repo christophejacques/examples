@@ -1,116 +1,20 @@
 import datetime as dt
-from typing import List, Dict, Optional
+
 from time import sleep, perf_counter
 from threading import Thread
+
+from documents import DocumentAMQ, DocumentElastic
+from databases import ActiveMQ, IndexElastic
+from lecture_jdd import lecture_jdd
 
 
 def fprint(*args, showTime: bool = True, **kwargs):
     if showTime:
         # affichage de l'heure en premier avant le reste
-        maintenant = dt.datetime.now(Document.TZ).isoformat()
+        maintenant = dt.datetime.now(DocumentAMQ.TZ).isoformat()
         print(f"{maintenant} -", *args, **kwargs, flush=True)
     else:
         print(*args, **kwargs, flush=True)
-
-
-class Document:
-    TZ: dt.timezone
-
-    ident: int
-    header: Dict
-    payload: Dict
-
-    def __init__(self, ident: int, content, statut: Optional[Dict] = None):
-        self.ident = ident
-
-        # creation du header du document
-        self.header = dict()
-
-        # Ajout de la date de creation du document
-        maintenant = dt.datetime.now(Document.TZ)
-        self.header.update({"date_creation": maintenant})
-
-        # Mise a jour du contenu du payload
-        self.payload = {"content": content}
-
-    def __str__(self) -> str:
-        statut = self.header.get('statut', None)
-        statut = "" if statut is None else f"{statut:7} - "
-
-        contenu = f"{self.payload.get('content', '')}"
-
-        maintenant = dt.datetime.now(Document.TZ)
-        temps_traitement = (maintenant - self.header.get("date_creation", maintenant)).total_seconds()
-        if temps_traitement == 0:
-            temps_traitement = ""
-        else:
-            temps_traitement = f" - (Temps: {temps_traitement:.2f}s)"
-
-        return f"{statut}Doc {self.ident}: {contenu}{temps_traitement}"
-
-    @classmethod
-    def init(cls):
-        # Calcul de la timezone a ne faire qu'une seule fois
-        date_utc = dt.datetime.now(dt.UTC)
-        heure_utc = date_utc.hour
-
-        heure_locale = dt.datetime.now().hour
-        delta_hour = heure_locale - heure_utc
-
-        tz = dt.timezone(dt.timedelta(hours=delta_hour))
-        cls.TZ = tz
-
-        # fprint(f"Initialisation de la timezone: +{delta_hour}h00")
-
-
-class ActiveMQ:
-    __content: List[Document]
-
-    def __init__(self, name: str):
-        self.__content = list()
-        self.name = name
-
-    def add(self, document: Document, retry_min: int = 0, retry_sec: int = 0) -> None:
-        if document.header.get("release") is None and retry_min+retry_sec > 0:
-            # calcul de la datetime de liberation s'il y a un retry_sec ou retry_min
-            release_time = dt.timedelta(minutes=retry_min, seconds=retry_sec) + \
-                dt.datetime.now(Document.TZ)
-
-            document.header.update({"release": release_time})
-
-        # ajout du document dans la liste (file)
-        self.__content.append(document)
-
-    def isEmpty(self) -> bool:
-        return len(self.__content) <= 0
-
-    def pop(self) -> Optional[Document]:
-        if self.isEmpty():
-            return None
-
-        doc = self.__content.pop(0)
-        return doc
-
-    def view(self) -> Optional[Document]:
-        if self.isEmpty():
-            return None
-
-        doc = self.__content[0]
-        return doc
-
-    def has_document(self, ident: int) -> bool:
-        for document in self.__content:
-            if ident == document.ident:
-                return True
-
-        return False
-
-    def __len__(self) -> int:
-        return len(self.__content)
-
-    def __str__(self) -> str:
-        contenu = [doc.ident for doc in self.__content]
-        return f"{self.name} " + str(contenu)
 
 
 class sigmaGestionListener:
@@ -122,43 +26,65 @@ class sigmaGestionListener:
     RETRY_NBR_PERC33: int = 2
     DEBUG: bool = False
 
+    # définition des objets auxquels la classe doit accéder
+    # index Elastc
+    axone_perf3: IndexElastic
+
+    # collections activeMQ
+    amq_perc33: ActiveMQ
+    amq_perc33_retry: ActiveMQ
+
     def __init__(self):
 
-        Document.init()
+        # simule la route PERF3 dans l'index Elastic 
+        self.axone_perf3 = IndexElastic("PERF3")
 
-        self.amq_perf3 = ActiveMQ("PERF3")
+        # creation des 2 files activeMQ
         self.amq_perc33 = ActiveMQ("PERC33")
         self.amq_perc33_retry = ActiveMQ("RETRY")
 
-        # Jeu de données
+        # Chargement des jeux de données
+        self.threads: list = list()
+        self.init_fichier()
 
-        #  Flux PERF3
-        fprint("Ajout des documents PERF3 du jeu de donnees: 1, 3, 5, 6 et 8")
-        for index, nombre in [(1, "Un"), (3, "Trois"), (5, "Cinq"), (6, "Six"), (8, "Huit")]:
-            self.amq_perf3.add(Document(index, nombre))
+    def load_datas(self, wait: int, datas: dict) -> None:
+        # Mise en pause s'il s'agit d'un chargement différé
+        sleep(wait)
 
-        # Flux PERC33
-        fprint("Ajout des documents PERC33 du jeu de donnees: 1 à 5")
-        for index, nombre in [(1, "Un"), (2, "Deux"), (3, "Trois"), (4, "Quatre"), (5, "Cinq")]:
-            document = Document(index, nombre)
-            self.amq_perc33.add(document)
-            fprint(f" +  Document ajouté: {document}")
+        for database in datas:
+            #  Documents Elastic equivalent route PERF3
+            if database == "INDEXELASTIC":
+                fprint("Ajout des documents PERF3 du jeu de donnees: ", end="")
+                for index, nombre in datas[database]:
+                    fprint(index, showTime=False, end=", ")
+                    self.axone_perf3.add(DocumentElastic(index, nombre))
+                print()
 
-        # ajout du 2eme jeu de donnees dans un tache
-        # devant s'executer dans 7s
-        Thread(target=self.add_decale).start()
+            # Documents activeMQ utilisés pour la route PERC33
+            elif database == "ACTIVEMQ":
+                fprint("Ajout des documents PERC33 du jeu de donnees: ")
+                for index, nombre in datas[database]:
+                    document = DocumentAMQ(index, nombre)
+                    self.amq_perc33.add(document)
+                    fprint(f" +  Document ajouté: {document}")
 
-    def add_decale(self):
-        sleep(7)
-        document = Document(2, "Deux")
-        self.amq_perf3.add(document)
-        fprint(f" +  Document PERF3 ajouté: {document}")
+    def init_fichier(self) -> None:
+        # Initialisation des Jeux de données
+        # depuis un fichier
+        donnees = lecture_jdd()
 
-        fprint("Ajout des documents du jeu de donnees: 6, 7 et 8")
-        for index, nombre in [(6, "Six"), (7, "Sept"), (8, "Huit")]:
-            document = Document(index, nombre)
-            self.amq_perc33.add(document)
-            fprint(f" +  Document ajouté: {document}")
+        #  chargement des données avant lancement du processus de traitement
+        for wait in donnees:
+            databases = donnees.get(wait, {})
+            if wait == 0:
+                # Chargement du Jeu de données initial
+                self.load_datas(0, databases)
+            else:
+                # ajout des autres jeux de donnees dans une tache
+                # devant s'executer dans 'wait' secondes
+                thread = Thread(target=self.load_datas, args=(wait, databases))
+                thread.start()
+                self.threads.append(thread)
 
     def print(self, **kwargs):
         # personnalisation de l'affichage des deplacement des documents
@@ -177,15 +103,16 @@ class sigmaGestionListener:
             deplace = "   " 
 
         chaine = f"{self.amq_perc33}"
-        message = f"{aj_sup} {chaine:20}{deplace} "
+        message = f"{aj_sup} {chaine:24}{deplace} "
         message += f"{self.amq_perc33_retry}"
         fprint(message)
 
-    def check_perf3(self, document: Document) -> None:
+    def check_perf3(self, document: DocumentAMQ) -> None:
         # regarde si le document existe dans la file PERF3
-        if self.amq_perf3.has_document(document.ident):
+        if self.axone_perf3.has_document(document.ident):
             # le document est trouve => on l'INTEGRE
             document.header.update({"statut": "INTEGRE"})
+            
         else:
             # le document n'est pas trouve => on le REJETE
             document.header.update({"statut": "REJETE"})
@@ -197,9 +124,10 @@ class sigmaGestionListener:
             return
 
         # code permettant de mettre à jour l'état INTEGRE/REJETE du flux
+        # en regardant s'il existe dans la file PERF3
         self.check_perf3(doc)
 
-        if doc.header.get("statut", "?") == "REJETE":
+        if doc.header.get("statut") == "REJETE":
             # mise en place des retry que sur les flux REJETE
             retry_sec: int = sigmaGestionListener.RETRY_SEC_PERC33
 
@@ -214,30 +142,38 @@ class sigmaGestionListener:
                 if self.DEBUG:
                     fprint(f"    >> GoTo RETRY ({1+nb_retries} fois), Doc {doc.ident}, {doc.payload}")
 
+                # calcul du temps d'attente
+                release_time = dt.timedelta(minutes=0, seconds=retry_sec) + \
+                    dt.datetime.now(DocumentAMQ.TZ)
+
+                # Mise à jour du temps d'attente dans le document
+                doc.header.update({"release": release_time})
+
                 # envoi sur la file des retry
-                self.amq_perc33_retry.add(doc, retry_sec=retry_sec)
+                self.amq_perc33_retry.add(doc)
                 return
 
-        # si on arrive ici, cela signifi que l'on a dépiller le document
+        # si on arrive ici, cela signifi que l'on a dépilé le document
         # et qu'il n'a pas été envoyé vers la file de retry
         # donc l'affichage indique uniquement sont contenu
         fprint(f"{doc}")
 
     def check_retry(self) -> None:
-        # on regarde le document suivant sans le supprimer
+        # on regarde le premier document sans le supprimer
         doc = self.amq_perc33_retry.view()
         if doc is None:
             fprint("    /!\\ Retry Queue is empty")
             return
 
         # on regarde s'il reste du temps avant la liberation du document
-        maintenant = dt.datetime.now(Document.TZ)
-        if maintenant < doc.header.get("release", maintenant):
+        maintenant = dt.datetime.now(DocumentAMQ.TZ)
+        release_time = doc.header.get("release", maintenant)
+        if maintenant < release_time:
             # le temps de renvoyer le document vers la file initiale
             # n'est pas encore arrive
 
             # on calcul le temps restant à attendre
-            duree = (doc.header.get("release") - maintenant).total_seconds()
+            duree = (release_time - maintenant).total_seconds()
             if self.DEBUG:
                 fprint("        * wait Doc", doc.ident, doc.payload, "for", duree, "seconds ...")
 
@@ -249,6 +185,8 @@ class sigmaGestionListener:
         # si on arrive ici, cela signifie
         # qu'il faut renvoyer immediatement le document vers la file initiale
         doc = self.amq_perc33_retry.pop()
+        if doc is None:
+            return
 
         # suppression de la datetime de liberation du document 
         # de la file des retry
@@ -300,12 +238,14 @@ class Main:
         # boucle tant que 
         #     l'une des 2 files n'est pas vide
         #     ou que le traitement des retry n'est pas fini
+        #     ou que le traitement des chargements des jdd n'est pas fini
         while (not self.sg.amq_perc33.isEmpty() or 
           not self.sg.amq_perc33_retry.isEmpty() or 
-          self.retry is not None and self.retry.is_alive()):
+          (self.retry is not None and self.retry.is_alive()) or 
+          any([thread.is_alive() for thread in self.sg.threads])):
 
             self.print_piles()
-            # controle des documents de la file principale
+            # traitement des documents de la file principale
             if not self.sg.amq_perc33.isEmpty():
                 if self.perc33 is None or not self.perc33.is_alive():
                     # lancement du traitement en tache de fond
@@ -313,7 +253,7 @@ class Main:
                     self.perc33.start()
                 
             self.print_piles()
-            # controle des documents de la file des retry
+            # traitement des documents de la file des retry
             if not self.sg.amq_perc33_retry.isEmpty():
                 if self.retry is None or not self.retry.is_alive():
                     # lancement du traitement en tache de fond
