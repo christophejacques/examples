@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # Type de données :
 # -----------------
 # databases: dict[int, dict] {
