@@ -18,8 +18,12 @@ class DataBase:
         return len(self.contenu)
 
     def __str__(self) -> str:
-        contenu = [doc.ident for doc in self.contenu]
-        return f"{self.name} " + str(contenu)
+        contenu: str = ""
+        for doc in self.contenu:
+            contenu += "*" if doc.header.get("statut", "") == "REJETE" else ""
+            contenu += f"{doc.ident}," 
+
+        return f"{self.name} " + f"[{contenu[:-1].strip()}]"
 
 
 class ActiveMQ(DataBase):
@@ -59,3 +63,10 @@ class IndexElastic(DataBase):
                 return True
 
         return False
+
+    def get_document(self, ident: int) -> Optional[DocumentElastic]:
+        for document in self.contenu:
+            if ident == document.ident:
+                return document
+
+        return None

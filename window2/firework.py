@@ -3,7 +3,7 @@ import math
 
 from classes import Application, make_path, Fonction
 from colors import Colors
-from p5 import Vector, StaticVector
+from lib.p5 import Vector, StaticVector
 
 
 class Particle:

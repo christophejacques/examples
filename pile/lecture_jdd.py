@@ -8,10 +8,10 @@
 #   }
 # }
 
-def lecture_jdd() -> dict[int, dict[str, list]]:
+def lecture_jdd(nom_fichier: str) -> dict[int, dict[str, list]]:
     databases: dict[int, dict[str, list]] = dict()
 
-    with open("jeu_donnees.conf", encoding="utf-8") as jdd:
+    with open(nom_fichier, encoding="utf-8") as jdd:
         database: str = ""
         wait: str = ""
         iwait: int = 0
@@ -46,15 +46,15 @@ def lecture_jdd() -> dict[int, dict[str, list]]:
 
                 case _:
                     # Donnees
-                    index, content = ligne.split(",")
+                    index, content, *statut = ligne.split(",")
                     databases[iwait][database].append(
-                        (int(index), content.strip()))
+                        (int(index), content.strip(), " ".join(statut).strip()))
 
     return databases
 
 
 if __name__ == "__main__":
-    databases = lecture_jdd()
+    databases = lecture_jdd("jeu_donnees2.conf")
     for iwait in databases:
         print(f"{iwait}s:")
         for database in databases[iwait]:

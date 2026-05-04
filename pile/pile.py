@@ -3,6 +3,7 @@ import datetime as dt
 
 from time import sleep, perf_counter
 from threading import Thread
+from typing import Optional
 
 from documents import DocumentAMQ, DocumentElastic
 from databases import ActiveMQ, IndexElastic
@@ -12,7 +13,7 @@ from lecture_jdd import lecture_jdd
 def fprint(*args, showTime: bool = True, **kwargs):
     if showTime:
         # affichage de l'heure en premier avant le reste
-        maintenant = dt.datetime.now(DocumentAMQ.TZ).isoformat()
+        maintenant = dt.datetime.now(DocumentAMQ.TZ).isoformat()[11:23]
         print(f"{maintenant} -", *args, **kwargs, flush=True)
     else:
         print(*args, **kwargs, flush=True)
@@ -28,11 +29,12 @@ class sigmaGestionListener:
     DEBUG: bool = False
 
     # définition des objets auxquels la classe doit accéder
-    # index Elastc
+    # index Elastic
     axone_perf3: IndexElastic
 
     # collections activeMQ
     amq_perc33: ActiveMQ
+    amq_perc34: ActiveMQ
     amq_perc33_retry: ActiveMQ
 
     def __init__(self):
@@ -41,7 +43,10 @@ class sigmaGestionListener:
         self.axone_perf3 = IndexElastic("PERF3")
 
         # creation des 2 files activeMQ
-        self.amq_perc33 = ActiveMQ("PERC33")
+        self.amq_perc33 = ActiveMQ("PERC33")  # Entree
+        self.amq_perc34 = ActiveMQ("PERC34")  # Sortie
+
+        # creation de la file activeMQ de retry
         self.amq_perc33_retry = ActiveMQ("RETRY")
 
         # Chargement des jeux de données
@@ -52,27 +57,31 @@ class sigmaGestionListener:
         # Mise en pause s'il s'agit d'un chargement différé
         sleep(wait)
 
-        for database in datas:
+        for database, liste_docs in datas.items():
             #  Documents Elastic equivalent route PERF3
             if database == "INDEXELASTIC":
                 fprint("Ajout des documents PERF3 du jeu de donnees: ", end="")
-                for index, nombre in datas[database]:
+                for index, libelle, statut in liste_docs:
                     fprint(index, showTime=False, end=", ")
-                    self.axone_perf3.add(DocumentElastic(index, nombre))
+                    if statut == "":
+                        self.axone_perf3.add(DocumentElastic(index, libelle))
+                    else:
+                        self.axone_perf3.add(DocumentElastic(
+                            index, libelle, header={"statut": statut}))
                 print()
 
             # Documents activeMQ utilisés pour la route PERC33
             elif database == "ACTIVEMQ":
                 fprint("Ajout des documents PERC33 du jeu de donnees: ")
-                for index, nombre in datas[database]:
-                    document = DocumentAMQ(index, nombre)
+                for index, libelle, *_ in liste_docs:
+                    document = DocumentAMQ(index, libelle)
                     self.amq_perc33.add(document)
                     fprint(f" +  Document ajouté: {document}")
 
     def init_fichier(self) -> None:
         # Initialisation des Jeux de données
         # depuis un fichier
-        donnees = lecture_jdd()
+        donnees = lecture_jdd("jeu_donnees.conf")
 
         #  chargement des données avant lancement du processus de traitement
         for wait in donnees:
@@ -105,22 +114,35 @@ class sigmaGestionListener:
 
         chaine = f"{self.amq_perc33}"
         message = f"{aj_sup} {chaine:24}{deplace} "
-        message += f"{self.amq_perc33_retry}"
+        chaine = f"{self.amq_perc33_retry}"
+        message += f"{chaine:18}"
+        chaine = f"{self.axone_perf3}"
+        message += f"{chaine:28} "
+        chaine = f"{self.amq_perc34}"
+        message += f"{chaine}"
         fprint(message)
 
     def check_perf3(self, document: DocumentAMQ) -> None:
-        # regarde si le document existe dans la file PERF3
-        if self.axone_perf3.has_document(document.ident):
-            # le document est trouve => on l'INTEGRE
-            document.header.update({"statut": "INTEGRE"})
-            
-        else:
-            # le document n'est pas trouve => on le REJETE
-            document.header.update({"statut": "REJETE"})
+        # Recherche du document dans Elastic
+        doc_elastic: Optional[DocumentElastic]
+        doc_elastic = self.axone_perf3.get_document(document.ident)
 
+        if doc_elastic is None:
+            # le document n'est pas trouve => on le renvoi avec l'etat INCONNU
+            document.header.update({"statut": "INCONNU"})
+            return
+
+        # le document existe dans la file PERF3, 
+        # on met a jour le statut du document 
+        # avec celle du document trouve
+        # si le statut n'est pas renseigné il est mis à INTEGRE par defaut
+        document.header.update({"statut": 
+            doc_elastic.header.get("statut", "INTEGRE")})
+            
     def check_perc33(self) -> None:
         doc = self.amq_perc33.pop()
         if doc is None:
+            # ce code ne doit jamais être exécuté
             fprint("    /!\\ PERC34 Queue is empty")
             return
 
@@ -128,7 +150,7 @@ class sigmaGestionListener:
         # en regardant s'il existe dans la file PERF3
         self.check_perf3(doc)
 
-        if doc.header.get("statut") == "REJETE":
+        if doc.header.get("statut") == "INCONNU":
             # mise en place des retry que sur les flux REJETE
             retry_sec: int = sigmaGestionListener.RETRY_SEC_PERC33
 
@@ -136,7 +158,12 @@ class sigmaGestionListener:
             # initialisé à RETRY_NBR_PERC33 si variable absente
             # sinon decrementation de 1
             nb_retries = doc.header.get("retry", sigmaGestionListener.RETRY_NBR_PERC33)
-            if nb_retries > 0:
+            if nb_retries <= 0:
+                # c'etait le dernier retry, on rejete donc
+                doc.header.update({"statut": "REJETE"})
+
+            else:
+                # il reste des retry à faire
                 nb_retries -= 1
                 doc.header.update({"retry": nb_retries})
 
@@ -150,12 +177,19 @@ class sigmaGestionListener:
                 # Mise à jour du temps d'attente dans le document
                 doc.header.update({"release": release_time})
 
+                # Supression du statut 'INCONNU'
+                doc.header.pop("statut", None)
+
                 # envoi sur la file des retry
                 self.amq_perc33_retry.add(doc)
                 return
 
-        # si on arrive ici, cela signifi que l'on a dépilé le document
+        # si on arrive ici, cela signifie que l'on a dépilé le document
         # et qu'il n'a pas été envoyé vers la file de retry
+
+        # on l'envoi vers la file de reponse avec son statut calculé
+        self.amq_perc34.add(doc)
+
         # donc l'affichage indique uniquement sont contenu
         fprint(f"{doc}")
 
@@ -163,6 +197,7 @@ class sigmaGestionListener:
         # on regarde le premier document sans le supprimer
         doc = self.amq_perc33_retry.view()
         if doc is None:
+            # ce code ne doit jamais être exécuté
             fprint("    /!\\ Retry Queue is empty")
             return
 
@@ -185,8 +220,10 @@ class sigmaGestionListener:
 
         # si on arrive ici, cela signifie
         # qu'il faut renvoyer immediatement le document vers la file initiale
+        # on commence par le récupérer en le retirant de la liste des retry
         doc = self.amq_perc33_retry.pop()
         if doc is None:
+            # ce code ne doit jamais être exécuté
             return
 
         # suppression de la datetime de liberation du document 
@@ -233,17 +270,40 @@ class Main:
         self.prev_nb_perc33 = self.nb_perc33
         self.prev_nb_retry = self.nb_retry
 
+    def has_work_ToDo(self) -> bool:
+        # la file retry n'est pas vide
+        if not self.sg.amq_perc33_retry.isEmpty():
+            return True
+
+        # la file perc33 n'est pas vide
+        if not self.sg.amq_perc33.isEmpty():
+            return True
+
+        # le traitement des retry n'est pas fini
+        if self.retry is not None and self.retry.is_alive():
+            return True
+
+        # Supprimer une tache de la liste des taches en cours
+        # si celle ci est terminee
+        index: int = 0
+        last: int = len(self.sg.threads)
+
+        while index < last:
+            if self.sg.threads[index].is_alive():
+                index += 1
+                continue
+
+            self.sg.threads.pop(index)
+            last -= 1
+
+        # check le traitement de chargement des jdd restant
+        return any([thread.is_alive() for thread in self.sg.threads])
+
     def run(self):
         debut = perf_counter()
 
-        # boucle tant que 
-        #     l'une des 2 files n'est pas vide
-        #     ou que le traitement des retry n'est pas fini
-        #     ou que le traitement des chargements des jdd n'est pas fini
-        while (not self.sg.amq_perc33.isEmpty() or 
-          not self.sg.amq_perc33_retry.isEmpty() or 
-          (self.retry is not None and self.retry.is_alive()) or 
-          any([thread.is_alive() for thread in self.sg.threads])):
+        # boucle tant qu'il reste des choses à faire
+        while self.has_work_ToDo():
 
             self.print_piles()
             # traitement des documents de la file principale

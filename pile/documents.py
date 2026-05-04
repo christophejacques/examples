@@ -1,5 +1,5 @@
 import datetime as dt
-from typing import Dict
+from typing import Optional, Dict
 
 
 class Document:
@@ -58,11 +58,14 @@ class DocumentAMQ(Document):
 
 class DocumentElastic(Document):
 
-    def __init__(self, ident: int, content: str):
+    def __init__(self, ident: int, content: str, header: Optional[Dict] = None):
         self.ident = ident
 
         # creation du header du document
-        self.header = dict()
+        if header is None:
+            self.header = dict()
+        else:
+            self.header = header
 
         # Mise a jour du contenu du payload
         self.payload = {"content": content}
@@ -72,3 +75,8 @@ if __name__ == "__main__":
     print(f"{Document.TZ=}")
     print(f"{DocumentAMQ.TZ=}")
     print(f"{DocumentElastic.TZ=}")
+
+    print("AMQ", DocumentAMQ(1, "Premier doc"))
+    print("ELAS", DocumentElastic(1, "Premier doc"))
+    print("ELAS", DocumentElastic(2, "Doc integre"))
+    print("ELAS", DocumentElastic(2, "Doc rejete", header={"statut": "REJETE"}))
