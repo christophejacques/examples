@@ -19,7 +19,7 @@ class Document:
 
         maintenant = dt.datetime.now(Document.TZ)
         temps_traitement = (maintenant - self.header.get("date_creation", maintenant)).total_seconds()
-        if temps_traitement == 0:
+        if temps_traitement < 0.01:
             temps_traitement = ""
         else:
             temps_traitement = f" - (Temps: {temps_traitement:.2f}s)"
