@@ -10,11 +10,19 @@ from databases import ActiveMQ, IndexElastic
 from lecture_jdd import lecture_jdd
 
 
+class Var:
+    debut = perf_counter()
+
+
 def fprint(*args, showTime: bool = True, **kwargs):
     if showTime:
         # affichage de l'heure en premier avant le reste
-        maintenant = dt.datetime.now(DocumentAMQ.TZ).isoformat()[11:23]
-        print(f"{maintenant} -", *args, **kwargs, flush=True)
+        # maintenant = dt.datetime.now(DocumentAMQ.TZ)
+        fin = perf_counter()
+        duree = fin - Var.debut
+        duree_str = f"{duree:.2f}"
+
+        print(f"{duree_str:>6}s -", *args, **kwargs, flush=True)
     else:
         print(*args, **kwargs, flush=True)
 
@@ -300,7 +308,7 @@ class Main:
         return any([thread.is_alive() for thread in self.sg.threads])
 
     def run(self):
-        debut = perf_counter()
+        Var.debut = perf_counter()
 
         # boucle tant qu'il reste des choses à faire
         while self.has_work_ToDo():
@@ -327,7 +335,7 @@ class Main:
         self.print_piles()
 
         fin = perf_counter()
-        print(f"Temps de traitement: {fin-debut:.2f}s")
+        print(f"Temps de traitement: {fin-Var.debut:.2f}s")
 
 
 if __name__ == "__main__":
