@@ -34,7 +34,7 @@ class sigmaGestionListener:
 
     # Nombre de retry maximal 
     RETRY_NBR_PERC33: int = 2
-    DEBUG: bool = False
+    DEBUG: bool = True
 
     # définition des objets auxquels la classe doit accéder
     # index Elastic
@@ -43,7 +43,6 @@ class sigmaGestionListener:
     # collections activeMQ
     amq_perc33: ActiveMQ
     amq_perc34: ActiveMQ
-    amq_perc33_retry: ActiveMQ
 
     def __init__(self):
 
@@ -53,9 +52,6 @@ class sigmaGestionListener:
         # creation des 2 files activeMQ
         self.amq_perc33 = ActiveMQ("PERC33")  # Entree
         self.amq_perc34 = ActiveMQ("PERC34")  # Sortie
-
-        # creation de la file activeMQ de retry
-        self.amq_perc33_retry = ActiveMQ("RETRY")
 
         # Chargement des jeux de données
         self.threads: list = list()
@@ -89,7 +85,7 @@ class sigmaGestionListener:
     def init_fichier(self) -> None:
         # Initialisation des Jeux de données
         # depuis un fichier
-        donnees = lecture_jdd("jeu_donnees.conf")
+        donnees = lecture_jdd("jeu_donnees_rejete.conf")
 
         #  chargement des données avant lancement du processus de traitement
         for wait in donnees:
@@ -113,17 +109,8 @@ class sigmaGestionListener:
         else:
             aj_sup = "   " 
 
-        if kwargs.get("to_retry"):
-            deplace = "->>" 
-        elif kwargs.get("to_perc"):
-            deplace = "<<-" 
-        else:
-            deplace = "   " 
-
         chaine = f"{self.amq_perc33}"
-        message = f"{aj_sup} {chaine:24}{deplace} "
-        chaine = f"{self.amq_perc33_retry}"
-        message += f"{chaine:18}"
+        message = f"{aj_sup} {chaine:24} "
         chaine = f"{self.axone_perf3}"
         message += f"{chaine:28} "
         chaine = f"{self.amq_perc34}"
@@ -160,7 +147,6 @@ class sigmaGestionListener:
 
         if doc.header.get("statut") == "INCONNU":
             # mise en place des retry que sur les flux REJETE
-            retry_sec: int = sigmaGestionListener.RETRY_SEC_PERC33
 
             # calcul du nombre de retry à faire
             # initialisé à RETRY_NBR_PERC33 si variable absente
@@ -176,20 +162,18 @@ class sigmaGestionListener:
                 doc.header.update({"retry": nb_retries})
 
                 if self.DEBUG:
-                    fprint(f"    >> GoTo RETRY ({1+nb_retries} fois), Doc {doc.ident}, {doc.payload}")
+                    fprint(f"    >> Wait ({1+nb_retries} fois), Doc {doc.ident}, {doc.payload}")
 
-                # calcul du temps d'attente
-                release_time = dt.timedelta(minutes=0, seconds=retry_sec) + \
-                    dt.datetime.now(DocumentAMQ.TZ)
+                sleep(sigmaGestionListener.RETRY_SEC_PERC33)
 
-                # Mise à jour du temps d'attente dans le document
-                doc.header.update({"release": release_time})
+                if self.DEBUG:
+                    fprint("    << Back to PERC33, Doc", doc.ident, doc.payload)
 
                 # Supression du statut 'INCONNU'
                 doc.header.pop("statut", None)
 
-                # envoi sur la file des retry
-                self.amq_perc33_retry.add(doc)
+                # envoi a nouveau sur la file
+                self.amq_perc33.add(doc)
                 return
 
         # si on arrive ici, cela signifie que l'on a dépilé le document
@@ -201,56 +185,12 @@ class sigmaGestionListener:
         # donc l'affichage indique uniquement sont contenu
         fprint(f"{doc}")
 
-    def check_retry(self) -> None:
-        # on regarde le premier document sans le supprimer
-        doc = self.amq_perc33_retry.view()
-        if doc is None:
-            # ce code ne doit jamais être exécuté
-            fprint("    /!\\ Retry Queue is empty")
-            return
-
-        # on regarde s'il reste du temps avant la liberation du document
-        maintenant = dt.datetime.now(DocumentAMQ.TZ)
-        release_time = doc.header.get("release", maintenant)
-        if maintenant < release_time:
-            # le temps de renvoyer le document vers la file initiale
-            # n'est pas encore arrive
-
-            # on calcul le temps restant à attendre
-            duree = (release_time - maintenant).total_seconds()
-            if self.DEBUG:
-                fprint("        * wait Doc", doc.ident, doc.payload, "for", duree, "seconds ...")
-
-            # on attend donc uniquement le temps restant
-            sleep(duree)
-            if self.DEBUG:
-                fprint("    << Back to PERC33, Doc", doc.ident, doc.payload)
-
-        # si on arrive ici, cela signifie
-        # qu'il faut renvoyer immediatement le document vers la file initiale
-        # on commence par le récupérer en le retirant de la liste des retry
-        doc = self.amq_perc33_retry.pop()
-        if doc is None:
-            # ce code ne doit jamais être exécuté
-            return
-
-        # suppression de la datetime de liberation du document 
-        # de la file des retry
-        doc.header.pop("release", 0)
-
-        # envoi du document sur la file initiale
-        self.amq_perc33.add(doc)
-
 
 class Main:
 
     def __init__(self):
         self.perc33 = None
-        self.retry = None
-        self.prev_nb_perc33: int = 0
-        self.prev_nb_retry: int = 0
-        self.nb_perc33: int = 0
-        self.nb_retry: int = 0
+        self.prev_perc33 = None
 
         # initialisation du service
         self.sg = sigmaGestionListener()
@@ -261,34 +201,17 @@ class Main:
             pass
             return 
 
-        self.nb_perc33 = len(self.sg.amq_perc33)
-        self.nb_retry = len(self.sg.amq_perc33_retry)
+        self.perc33 = self.sg.amq_perc33.view()
 
-        if self.prev_nb_perc33 != self.nb_perc33 or self.prev_nb_retry != self.nb_retry:
+        if self.prev_perc33 != self.perc33:
             # n'affiche les pile que si l'une d'elle a changee
+            self.sg.print()
 
-            # calcul des variables permettant de personnaliser l'affichage
-            ajout = (self.prev_nb_perc33 < self.nb_perc33 and self.prev_nb_retry == self.nb_retry)
-            suppression = (self.prev_nb_perc33 > self.nb_perc33 and self.prev_nb_retry == self.nb_retry)
-            to_retry = (self.prev_nb_perc33 > self.nb_perc33 and self.prev_nb_retry < self.nb_retry)
-            to_perc = (self.prev_nb_perc33 < self.nb_perc33 and self.prev_nb_retry > self.nb_retry)
-
-            self.sg.print(ajout=ajout, suppr=suppression, to_retry=to_retry, to_perc=to_perc)
-
-        self.prev_nb_perc33 = self.nb_perc33
-        self.prev_nb_retry = self.nb_retry
+        self.prev_perc33 = self.perc33
 
     def has_work_ToDo(self) -> bool:
-        # la file retry n'est pas vide
-        if not self.sg.amq_perc33_retry.isEmpty():
-            return True
-
         # la file perc33 n'est pas vide
         if not self.sg.amq_perc33.isEmpty():
-            return True
-
-        # le traitement des retry n'est pas fini
-        if self.retry is not None and self.retry.is_alive():
             return True
 
         # Supprimer une tache de la liste des taches en cours
@@ -316,19 +239,9 @@ class Main:
             self.print_piles()
             # traitement des documents de la file principale
             if not self.sg.amq_perc33.isEmpty():
-                if self.perc33 is None or not self.perc33.is_alive():
-                    # lancement du traitement en tache de fond
-                    self.perc33 = Thread(target=self.sg.check_perc33)
-                    self.perc33.start()
+                # lancement du traitement en tache de fond
+                self.sg.check_perc33()
                 
-            self.print_piles()
-            # traitement des documents de la file des retry
-            if not self.sg.amq_perc33_retry.isEmpty():
-                if self.retry is None or not self.retry.is_alive():
-                    # lancement du traitement en tache de fond
-                    self.retry = Thread(target=self.sg.check_retry)
-                    self.retry.start()
-
             # simule le temps de traitement d'un document
             sleep(0.25)
 
