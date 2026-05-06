@@ -34,7 +34,7 @@ class sigmaGestionListener:
 
     # Nombre de retry maximal 
     RETRY_NBR_PERC33: int = 2
-    DEBUG: bool = True
+    DEBUG: bool = False
 
     # définition des objets auxquels la classe doit accéder
     # index Elastic
