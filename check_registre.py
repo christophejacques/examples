@@ -1,8 +1,8 @@
 from winreg import QueryValueEx, OpenKeyEx, ConnectRegistry, HKEY_LOCAL_MACHINE
 from winreg import EnumKey, EnumValue
 
-une_cle = r"SOFTWARE\Microsoft\Windows\CurrentVersion\Run\WDDiscovery"
-# une_cle = r"SOFTWARE\Microsoft\Windows\CurrentVersion\Run"
+# une_cle = r"SOFTWARE\Microsoft\Windows\CurrentVersion\Run\WDDiscovery"
+une_cle = r"SOFTWARE\Microsoft\Windows\CurrentVersion\Run"
 # une_cle = r"SOFTWARE\Microsoft\Windows\CurrentVersion"
 
 

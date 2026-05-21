@@ -1,8 +1,9 @@
 import ssl
 import socket
-import OpenSSL
-from pprint import pprint
-from datetime import datetime
+# import OpenSSL
+from cryptography import x509
+import cryptography
+import pip_system_certs.wrapt_requests  # Force l'intégration
 
 
 def get_certificate(host, port=443, timeout=10):
@@ -17,19 +18,73 @@ def get_certificate(host, port=443, timeout=10):
     return ssl.DER_cert_to_PEM_cert(der_cert)
 
 
-certificate = get_certificate('example.com')
-x509 = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, certificate)
+# certificate = get_certificate('example.com')
+# certificate = get_certificate('echange.asp-public.fr')
+certificate = get_certificate('www.google.fr')
 
-result = {
-    'subject': dict(x509.get_subject().get_components()),
-    'issuer': dict(x509.get_issuer().get_components()),
-    'serialNumber': x509.get_serial_number(),
-    'version': x509.get_version(),
-    'notBefore': datetime.strptime(x509.get_notBefore().decode(), '%Y%m%d%H%M%SZ'),
-    'notAfter': datetime.strptime(x509.get_notAfter().decode(), '%Y%m%d%H%M%SZ'),
-}
+cert = x509.load_pem_x509_certificate(
+    certificate.encode() if isinstance(certificate, str) else certificate)
 
-extensions = (x509.get_extension(i) for i in range(x509.get_extension_count()))
-extension_data = {e.get_short_name().decode(): str(e) for e in extensions}
-result.update(extension_data)
-pprint(result)
+print("issuer:", cert.issuer.rfc4514_string())
+print("not_valid_after:", cert.not_valid_after_utc.strftime('%Y-%m-%d %H:%M:%S'))
+print("not_valid_before:", cert.not_valid_before_utc.strftime('%Y-%m-%d %H:%M:%S'))
+print("serial_number:", cert.serial_number)
+# print(f"\n{cert.signature=}")
+print("subject:", cert.subject.rfc4514_string())
+print("version:", cert.version.name, "=", cert.version.value)
+print("Objects Identifier:")
+for certificat in cert.extensions:
+    print(f"- {str(certificat.critical):5}", end=", ")
+
+    print(f"{certificat.oid._name:30}", end=" = ")
+    print(certificat.oid.dotted_string)
+
+    if hasattr(certificat.value, "__iter__"):
+        for cert in certificat.value:
+
+            if type(cert) is cryptography.hazmat.bindings._rust.ObjectIdentifier:
+                if hasattr(cert, "dotted_string"):
+                    print("    * dotted_string:", cert.dotted_string)
+
+            elif type(cert) is cryptography.x509.extensions.DistributionPoint:
+                if hasattr(cert, "full_name"):
+                    print("    * full_name: ", end="")
+                    for name in cert.full_name:
+                        print(name.value, end=", ")
+                    print()
+
+            elif type(cert) is cryptography.x509.extensions.AccessDescription:            
+                if hasattr(cert, "access_location"):
+                    print("    * access_location:", cert.access_location.value)
+                if hasattr(cert, "access_method"):
+                    print("    * access_method:", cert.access_method._name, "=", cert.access_method.dotted_string)
+
+            elif type(cert) is cryptography.x509.general_name.DNSName:
+                if hasattr(cert, "value"):
+                    print("    * value:", cert.value)
+
+            elif type(cert) is cryptography.x509.extensions.PolicyInformation:
+                if hasattr(cert, "policy_identifier"):
+                    print("    * policy_identifier:", cert.policy_identifier._name, "=", cert.policy_identifier.dotted_string)
+                if hasattr(cert, "policy_qualifiers"):
+                    print("    * policy_qualifiers:", cert.policy_qualifiers)
+
+            elif type(cert) is cryptography.hazmat.bindings._rust.x509.Sct:
+                print("   [", cert.signature_algorithm, end=", ")
+                print(cert.signature_hash_algorithm.name, "]")
+                if hasattr(cert, "entry_type"):
+                    print("    * entry_type:", cert.entry_type)
+                if hasattr(cert, "extension_bytes"):
+                    print("    * extension_bytes:", cert.extension_bytes)
+                if hasattr(cert, "log_id"):
+                    print("    * log_id:", cert.log_id)
+                if hasattr(cert, "timestamp"):
+                    print("    * timestamp:", cert.timestamp)
+                if hasattr(cert, "version"):
+                    print("    * version:", cert.version)
+            else:
+                raise TypeError("type de certificat inconnu:", type(cert))
+
+    else:
+        print("    * value:", certificat.value)
+        print("    * oid:", certificat.oid._name, "=", certificat.oid.dotted_string)

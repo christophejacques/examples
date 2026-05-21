@@ -3,7 +3,7 @@ import csv
 
 from typing import Dict, Callable, List, Generator
 from functools import wraps
-from inspect import signature
+# from inspect import signature
 
 
 class Regles:

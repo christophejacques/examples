@@ -8,7 +8,7 @@ def debug(fonction):
     liste_types: list = list()
     index: int = 0
     for nom, param in sig.parameters.items():
-        if param.annotation ==  inspect._empty:
+        if param.annotation == inspect._empty:
             if index == 0:
                 liste_types.append(object)
             else:
@@ -57,16 +57,16 @@ def debug(fonction):
 
 class MaClasse: 
 
-    def add(self, a: int, b: int=0) -> int:
+    def add(self, a: int, b: int = 0) -> int:
         return a+b
 
-    def diff(self, a: int, b: int=0) -> int:
+    def diff(self, a: int, b: int = 0) -> int:
         return a-b
 
-    def mult(self, a: int, b: int=0) -> int:
+    def mult(self, a: int, b: int = 0) -> int:
         return a*b
 
-    def divint(self, a: int, b: int=0) -> int:
+    def divint(self, a: int, b: int = 0) -> int:
         return a//b
 
     def fusion(self, a, b) -> str:
@@ -91,5 +91,5 @@ ajout_decorateur(MaClasse, debug)
 
 mc = MaClasse()
 print(mc.fusion("1", "2"))
-# print(mc.diff(5, 2))
-
+print(mc.diff(5, 2))
+print(mc.add("5", 2))

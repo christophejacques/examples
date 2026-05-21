@@ -28,7 +28,7 @@ def dans(liste: list, *valeurs) -> bool:
 
 
 def main(*params) -> None:
-    if dans(("-f", "--force"), *params):
+    if dans(["-f", "--force"], *params):
         print("dedans")
     else:
         print("Aucun parametre existant:", *params)

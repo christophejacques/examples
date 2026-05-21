@@ -38,14 +38,18 @@ def print_users(c):
 
 
 def table_exist(c, table_name: str) -> bool:
-    c.execute("SELECT name FROM sqlite_master WHERE type='table' and name=:tablename;", {"tablename": table_name})
+    c.execute("SELECT name FROM sqlite_master WHERE type='table' and name=:tablename;", 
+        {"tablename": table_name})
+
     return len(c.fetchall()) > 0
 
 
 def isPassword(c, username, password):
     fprint(f"Checking connection : {username} / {password} => ", end="")
     res = False
-    e = c.execute("select cle, password from user where username = :username", {"username": username})
+    e = c.execute("SELECT cle, password FROM user WHERE username = :username", 
+        {"username": username})
+
     f = e.fetchone()
     if f:
         cle, cryptpass = f
@@ -61,7 +65,12 @@ def update_password(c, username, password):
                 date_modified   = DATETIME('now','localtime')
            WHERE username = :username"""
     cle = creation_cle()
-    e = c.execute(s, {"username": username, "cle": cle, "password": hash(cle, password)})
+    e = c.execute(s, 
+        {
+            "username": username, 
+            "cle": cle, 
+            "password": hash(cle, password)
+        })
     
     if e.rowcount > 0:
         fprint(f"{username} password updated to : {password}")
@@ -74,12 +83,14 @@ def update_password(c, username, password):
 def add_user(c, username, password):
     cle = creation_cle()
     try:
-        e = c.execute("""insert into user (username,   cle,  password) 
-                                   values (:username, :cle, :password)""", 
-                     {"username": username, 
-                      "cle": cle, 
-                      "password": hash(cle, password)})
-                     
+        e = c.execute("""INSERT INTO user (username,   cle,  password) 
+                                   VALUES (:username, :cle, :password)""", 
+            {
+                "username": username, 
+                "cle": cle, 
+                "password": hash(cle, password)
+            })
+    
     except Exception as err:
         print(f"Error add_user({username}):", err)
         return False
@@ -101,7 +112,7 @@ def main():
         # db.create_function("hash", 2, hash)
         c = db.cursor()
         
-        c.execute("drop table if exists user")
+        c.execute("DROP TABLE IF exists user")
         c.execute("""CREATE TABLE user (
                         id              INTEGER PRIMARY KEY AUTOINCREMENT, 
                         username        TEXT NOT NULL UNIQUE, 
@@ -123,11 +134,10 @@ def main():
         db.commit()
         print()
         
-        # print_users(c)
+        print_users(c)
         isPassword(c, "admin", "Unknown")
         isPassword(c, "admin", "admin")
 
-        # print_users(c)
         isPassword(c, "christophe.jacques1", "Password")
         fprint()
         
@@ -137,7 +147,7 @@ def main():
         isPassword(c, "christophe.jacques1", "Password")
         fprint()
         
-        # print_users(c)
+        print_users(c)
         c.close()
 
 

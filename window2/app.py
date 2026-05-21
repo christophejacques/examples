@@ -20,7 +20,7 @@ DEBUG: bool = False
 
 def get_pygame_const_name(index):
     for c in dir(pygame):
-        if c[1] in "AZERTYUIOPMLKJHGFDSQWXCVBN":
+        if c[0] in "AZERTYUIOPMLKJHGFDSQWXCVBN":
             if type(getattr(pygame, c)) == int and getattr(pygame, c) == index:
                 return c
 

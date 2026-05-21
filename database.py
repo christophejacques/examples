@@ -119,6 +119,10 @@ def exemple():
     print(fr)
 
 
+exemple()
+exit()
+
+
 class TableException(Exception):
     pass
 

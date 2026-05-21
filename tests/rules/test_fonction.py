@@ -113,6 +113,7 @@ def main():
             try:
                 if not fonction(personne):
                     continue
+                    
             except Exception as erreur:
                 print("ERREUR:", erreur)
                 break

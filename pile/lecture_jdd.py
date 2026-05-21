@@ -7,6 +7,9 @@
 #       (index: int, contenu: str), (...), ...] 
 #   }
 # }
+import sys
+from os.path import sep
+
 
 def lecture_jdd(nom_fichier: str) -> dict[int, dict[str, list]]:
     databases: dict[int, dict[str, list]] = dict()
@@ -54,7 +57,12 @@ def lecture_jdd(nom_fichier: str) -> dict[int, dict[str, list]]:
 
 
 if __name__ == "__main__":
-    databases = lecture_jdd("jeu_donnees2.conf")
+    if len(sys.argv) == 2:
+        nom_fichier = sys.argv[1].split(sep)[-1]
+    else:
+        nom_fichier = "jeu_donnees2.conf"
+
+    databases = lecture_jdd(nom_fichier)
     for iwait in databases:
         print(f"{iwait}s:")
         for database in databases[iwait]:

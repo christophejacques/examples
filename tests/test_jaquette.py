@@ -35,7 +35,7 @@ class Tag:
         if not isinstance(other, Tag):
             return False
 
-        if  self.__tag != other.__tag:
+        if self.__tag != other.__tag:
             return False
 
         if self.__ctrl_cls:
@@ -125,12 +125,12 @@ if 1 == 1:
     selector.setCtrlClasses(True)
     print("begins:", selector.begins_with(TagSelector([Tag("article")])))
 
-    # print(selector)
-    # print(selector == TagSelector([Tag("article.post"), Tag("header.entry-header"), Tag("h1")]))
+    print(selector)
+    print(selector == TagSelector([Tag("article.post"), Tag("header.entry-header"), Tag("h1")]))
 
     selector.setCtrlClasses(False)
-    # print("begins:", selector.begins_with(TagSelector([Tag("article"), Tag("header"), Tag("h1")])))
-    # print("begins:", selector.begins_with(TagSelector([Tag("article"), Tag("header")])))
+    print("begins:", selector.begins_with(TagSelector([Tag("article"), Tag("header"), Tag("h1")])))
+    print("begins:", selector.begins_with(TagSelector([Tag("article"), Tag("header")])))
     print("begins:", selector.begins_with(TagSelector([Tag("article")])))
     print(selector == TagSelector([]))
     exit()
@@ -211,7 +211,7 @@ class HTMLTagParser(HTMLParser):
             valeur_split: list[str] = valeur.split()
 
             for valeur_style in self.valeurs_style:
-                if not valeur_style in valeur_split:
+                if valeur_style not in valeur_split:
                     return
 
         if loop:
@@ -286,12 +286,13 @@ class MyHTMLParser(HTMLParser):
     def handle_endtag(self, tag):
         if self.found:
             return
-        if not tag.lower() in self.checked_tags:
+        if tag.lower() not in self.checked_tags:
             return
-        if not tag in self.css_chemin:
+        if tag not in self.css_chemin:
             return
 
-        pop_tag = self.css_chemin.pop()
+        # pop_tag = self.css_chemin.pop()
+        self.css_chemin.pop()
         # print("pop_tag=", pop_tag)
 
 
@@ -304,7 +305,7 @@ def get_image_text(session: Session, url: str) -> tuple:
 
     type_page, *encoding = reponse.headers.get("Content-Type").split(";")  # type: ignore[union-attr]
 
-    if not "text/html" in type_page:
+    if "text/html" not in type_page:
         return False, f"type_page problem : {type_page}"
 
     # html_parser: HTMLTagParser = HTMLTagParser("h5", "class", "card-title m-b-10 m-t-0")
@@ -328,7 +329,7 @@ def get_image_link(session: Session, url: str) -> tuple[bool, str]:
 
     type_page, *encoding = reponse.headers.get("Content-Type").split(";")  # type: ignore[union-attr]
 
-    if not "text/html" in type_page:
+    if "text/html" not in type_page:
         return False, f"type_page problem : {type_page}"
 
     # html_parser: MyHTMLParser = MyHTMLParser("html/body/div/div/div/main/div/div/div/div/div/a/img")

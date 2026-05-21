@@ -28,7 +28,7 @@ class Variable:
 
     @classmethod
     def set_menu(cls, menu: str, valeur: bool) -> None:
-        if not menu in cls.check_menu:
+        if menu not in cls.check_menu:
             cls.check_menu[menu] = valeur
 
     @classmethod
@@ -71,10 +71,12 @@ class Mouse:
 def add_avg(a, b):
     return (a + b) // 2
 
+
 def sub_avg(a, b):
     if a > b:
         return (a - b) // 2
     return (b - a) // 2
+
 
 def invert_color(color):
     fprint("inverting", color)
@@ -83,6 +85,7 @@ def invert_color(color):
         selected_color[idx] = 255 - getattr(Variable, color)[idx]
     setattr(Variable, color, tuple(selected_color))
     fprint(getattr(Variable, color))
+
 
 def fprint(*args, **kwargs):
     print(*args, **kwargs, flush=True)
@@ -109,8 +112,8 @@ class Action:
     index: int
     libelle: str
     raccourci: str
-    check : bool = False
-    check_value : bool
+    check: bool = False
+    check_value: bool
     etat: str
     fonction: Optional[Callable] = None
     sub_menu: Optional[Menu] = None
@@ -278,7 +281,6 @@ class Menu:
         #  Cadre de la surface de la selection
         pygame.draw.rect(self.check_surf, (38, 160, 218), 
             (0, 0, *self.check_surf.get_size()), width=1)
-
 
         # Surface de la selection active 
         self.selecta = pygame.Surface((self.surf.get_width()-4, self.select_size))
@@ -500,7 +502,6 @@ class Menu:
                 #             self.goutiere_size-4, 
                 #             self.select_size),
                 #         1)
-
 
             if action.raccourci:
                 # Affichage du raccourci si existant

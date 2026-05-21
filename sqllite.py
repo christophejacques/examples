@@ -4,6 +4,10 @@ import os
 import traceback
 # import codecs
 
+from dataclasses import dataclass
+from typing import Dict, List, Tuple, Any, Optional
+
+
 repertoire = r"D:\Programmation\python\examples"
 os.chdir(repertoire)
 
@@ -15,28 +19,21 @@ os.chdir(repertoire)
 # ---------------------------------------------------------
 
 
-def fonction(*args):
-    print(f"fonction(*args): avec {len(args)} arguments")
-
-    for i, arg in enumerate(args):
-        print(f"- {i} : {arg}")
-
-
 class Valeurs:
 
-    def __init__(self, valeurs: tuple):
+    def __init__(self, valeurs: Tuple):
         self.valeurs = valeurs
 
     def getValeur(self, indice: int = 0) -> object:
         return self.valeurs[indice]
 
-    def getAllValeurs(self) -> tuple:
+    def getAllValeurs(self) -> Tuple:
         return self.valeurs
 
 
 class Resultats:
 
-    def __init__(self, resultats: list):
+    def __init__(self, resultats: List):
         self.resultats = resultats
 
     def hasData(self) -> bool:
@@ -45,11 +42,44 @@ class Resultats:
     def getData(self) -> Valeurs:
         return Valeurs(self.resultats.pop(0))
 
-    def getAllDatas(self) -> list[Valeurs]:
+    def getAllDatas(self) -> List[Valeurs]:
         return [Valeurs(r) for r in self.resultats]
 
 
+@dataclass
+class Field:
+    key: str
+    value: Any
+
+
+class FieldList:
+    liste: List[Field]
+
+    def __init__(self, liste: List[Field] = list()):
+        self.liste = liste
+
+    def add(self, field: Field):
+        self.liste.append(field)
+        return self
+
+    def __str__(self) -> str:
+        msg: str = f"{self.__class__.__name__}("
+        lst_fields: str = ""
+        for field in self.liste:
+            lst_fields += f"{field}, "
+        msg += lst_fields[:-2]
+        msg += ")"
+        return msg
+
+
+fl = FieldList().add(Field("nom", "JACQUES")).add(Field("prenom", "christophe"))
+print(fl)
+exit()
+
+
 class monsql:
+
+    database: str
 
     def __init__(self, database):
         self.database = database
@@ -73,7 +103,7 @@ class monsql:
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.close()
 
-    def close(self):
+    def close(self) -> None:
         if self.conn:
             print(f"Fermeture de la bd ({self.database}) : ", end="")
             if self.curs:
@@ -84,33 +114,34 @@ class monsql:
             self.conn.close()
             print("connexion Ok")
 
-    def commit(self):
+    def commit(self) -> None:
         print("commit() : ", end="")
         self.conn.commit()
         print("Ok")
 
-    def rollback(self):
+    def rollback(self) -> None:
         print("rollback() : ", end="")
         self.conn.rollback()
         print("Ok")
 
-    def isconnected(self):
+    def isconnected(self) -> bool:
         return self.conn is not None
 
-    def existTable(self, nomTable):
-        res = self.curs.execute("SELECT name FROM sqlite_master WHERE name = ?", (nomTable,)).fetchone()
+    def existTable(self, nomTable: str) -> bool:
+        res = self.curs.execute("SELECT name FROM sqlite_master WHERE name = :table", 
+            {"table": nomTable}).fetchone()
         if res is None: 
             return False
         return len(res) > 0
 
-    def create_or_replace_table(self, nomTable: str, listeChamps: tuple, cles: str = ""):
+    def create_or_replace_table(self, nomTable: str, listeChamps: Tuple, cles: str = "") -> None:
         if mabd.existTable(nomTable):
             mabd.dropTable(nomTable)
         self.createTable(nomTable, listeChamps, cles)
 
-    def createTable(self, nomTable, listeChamps, cles=""):
+    def createTable(self, nomTable: str, listeChamps: Tuple, cles="") -> None:
         print(f"Création de la table *{nomTable}*", end="")
-        tableStr = f"CREATE TABLE {nomTable} (\n"
+        tableStr: str = f"CREATE TABLE {nomTable} (\n"
 
         for nomchamp, typeChamp in listeChamps[:-1]:
             tableStr += f"    {nomchamp} {typeChamp},\n"
@@ -128,13 +159,13 @@ class monsql:
 
         print(" => table créée")
 
-    def dropTable(self, nomTable):
+    def dropTable(self, nomTable: str) -> None:
         print(f"Drop de la table *{nomTable}*", end="")
         tableStr = f"DROP TABLE {nomTable}"
         self.curs.execute(tableStr)
         print(" => table supprimée")
 
-    def setForeignKeys(self, etat):
+    def setForeignKeys(self, etat: str) -> bool:
         ATTENDU = {
           "ON": 1,
           "OFF": 0
@@ -160,18 +191,19 @@ class monsql:
 
         return Resultats(res)
 
-    def deleteData(self, nomTable, *conditions):
-        lstCondValues = []
+    def deleteData(self, nomTable: str, *conditions) -> None:
+        lstCondValues = dict()
         where_cond = ""
         for n, v in conditions:
-            lstCondValues.append(v)
+            # lstCondValues.append(v)
+            lstCondValues[n] = v
             if where_cond == "":
-                where_cond = f"WHERE {n}=?"
+                where_cond = f"WHERE {n}=:" + n
             else:
                 if n.startswith("OR "):
-                    where_cond += f" {n}=?"
+                    where_cond += f" {n}=:" + n
                 else:
-                    where_cond += f" AND {n}=?"
+                    where_cond += f" AND {n}=:" + n
 
         sqlstring = f"DELETE FROM {nomTable} {where_cond}"
 
@@ -179,25 +211,26 @@ class monsql:
         nb = self.curs.execute(sqlstring, lstCondValues)
         print(f"(Id:{nb.lastrowid:03}) {nb.rowcount} enregs => OK")
 
-    def insertData(self, nomTable, *donnees):
+    def insertData(self, nomTable: str, *donnees) -> Optional[int]:
 
-        insertColsNames = "("
-        insertColsValues = []
-        listeColsNames = "("
+        insertColsNames: str = "("
+        insertColsValues: Dict = dict()
+        listeColsNames: str = "("
 
         for nomChamp, valeurChamp in donnees[:-1]:
             listeColsNames += f"{nomChamp}, "
             insertColsNames += f":{nomChamp}, "
-            insertColsValues.append(valeurChamp)
+            insertColsValues[nomChamp] = valeurChamp
 
         nomChamp, valeurChamp = donnees[-1]
         listeColsNames += f"{nomChamp})"
         insertColsNames += f":{nomChamp})"
-        insertColsValues.append(valeurChamp)
+        insertColsValues[nomChamp] = valeurChamp
 
         insertColsNames = f"INSERT INTO {nomTable} {listeColsNames} VALUES {insertColsNames}"
 
-        print(insertColsNames, insertColsValues, end="")
+        print(insertColsNames)
+        print(" ", insertColsValues, end="")
         try:
             res = self.curs.execute(insertColsNames, insertColsValues)
             print(f" => OK (Id:{res.lastrowid:03})")
@@ -209,7 +242,7 @@ class monsql:
 
         return self._last_row_id
 
-    def execute(self, sqlCode):
+    def execute(self, sqlCode: str) -> bool:
         print(f"execute({sqlCode}) : ", end="")
         try:
             self.curs.execute(sqlCode)
@@ -294,7 +327,7 @@ with monsql("basededonnees.db") as mabd:
 
             print("Liste des tables :")
             for t in mabd.getDatas("SELECT name FROM sqlite_master WHERE type = 'table' ORDER BY name").getAllDatas():
-                for enreg in mabd.getDatas(f"select * from {t.getValeur()}").getAllDatas():
+                for enreg in mabd.getDatas(f"SELECT * FROM {t.getValeur()}").getAllDatas():
                     print(f"  - {enreg.getAllValeurs()}")
                 print()
 
