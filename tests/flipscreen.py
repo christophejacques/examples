@@ -6,21 +6,6 @@ from time import sleep
 from threading import Thread
 
 
-class Var:
-    page1: pygame.Surface
-    page2: pygame.Surface
-
-    x = 0
-    y = 0
-    acceleration = 0
-    vitesse = 0
-    p1 = [0, 0]
-    p2 = [0, 0]
-
-    LARGEUR = 800
-    HAUTEUR = 600
-
-
 def fprint(*args, **kwargs):
     print(*args, **kwargs, flush=True)
 
@@ -39,111 +24,144 @@ CYAN = (0, 255, 255)
 BLANC = (255, 255, 255)
 
 
+class Coord:
+    x: int
+    y: int
+
+    def __init__(self, x: int, y: int):
+        self.x = x
+        self.y = y
+
+    def __eq__(self, other):
+        return self.x == other.x and self.y == other.y
+
+    def __str__(self):
+        return f"Coord({self.x}, {self.y})"
+
+
 class Page:
 
     nom: str
-    liste_switch: List[Tuple[int, int]]
+    liste_switch: List[Tuple[Coord, Coord]]
     index_switch: int
+    surface_page: pygame.surface.Surface
 
-    def __init__(self, nom: str, contenu, x: int = 0, y: int = 0, color: tuple = (0, 0, 0)): 
+    def __init__(self, nom: str, instance_affichage, 
+            coord: Coord, color: tuple = (0, 0, 0)): 
         self.nom = nom
-        self.set(x, y)
+        self.set(coord)
         self.color = color
-        self.content = pygame.Surface(Ecran.SIZE)
+        self.surface_page = pygame.Surface(Ecran.SIZE)
+        self.surface_page.set_alpha(50)
 
-        self.contenu = contenu
-        self.contenu.draw(self.content)
+        self.instance_affichage = instance_affichage
+        self.instance_affichage.draw(self.surface_page)
 
         self.vitesse = 0
         self.acceleration = Ecran.SIZE[0] // 40
 
     def resize(self):
         # fprint(f"Page resize({Ecran.SIZE})", self.index_switch)
-        self.content = pygame.Surface(Ecran.SIZE)
+        self.surface_page = pygame.Surface(Ecran.SIZE)
         self.acceleration = Ecran.SIZE[0] // 40
 
-        if self.x == self.liste_switch[self.index_switch][0]:
+        if Coord(self.x, self.y) == self.liste_switch[self.index_switch][0]:
             index_coord = 0
         else:
             index_coord = 1
 
-        msg = f"AVANT: x,y: ({self.x:5}, {self.y:5}), "
-        msg += f"deb,fin: ({self.debut:5}, {self.fin:5})"
-        msg += f" index: {index_coord}"
-        # fprint(msg, end=" => ")
-
-        self.contenu.resize()
-        self.contenu.draw(self.content)
+        self.instance_affichage.resize()
+        self.instance_affichage.draw(self.surface_page)
 
         for index, interval in enumerate(self.liste_switch):
             debut, fin = interval
-            self.liste_switch[index] = (int(debut * Ecran.DELTA), int(fin * Ecran.DELTA))
+            self.liste_switch[index] = (round(debut.x * Ecran.DELTA), 
+                round(fin.x * Ecran.DELTA))
 
-        self.x = self.liste_switch[self.index_switch][index_coord]
-        self.debut, self.fin = self.liste_switch[self.index_switch]
+        self.x = self.liste_switch[self.index_switch][index_coord].x
+        self.y = self.liste_switch[self.index_switch][index_coord].y
+        self.debut, self.fin = self.liste_switch[self.index_switch]        
         
         # fprint(f"APRES: x,y: ({self.x:5}, {self.y:5}), deb,fin: ({self.debut:5}, {self.fin:5})")
 
-        msg = f"self.liste_switch[{self.index_switch}][{index_coord}] : "
-        msg += f"{self.liste_switch[self.index_switch]} => "
-        msg += f"{self.liste_switch[self.index_switch][index_coord]}"
-        msg += f" ?= x={self.x}"
-        # fprint(msg)
+    def switch(self, direction: str):
+        pass
 
-    def set_liste_switch(self, liste: List[Tuple[int, int]]):
-        
+    def set(self, coord: Coord):
+        self.x = coord.x
+        self.y = coord.y
+
+    def move(self, dx: int = 0, dy: int = 0):
+        self.x += dx
+        self.y += dy
+
+
+class Push(Page):
+
+    def __init__(self, nom: str, instance_affichage, 
+            coord: Coord, color: tuple = (0, 0, 0)): 
+        super().__init__(nom, instance_affichage, coord, color)
+
+    def set_switch_list(self, liste: List[Tuple[Coord, Coord]]):
         # fprint(self.nom, "set_liste", liste)
-
         fin = liste[0][1]
         for interval in liste[1:]:
-            if fin != interval[0]:
-                raise Exception(f"La liste n'est pas continue ({fin} != {interval[0]})")
+            if fin.x != interval[0].x:
+                raise Exception(f"La liste n'est pas continue en x ({fin} != {interval[0]})")
+            if fin.y != interval[0].y:
+                raise Exception(f"La liste n'est pas continue en y ({fin} != {interval[0]})")
             fin = interval[1]
 
         index_trouve = False
         self.liste_switch = liste
         for index, interval in enumerate(liste):
             debut, fin = interval
-            # fprint(self.nom, "seek", self.x, "in", (debut, fin))
 
-            if self.x == debut or self.x == fin:
+            if Coord(self.x, self.y) == debut or Coord(self.x, self.y) == fin:
                 self.index_switch = index
                 index_trouve = True
-                # fprint(f"done ({index})")
+                # fprint(f"index done ({index})")
                 break
 
         if not index_trouve:
             raise Exception(f"la coordonnée x ({self.x}) n'est pas au debut ou la fin d'un des intervals")
 
-        self.debut, self.fin = self.liste_switch[self.index_switch]
+        self.debut = self.liste_switch[self.index_switch][0]
+        self.fin = self.liste_switch[self.index_switch][1]
+
+    def position(self):
+        return self.x, self.y
 
     def switch(self, direction: str):
-        if direction.upper() == "RIGHT":
-            # Direction RIGHT
+        # fprint(f"switch({direction})")
+        if direction.upper() == "RIGHT" or direction.upper() == "DOWN":
+            # Direction RIGHT or DOWN
             coef = -1
-            if self.x == self.fin:
+            if Coord(self.x, self.y) == self.fin:
                 self.vitesse = coef * self.acceleration
                 return
 
             if self.index_switch > 0:
                 self.index_switch -= 1
-            elif self.x == self.debut:
+            elif Coord(self.x, self.y) == self.debut:
                 return
 
         else:
-            # Direction LEFT
+            # Direction LEFT or UP
             coef = 1
-            if self.x == self.debut:
+            if Coord(self.x, self.y) == self.debut:
                 self.vitesse = coef * self.acceleration
+                # fprint("position Debut")
                 return
                 
             if self.index_switch < len(self.liste_switch)-1:
                 self.index_switch += 1
-            elif self.x == self.fin:
+            elif Coord(self.x, self.y) == self.fin:
+                # fprint("position Fin")
                 return
                 
-        self.debut, self.fin = self.liste_switch[self.index_switch]
-        # fprint(f"{self.nom}: [{self.x:5}] {self.debut:5} > {self.fin:5}")
+        self.debut = self.liste_switch[self.index_switch][0]
+        self.fin = self.liste_switch[self.index_switch][1]
         self.vitesse = coef * self.acceleration
 
     def animation(self):
@@ -151,29 +169,37 @@ class Page:
             return
 
         if self.vitesse > 0:
-            if self.x >= self.fin:
-                self.vitesse = 0
-                self.x = self.fin
+            if self.x >= self.fin.x:
+                self.x = self.fin.x
             else:
                 self.x += self.vitesse
+
+            if self.y >= self.fin.y:
+                self.y = self.fin.y
+            else:
+                self.y += self.vitesse
+
+            if Coord(self.x, self.y) == self.fin:
+                self.vitesse = 0
 
         else:
-            if self.x <= self.debut:
-                self.vitesse = 0
-                self.x = self.debut
+            if self.x <= self.debut.x:
+                self.x = self.debut.x
             else:
                 self.x += self.vitesse
 
-    def position(self):
-        return self.x, self.y
+            if self.y <= self.debut.y:
+                self.y = self.debut.y
+            else:
+                self.y += self.vitesse
 
-    def set(self, x: int = 0, y: int = 0):
-        self.x = x
-        self.y = y
+            if Coord(self.x, self.y) == self.debut:
+                self.vitesse = 0
 
-    def move(self, dx: int = 0, dy: int = 0):
-        self.x += dx
-        self.y += dy
+            # fprint(self.index_switch, f"{self.x=}", f"{self.y=}", f"{self.vitesse=}")
+
+    def surface_blit(self, surface_parent: pygame.surface.Surface):
+        surface_parent.blit(self.surface_page, self.position())
 
 
 class Ecran:
@@ -184,9 +210,9 @@ class Ecran:
     def __init__(self, size):
         # 1. Initialisation de Pygame
         pygame.init()
+        
         self.is_open = True
         self.switching = False
-        self.go_left = True
 
         Ecran.SIZE = size
         self.screen = pygame.display.set_mode(Ecran.SIZE, pygame.RESIZABLE)
@@ -227,10 +253,8 @@ class Ecran:
             self.switching = any([page.vitesse != 0 for page in self.pages])
 
     def draw(self):
-
         for page in self.pages:
-            # fprint(page.content, page.position())
-            self.screen.blit(page.content, page.position())
+            page.surface_blit(self.screen)
 
         pygame.display.flip()
 
@@ -242,17 +266,29 @@ class Carre:
         self.resize()
 
     def resize(self):
-        self.largeur, self.hauteur = Ecran.SIZE
+        self.deltax = 100
+        self.deltay = 100
+
+        self.largeur = Ecran.SIZE[0] - 2*self.deltax
+        self.hauteur = Ecran.SIZE[1] - 2*self.deltay
+
         self.x = self.largeur//2-self.taille 
         self.y = self.hauteur//2-self.taille
 
-    def draw(self, content):
+    def draw(self, surface_page: pygame.surface.Surface):
         # Dessine la page 1
+        surface_page.fill((60, 60, 20))
+        pygame.draw.rect(surface_page, NOIR, (
+            self.deltax, self.deltay, self.largeur, self.hauteur))
+
         for i in range(self.largeur//10):
-            pygame.draw.line(content, JAUNE, (10*i, 0), 
-                (self.largeur-10*i, self.hauteur))
-        pygame.draw.rect(content, ROUGE, (self.x, self.y, 
+            pygame.draw.line(surface_page, JAUNE, (self.deltax+10*i, self.deltay), 
+                (self.deltax+self.largeur-10*i, self.deltay+self.hauteur))
+        pygame.draw.rect(surface_page, ROUGE, (self.deltax+self.x, self.deltay+self.y, 
             2*self.taille, 2*self.taille))
+
+        pygame.draw.rect(surface_page, JAUNE, (
+            self.deltax, self.deltay, 1+self.largeur, 1+self.hauteur), 1)
 
 
 class Cercle:
@@ -264,12 +300,12 @@ class Cercle:
         self.largeur, self.hauteur = Ecran.SIZE
         self.cx, self.cy = self.largeur//2, self.hauteur//2
 
-    def draw(self, content):
+    def draw(self, surface_page: pygame.surface.Surface):
         # Dessine la page 1
         for i in range(self.hauteur//10):
-            pygame.draw.line(content, VIOLET, (0, 10*i), 
+            pygame.draw.line(surface_page, VIOLET, (0, 10*i), 
                 (self.largeur, self.hauteur-10*i))
-        pygame.draw.circle(content, CYAN, (self.cx, self.cy), self.rayon)
+        pygame.draw.circle(surface_page, CYAN, (self.cx, self.cy), self.rayon)
 
 
 class Triangle:
@@ -281,46 +317,67 @@ class Triangle:
         pi_sur_2 = pi / 2
         deux_pi_sur_3 = 2 * pi / 3
 
-        self.largeur, self.hauteur = Ecran.SIZE
+        self.deltax = 100
+        self.deltay = 100
+
+        self.largeur = Ecran.SIZE[0] - 2*self.deltax
+        self.hauteur = Ecran.SIZE[1] - 2*self.deltay
         self.cx, self.cy = self.largeur//2, self.hauteur//2
         self.coords = [(self.cx, self.cy - self.rayon), 
             (self.cx + self.rayon*cos(pi_sur_2-deux_pi_sur_3), 
                 self.cy - self.rayon*sin(pi_sur_2-deux_pi_sur_3)),
             (self.cx + self.rayon*cos(pi_sur_2+deux_pi_sur_3), 
                 self.cy - self.rayon*sin(pi_sur_2+deux_pi_sur_3))]
+        for i in range(len(self.coords)):
+            self.coords[i] = (self.coords[i][0]+self.deltax, 
+                self.coords[i][1]+self.deltay)
 
-    def draw(self, content):
+    def draw(self, surface_page: pygame.surface.Surface):
         # Dessine la page 3
+        surface_page.fill((20, 60, 20))
+        pygame.draw.rect(surface_page, NOIR, (
+            self.deltax, self.deltay, self.largeur, self.hauteur))
         for i in range(self.largeur//10):
-            pygame.draw.line(content, VERT, (10*i, 0), 
-                (self.largeur-10*i, self.hauteur))
-        pygame.draw.polygon(content, ROUGE, self.coords)
+            pygame.draw.line(surface_page, VERT, (self.deltax+10*i, self.deltay), 
+                (self.deltax + self.largeur-10*i, self.deltay+self.hauteur))
+
+        pygame.draw.rect(surface_page, VERT, (
+            self.deltax, self.deltay, 1+self.largeur, 1+self.hauteur), 1)
+        pygame.draw.polygon(surface_page, ROUGE, self.coords)
 
 
 def main():
-    ecran = Ecran([800, 600])
+    ecran = Ecran([1400, 800])
 
-    w = Ecran.SIZE[0]
+    width, height = Ecran.SIZE
 
     carre = Carre(40)
-    page1 = Page("P1", carre, color=(20, 200, 20))
-    page1.set_liste_switch([(-2*w, -w), (-w, 0)])
+    page1 = Push("P1", carre, Coord(0, 0), color=(20, 200, 20))
+    page1.set_switch_list([(Coord(0, -2*height), Coord(0, -height)), 
+        (Coord(0, -height), Coord(0, 0))])
     ecran.add(page1)
 
+    # carre = Carre(40)
+    # page1 = Push("P1", carre, Coord(0, 0), color=(20, 200, 20))
+    # page1.set_switch_list([(Coord(-2*width, 0), Coord(-width, 0)), 
+    #     (Coord(-width, 0), Coord(0, 0))])
+    # ecran.add(page1)
+
     cercle = Cercle(40)
-    page2 = Page("P2", cercle, w, 0, (20, 200, 200))
-    page2.set_liste_switch([(-w, 0), (0, w)])
+    page2 = Push("P2", cercle, Coord(width, 0), (20, 200, 200))
+    page2.set_switch_list([(Coord(-width, 0), Coord(0, 0)), 
+        (Coord(0, 0), Coord(width, 0))])
     ecran.add(page2)
 
     triangle = Triangle(50)
-    page3 = Page("P3", triangle, 2*w, 0, (20, 200, 200))
-    page3.set_liste_switch([(0, w), (w, 2*w)])
+    page3 = Push("P3", triangle, Coord(2*width, 0), (20, 200, 200))
+    page3.set_switch_list([(Coord(0, 0), Coord(width, 0)), 
+        (Coord(width, 0), Coord(2*width, 0))])
     ecran.add(page3)
 
     while ecran.is_open:
         # Réduire l'utilisation du processeur et fixer à 60 images par seconde
         horloge.tick(60)
-
         ecran.draw()
         
         for evenement in pygame.event.get():
@@ -334,8 +391,14 @@ def main():
                 elif evenement.key == pygame.K_LEFT:
                     ecran.switch("LEFT")
 
+                elif evenement.key == pygame.K_UP:
+                    ecran.switch("UP")
+
                 elif evenement.key == pygame.K_RIGHT:
                     ecran.switch("RIGHT")
+
+                elif evenement.key == pygame.K_DOWN:
+                    ecran.switch("DOWN")
 
             elif evenement.type in (768, 770, 771):
                 # key up & down + text
