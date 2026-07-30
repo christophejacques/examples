@@ -32,11 +32,17 @@ class Coord:
         self.x = x
         self.y = y
 
+    def __add__(self, other):
+        return Coord(self.x + other.x, self.y + other.y)
+
     def __eq__(self, other):
         return self.x == other.x and self.y == other.y
 
     def __str__(self):
         return f"Coord({self.x}, {self.y})"
+
+    def to_tuple(self):
+        return self.x, self.y
 
 
 class Page:
@@ -52,7 +58,6 @@ class Page:
         self.set(coord)
         self.color = color
         self.surface_page = pygame.Surface(Ecran.SIZE)
-        self.surface_page.set_alpha(50)
 
         self.instance_affichage = instance_affichage
         self.instance_affichage.draw(self.surface_page)
@@ -87,6 +92,9 @@ class Page:
     def switch(self, direction: str):
         pass
 
+    def animation(self):
+        pass
+
     def set(self, coord: Coord):
         self.x = coord.x
         self.y = coord.y
@@ -94,6 +102,79 @@ class Page:
     def move(self, dx: int = 0, dy: int = 0):
         self.x += dx
         self.y += dy
+
+
+class Cross(Page):
+    surface_page4: list[pygame.surface.Surface]
+
+    def __init__(self, nom: str, instance_affichage, 
+            coord: Coord, color: tuple = (0, 0, 0)): 
+        self.nom = nom
+        self.set(coord)
+        self.color = color
+        self.size_hg = Coord(Ecran.SIZE[0] // 2, Ecran.SIZE[1] // 2)
+        self.size_hd = Coord(Ecran.SIZE[0] - self.size_hg.x, self.size_hg.y)
+
+        self.rect_hg = (0, 0, Ecran.SIZE[0] // 2, Ecran.SIZE[1] // 2)
+        self.rect_hd = (self.size_hd.x, 0, *self.size_hg.to_tuple())
+        self.rect_bg = (0, self.size_hg.y, self.size_hg.x, Ecran.SIZE[1] - self.size_hg.y)
+        self.rect_bd = (self.size_hg.x, Ecran.SIZE[1] - self.size_hg.y, 
+            *self.size_hg.to_tuple())
+
+        self.surface_page = pygame.Surface(Ecran.SIZE)
+        self.instance_affichage = instance_affichage
+        self.instance_affichage.draw(self.surface_page)
+
+        self.pos_hg = Coord(0, 0)
+        self.pos_hd = Coord(self.size_hg.x, 0)
+        self.pos_bg = Coord(0, self.size_hg.y)
+        self.pos_bd = Coord(self.size_hg.x, self.size_hg.y)
+
+        self.surfaces_pages = [
+            self.surface_page.subsurface(self.rect_hg), 
+            self.surface_page.subsurface(self.rect_hd), 
+            self.surface_page.subsurface(self.rect_bg), 
+            self.surface_page.subsurface(self.rect_bd), ]
+
+        self.vitesse = Coord(0, 0)
+        self.acceleration = Coord(Ecran.SIZE[0] // 80, Ecran.SIZE[1] // 80)
+
+    def set_switch_list(self, liste: List[Tuple[Coord, Coord]]):
+        pass
+
+    def switch(self, direction: str):
+        if direction in ("LEFT", "UP"):
+            if self.pos_hg.x == 0:
+                self.vitesse = -self.acceleration
+        else:
+            if self.pos_hg.x < 0:
+                self.vitesse = self.acceleration
+
+    def animation(self):
+        if self.vitesse == Coord(0, 0):
+            return
+
+        self.pos_hg = self.pos_hg + Coord(self.vitesse.x, self.vitesse.y)
+        self.pos_hd = self.pos_hd + Coord(-self.vitesse.x, self.vitesse.y)
+        self.pos_bg = self.pos_bg + Coord(self.vitesse.x, -self.vitesse.y)
+        self.pos_bd = self.pos_bd + Coord(-self.vitesse.x, -self.vitesse.y)
+
+        if self.vitesse < 0:
+            if self.pos_hg.x < -self.size_hg.x:
+                self.vitesse = 0
+        else:
+            if self.pos_hg.x >= 0:
+                self.vitesse = 0
+
+    def position(self):
+        return self.x, self.y
+
+    def surface_blit(self, surface_parent: pygame.surface.Surface):
+        surface_parent.fill((0, 0, 0))
+        surface_parent.blit(self.surfaces_pages[0], self.pos_hg.to_tuple())
+        surface_parent.blit(self.surfaces_pages[1], self.pos_hd.to_tuple())
+        surface_parent.blit(self.surfaces_pages[2], self.pos_bg.to_tuple())
+        surface_parent.blit(self.surfaces_pages[3], self.pos_bd.to_tuple())
 
 
 class Push(Page):
@@ -351,8 +432,13 @@ def main():
 
     width, height = Ecran.SIZE
 
+    # carre = Carre(40)
+    # page1 = Push("P1", carre, Coord(0, 0), color=(20, 200, 20))
+    # page1.set_switch_list([(Coord(0, 0), Coord(0, 0)), (Coord(0, 0), Coord(0, 0))])
+    # ecran.add(page1)
+
     carre = Carre(40)
-    page1 = Push("P1", carre, Coord(0, 0), color=(20, 200, 20))
+    page1 = Cross("P1", carre, Coord(0, 0), color=(20, 200, 20))
     page1.set_switch_list([(Coord(0, -2*height), Coord(0, -height)), 
         (Coord(0, -height), Coord(0, 0))])
     ecran.add(page1)
@@ -363,17 +449,19 @@ def main():
     #     (Coord(-width, 0), Coord(0, 0))])
     # ecran.add(page1)
 
-    cercle = Cercle(40)
-    page2 = Push("P2", cercle, Coord(width, 0), (20, 200, 200))
-    page2.set_switch_list([(Coord(-width, 0), Coord(0, 0)), 
-        (Coord(0, 0), Coord(width, 0))])
-    ecran.add(page2)
+    # cercle = Cercle(40)
+    # page2 = Push("P2", cercle, Coord(width, 0), (20, 200, 200))
+    # page2.set_switch_list([(Coord(-width, 0), Coord(0, 0)), 
+    #     (Coord(0, 0), Coord(width, 0))])
+    # # page2.set_switch_list([(Coord(0, 0), Coord(0, 0)), 
+    # #     (Coord(0, 0), Coord(width, 0))])
+    # ecran.add(page2)
 
-    triangle = Triangle(50)
-    page3 = Push("P3", triangle, Coord(2*width, 0), (20, 200, 200))
-    page3.set_switch_list([(Coord(0, 0), Coord(width, 0)), 
-        (Coord(width, 0), Coord(2*width, 0))])
-    ecran.add(page3)
+    # triangle = Triangle(50)
+    # page3 = Push("P3", triangle, Coord(2*width, 0), (20, 200, 200))
+    # page3.set_switch_list([(Coord(0, 0), Coord(width, 0)), 
+    #     (Coord(width, 0), Coord(2*width, 0))])
+    # ecran.add(page3)
 
     while ecran.is_open:
         # Réduire l'utilisation du processeur et fixer à 60 images par seconde

@@ -1,6 +1,4 @@
 #!/usr/bin/env python3
-import datetime as dt
-
 from time import sleep, perf_counter
 from threading import Thread
 from typing import Optional
@@ -12,6 +10,7 @@ from lecture_jdd import lecture_jdd
 
 class Var:
     debut = perf_counter()
+    FICHIER_JDD = "jeu_donnees.conf"
 
 
 def fprint(*args, showTime: bool = True, **kwargs):
@@ -85,7 +84,7 @@ class sigmaGestionListener:
     def init_fichier(self) -> None:
         # Initialisation des Jeux de données
         # depuis un fichier
-        donnees = lecture_jdd("jeu_donnees_rejete.conf")
+        donnees = lecture_jdd(Var.FICHIER_JDD)
 
         #  chargement des données avant lancement du processus de traitement
         for wait in donnees:

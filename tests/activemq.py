@@ -215,7 +215,6 @@ class MyHTMLParser(HTMLParser):
         elif self.found and not self.tout:
             self.findnext()
 
-
     def handle_endtag(self, tag):
         if self.finish:
             return
@@ -283,7 +282,7 @@ class MyHTMLParser(HTMLParser):
 
         type_page, *encoding = reponse.headers.get("Content-Type").split(";")  # type: ignore[union-attr]
 
-        if not "text/html" in type_page:
+        if "text/html" not in type_page:
             return False, f"type_page problem : {type_page}"
 
         return self.load_str(reponse.text)
@@ -340,7 +339,6 @@ class MyHTMLParser(HTMLParser):
 
         return True, "Posted"
 
-
     def init_find(self, recherche: str):
         self.found = False
         self.classes = list()
@@ -359,7 +357,7 @@ class MyHTMLParser(HTMLParser):
         dprint("recherche:", recherche)
         dprint()
 
-    def find(self, recherche: str, tout: bool=False, exact: bool=False):
+    def find(self, recherche: str, tout: bool = False, exact: bool = False):
         # Parametres :
         # 
         # @recherche : chemin au format css
