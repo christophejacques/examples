@@ -523,6 +523,7 @@ class SysTray(metaclass=ABCMeta):
     def __init__(self, color):
         pass
 
+    @final
     def __initinstance__(self, screen):
         self.theme = Theme()
         self.registre = Registres(self.DEFAULT_CONFIG[0])

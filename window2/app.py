@@ -330,7 +330,8 @@ class Window:
         self.on_error = True
         self.set_surface_color()
 
-    def theme_color(self, active_color: Optional[Tuple] = None, inactive_color: Optional[Tuple]=None, check_error: bool=False):
+    def theme_color(self, active_color: Optional[Tuple] = None, 
+            inactive_color: Optional[Tuple] = None, check_error: bool = False):
         if check_error and self.on_error:
             return self.THEME_ERROR_COLOR
             

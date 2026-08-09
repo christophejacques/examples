@@ -2,6 +2,12 @@ from __future__ import annotations
 from typing import Optional, Callable, Dict, List, Self, Generator, Any
 from enum import Enum, auto
 from functools import wraps
+from threading import Thread
+from time import sleep
+
+
+def fprint(*args, **kwargs):
+    print(*args, **kwargs, flush=True)
 
 
 def definition_types(*params):
@@ -62,7 +68,7 @@ class Communication:
     def init_port(self, action: Action, port: int, callback: Callable) -> None:
         if not Communication.session.get(port):
             Communication.session[port] = dict()
-            # print("Initialisation du Port:", port)
+            # fprint("Initialisation du Port:", port)
         
         if action.code != "INIT":
             raise ValueError("L'initialisation d'un port ne peut s'effectuer que par un code action INIT")
@@ -83,7 +89,7 @@ class Communication:
 
         del Communication.session[port]
         if Communication.DEBUG:
-            print("Fermeture du Port:", port)
+            fprint("Fermeture du Port:", port)
 
     @definition_types(Self, int, int)
     def close_communication(self, client_id: int, port: int) -> None:
@@ -96,7 +102,7 @@ class Communication:
 
         del Communication.session[port]
         if Communication.DEBUG:
-            print("Fermeture communication du Port:", port)
+            fprint("Fermeture communication du Port:", port)
 
     @definition_types(Self, int, int)
     def has_client(self, client_id: int, port: int) -> bool:
@@ -173,7 +179,7 @@ class Server:
         self.communication.init_port(self.action, Server.PORT, self.receive)
 
         if Server.DEBUG:
-            print("Server", self.name, "initialized on port:", Server.PORT, "with id:", self.action.ident)
+            fprint("Server", self.name, "initialized on port:", Server.PORT, "with id:", self.action.ident)
 
     def __enter__(self, *args) -> Self:
         return self
@@ -184,7 +190,8 @@ class Server:
     @definition_types(Self)
     def close(self) -> None:
         if Server.DEBUG:
-            print("Shutdown Server", self.name)
+            fprint("Shutdown Server", self.name)
+
         action: Action = Action(self.action.ident)
         action.update("CLOSE", {"port": Server.PORT})
 
@@ -202,7 +209,8 @@ class Server:
     @definition_types(Self, int, Action)
     def send(self, client_id: int, action: Action) -> None:
         if Server.DEBUG:
-            print("  >", self.name, ":", "send to", f"id:{client_id}", "...", action)
+            fprint("  >", self.name, ":", "send to", f"id:{client_id}", "...", action)
+
         self.communication.sendTo(client_id, Server.PORT, action)
 
     @definition_types(Self, Action)
@@ -221,7 +229,7 @@ class Server:
         if client_id not in self.clients:
             self.clients.append(client_id)
 
-            # print("#", self.name, f"New client {client_name} added (id:{client_id})")
+            # fprint("#", self.name, f"New client {client_name} added (id:{client_id})")
             self.action.update("SERVER_RESPONSE", {"connected": True})
             self.send(client_id, self.action)
 
@@ -235,7 +243,7 @@ class Server:
             try:
                 self.communication.close_communication(client_id, Server.PORT)
             except Exception as communication_erreur:
-                print(communication_erreur)
+                fprint(communication_erreur)
 
     @definition_types(Self, Action)
     def receive(self, action: Action) -> None:
@@ -266,16 +274,39 @@ class Client:
         self.communication = self.os.get_fonction(Fonction.COMMUNICATION)
         self.action = Action()
         self.isConnected = False
+        self.thread = Thread(target=self.try_connect)
+        self.thread.start()
+
+    def check_connection(self):
+        self.thread.join()
+        if not self.isConnected:
+            raise Exception(f"{self.name}.check_connection(): Aucun serveur de connecté")
+
+    def try_connect(self):
+        try:
+            self.communication.init_port(self.action, Server.PORT, self.receive)
+        except Exception as erreur:
+            fprint("CONN ERROR:", erreur)
+            sleep(2)
+            return
+
+        boucle: int 
+        retry: int = 3
+        while not self.isConnected and retry > 0:
+            self.init_port(Server.PORT)
+            boucle = 5
+            while not self.isConnected and boucle > 0:
+                sleep(1)
+                boucle -= 1
+            retry -= 1
 
     @definition_types(Self, int)
     def init_port(self, port: int) -> None:
-        self.communication.init_port(self.action, port, self.receive)
-
         action = Action(self.action.ident)
         action.update("INIT", {"id": self.action.ident, "name": self.name})
 
         if Client.DEBUG:
-            print(">", self.name, "looking for server", action)
+            fprint(">", self.name, "looking for server", action)
         self.communication.send(self.action.ident, port, action)
 
     @definition_types(Self, int)
@@ -285,13 +316,21 @@ class Client:
 
         self.send(port, action)
 
+        self.isConnected = False
+        self.server_id = None
+
     @definition_types(Self, int, Action)
     def send(self, port: int, action: Action) -> None:
         if self.server_id is None:
-            raise Exception("Aucun serveur de connecté")
+            raise Exception(f"{self.name}.send(): Aucun serveur de connecté")
 
-        print(self.name, "send ...", action)
+        fprint(self.name, "send ...", action)
         self.communication.sendTo(self.server_id, port, action)
+
+    @definition_types(Self, str)
+    def send_message(self, message: str):
+        self.action.update("MESSAGE", {"content": message})
+        self.send(Server.PORT, self.action)
 
     @definition_types(Self, Action)
     def receive(self, action: Action) -> None:
@@ -301,7 +340,7 @@ class Client:
                 if self.isConnected:
                     self.server_id = action.ident
                 else:
-                    print(self.name, "is NOT connected !")
+                    fprint(self.name, "is NOT connected !")
                 
             case "CLOSE":
                 self.isConnected = False
@@ -309,35 +348,42 @@ class Client:
 
             case "MESSAGE":
                 if not self.isConnected:
-                    print("client", self.name, "is not connected")
+                    fprint("client", self.name, "is not connected")
                     return
 
             case _:  # INIT
+                # if Client.DEBUG:
+                #     fprint("/!\\", self.name, "receive", action)
                 return
 
         if Client.DEBUG:
-            print("<", self.name, "receive from", action)
+            fprint("<", self.name, "receive from", action)
+
+        if not self.thread.is_alive():
+            self.thread.join()
 
 
 if __name__ == "__main__":
+    c1 = Client("CLI1")
+    sleep(2)
+    
     with Server("SRV") as s:
-        c1 = Client("CLI1")
-        c1.init_port(s.PORT)
+        c1.check_connection()
 
-        print()
-        c2 = Client("CLI2")
-        c2.init_port(s.PORT)
+        for i in range(2, 6):
+            fprint()
+            c = Client(f"CLI{i}")
+            c.check_connection()
 
-        print()
-        c3 = Client("CLI3")
-        c3.init_port(s.PORT)
+        fprint()
+        c1.send_message("Ah que coucou !")
 
-        print()
-        c2.action.update("MESSAGE", {"content": "Ah que coucou !"})
-        c2.send(s.PORT, c2.action)
-
-        print()
+        fprint()
         c1.close_port(s.PORT)
-        # c2.close_port(s.PORT)
-        # c3.close_port(s.PORT)
-        print()
+
+        try:
+            c1.send_message("Message after closed")
+        except Exception as erreur:
+            fprint("ERREUR:", erreur)
+
+        fprint()
