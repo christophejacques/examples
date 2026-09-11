@@ -34,6 +34,7 @@ def division(a, b) -> float:
 
 print("=>", division(5, 2))
 print("=>", division(5, 0))
+print()
 
 
 class Entier:

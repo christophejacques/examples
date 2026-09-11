@@ -20,7 +20,6 @@ class GestionProcess:
         self.process = multiprocessing.Process(target=tache)
         fprint(f"{tache.__name__=}")
 
-
     def start(self):
         self.process.start()
         self.pid = self.process.pid
@@ -83,4 +82,3 @@ if __name__ == "__main__":
     time.sleep(2)
     gp.kill()
     # gp.end()
-    

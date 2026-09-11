@@ -1,36 +1,25 @@
-from typing import Type, Any, List, Dict, Optional
-from dataclasses import dataclass, field
-from typing import LiteralString
+from collections import namedtuple
+import typing
+
+for metod in dir(typing):
+    if "literal" in metod.lower():
+        print(metod)
+
+fields: typing.LiteralString = "Un"
 
 
-@dataclass(frozen=True)
-class ClasseMere:
-    screen: LiteralString
-    window: LiteralString
+# Définition du namedtuple (nom du type, liste des champs)
+Personne = namedtuple('Personne', ['nom', 'age', 'ville'])
 
 
-@dataclass
-class UneClasse:
-    args: List[Any]
-    kwargs: Optional[Dict[str, Any]] = field(default_factory=Dict)
+# Création d'une instance
+p1 = Personne(nom='Alice', age=30, ville='Paris')
 
-    def __str__(self):
-        screen, window, args, kwargs = self.screen, self.window, self.args, self.kwargs
-        return f"UneClasse({screen=}, {window=}, {args=}, {kwargs=})"
+# Accès aux champs par attribut ou par index
+print(p1.nom)      # Alice
+print(p1.age)      # 30
+print(p1[2])       # Paris
 
-
-def initialise_classe(nom_classe: Type[Any], screen: str, window: str, 
-        *args, **kwargs) -> Any:
-
-    init_method = nom_classe.__init__
-    nom_classe.__init__ = ClasseMere.__init__
-    instance = nom_classe(screen, window)
-
-    nom_classe.__init__ = init_method
-    nom_classe.__init__(instance, args, kwargs)
-
-    return instance
-
-
-uc = initialise_classe(UneClasse, "screen", "window", 5, retry=False)
-print(uc)
+# Déstructuration (unpacking) directe
+nom, age, ville = p1
+print(f"{nom} a {age} ans et habite à {ville}.")

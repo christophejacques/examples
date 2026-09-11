@@ -63,9 +63,9 @@ def test_final():
 
 
 def ouvrir_fichier(nom: str) -> BufferedWriter:
-  print("Creating file:", nom)
-  bf = open(nom, "wb")
-  return bf
+    print("Creating file:", nom)
+    bf = open(nom, "wb")
+    return bf
 
 
 def fermer_fichier(file_handle: BufferedWriter):
@@ -101,7 +101,6 @@ def test_newtype():
         def get_id(self):
             return self.user_id
 
-
     u = User("cja")
     print(u.user_id)
     print(u.get_id())
@@ -135,6 +134,7 @@ def verifier_acces(autorises: Container[int], utilisateur_id: int) -> bool:
         return True
     return False
 
+
 def test_container():
     # Fonctionne avec une liste
     print(verifier_acces([1, 2, 3], 2))  # True
@@ -149,6 +149,7 @@ def test_container():
 def division_par_0():
     return 1 / 0
 
+
 def test_raise():
     try:
         division_par_0()
@@ -158,8 +159,10 @@ def test_raise():
     finally:
         print("Fin raise()")
 
+
 def open_file(nom: str) -> ContextManager:
-  return open(nom, "rb")
+    return open(nom, "rb")
+
 
 def test_contextmanager():
     with open_file("fichier.bin") as fh:
@@ -178,5 +181,5 @@ if __name__ == "__main__":
     # test_collection()
     # test_container()
     # test_raise()
-    # test_contextmanager()
+    test_contextmanager()
     test_match("Bonjour, Nom: Alice, Age: 30")

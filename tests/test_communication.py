@@ -68,7 +68,6 @@ class Communication:
     def init_port(self, action: Action, port: int, callback: Callable) -> None:
         if not Communication.session.get(port):
             Communication.session[port] = dict()
-            # fprint("Initialisation du Port:", port)
         
         if action.code != "INIT":
             raise ValueError("L'initialisation d'un port ne peut s'effectuer que par un code action INIT")
@@ -153,11 +152,10 @@ class Fonction(Enum):
 
 
 class OS:
+    
     @classmethod
-    def get_fonction(cls, fonction: Fonction) -> Any:
-        if not isinstance(fonction, Fonction):
-            raise TypeError("Le parametre doit être de type 'Fonction'.")
-            
+    @definition_types(Self, Fonction)
+    def get_fonction(cls, fonction: Fonction) -> Any:            
         match fonction:
             case Fonction.COMMUNICATION:
                 return Communication()
@@ -171,6 +169,7 @@ class Server:
     communication: Communication
     clients: List[int] = list()
     
+    @definition_types(Self, str)
     def __init__(self, name: str):
         self.name = name
         self.action = Action()
@@ -268,6 +267,7 @@ class Client:
     communication: Communication
     server_id: Optional[int] = None
     
+    @definition_types(Self, str)
     def __init__(self, name: str):
         self.name = name
         self.os = OS()

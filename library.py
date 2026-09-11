@@ -21,15 +21,25 @@ class Constante:
     FONT22: pygame.font.Font
     FONT28: pygame.font.Font
 
+    Initialized: bool
+
     @classmethod
     def __init__(cls):
+        cls.Initialized = False
+        fprint("Init pygame")
         pygame.init()
+        cls.Initialized = True
         cls.FONT22 = pygame.font.SysFont("arial", 18)
         cls.FONT28 = pygame.font.SysFont("arial", 28)
 
     @classmethod
     def close(cls):
+        if not cls.Initialized:
+            return
+
+        fprint("Quit pygame")
         pygame.quit()
+        cls.Initialized = False
 
 
 class Commande:
@@ -128,7 +138,7 @@ class MessageBox:
 
     def __init__(self, screen: pygame.surface.Surface, 
             size: Tuple, 
-            btn_defs: List):
+            btn_defs: List[Tuple]):
         self.screen = screen
 
         largeur_box, hauteur_box = size
@@ -166,7 +176,7 @@ class MessageBox:
         self.calculate(btn_defs)
         self.open()
 
-    def calculate(self, btn_defs: List):
+    def calculate(self, btn_defs: List[Tuple]):
         # btn : str, Optional[str], Optional[tuple]
         # 1. str = Libelle bouton
         # 2. str = return value
@@ -335,8 +345,9 @@ def main():
 
         pygame.display.update()
 
-    Constante.close()
-
 
 if __name__ == '__main__':
-    main()
+    try:
+        main()
+    finally:
+        Constante.close()
