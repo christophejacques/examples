@@ -1,7 +1,6 @@
 import email
 from email.header import decode_header
 import imaplib
-from typing import Any
 
 
 # Init Configuration 
@@ -30,7 +29,7 @@ with open("ENVIRONNEMENT") as env:
 
 
 def print_body(body: str):
-    maxi: int = 4
+    maxi: int = 20
     taille: int = 100
     total: int = len(body)
     indice: int = 0
@@ -38,10 +37,19 @@ def print_body(body: str):
     while indice < maxi:
         debut = indice_body * taille
         indice_body += 1
+        premiere = True
         for ligne_n in body[debut:debut+taille].split("\n"):
             for ligne_r in ligne_n.split("\r"):
-                indice += 1
-                print(indice, ligne_r)
+                if ligne_r.strip() != "":
+                    premiere = True
+                    indice += 1
+                    # print(indice, ligne_r)
+                    print(" |", ligne_r)
+
+                elif premiere:
+                    premiere = False
+                    print(" |")
+
                 if indice >= maxi:
                     break
 
@@ -50,6 +58,41 @@ def print_body(body: str):
 
         if (indice_body+1) * taille > total:
             indice = maxi
+
+    print("---")
+
+
+def extract_payload(indice, message):
+
+    all_content = message.get("Content-Type")
+    content_disposition = str(message.get("Content-Disposition"))
+    content_encoding = message.get("Content-Transfer-Encoding")
+
+    if all_content:
+        content_type, charset = [tab.strip() 
+            for tab in all_content.split(";")]
+        *debut, encoding = charset.split("=")
+
+    else:
+        content_type = ""
+        encoding = "?"
+
+    if debut and debut[0].lower() == "charset":
+        encoding = encoding.replace("\"", "")
+        
+    print(f"#-{indice}>", content_type, content_disposition, content_encoding, debut, encoding)
+
+    if content_type != "text/plain" or "attachment" in content_disposition:
+        return
+
+    payload = message.get_payload(decode=True)
+    if type(payload) is bytes:
+        body = payload.decode(encoding, errors="ignore")
+    else:
+        body = str(payload)
+
+    print("Corps :")
+    print_body(body)
 
 
 def decoder_texte(header_val):
@@ -89,8 +132,6 @@ try:
         for response_part in msg_data:
             if isinstance(response_part, tuple):
                 # Conversion des données brutes en objet email
-
-                msg0 = email.message_from_bytes(response_part[0])
                 msg = email.message_from_bytes(response_part[1])
 
                 expediteur = " ".join(decoder_texte(msg.get("From")).split())
@@ -105,50 +146,12 @@ try:
 
                 # Extraction du corps de l'e-mail
                 if msg.is_multipart():
-                    for part in msg.walk():
-                        all_content = part.get("Content-Type")
-                        content_disposition = str(part.get("Content-Disposition"))
-                        content_encoding = part.get("Content-Transfer-Encoding")
-
-                        if all_content:
-                            content_type, charset = [tab.strip() 
-                                for tab in all_content.split(";")]
-                            *debut, encoding = charset.split("=")
-
-                        else:
-                            content_type = ""
-                            encoding = "?"
-
+                    for indice, part in enumerate(msg.walk()):
                         # Récupère le texte brut s'il ne s'agit pas d'une pièce jointe
-                        if (
-                            content_type in ["text/plain", "-text/html"]
-                            and "attachment" not in content_disposition
-                        ):
-                            payload = part.get_payload(decode=True)
-
-                            if type(payload) is bytes:
-                                body = payload.decode(encoding, errors="ignore")
-                            elif payload is None:
-                                continue
-                            else:
-                                body = str(payload)
-
-                            print("Corps : ", end="")  # Aperçu 100 caractères
-                            print_body(body)
-                            break
-
-                        else:
-                            print("*", content_type, content_disposition)
+                        extract_payload(indice, part)
 
                 else:
-                    payload = msg.get_payload(decode=True)
-                    if type(payload) is bytes:
-                        body = payload.decode("utf-8", errors="ignore")
-                    else:
-                        body = str(payload)
-
-                    print("Corps ? ")
-                    print_body(body)
+                    extract_payload(0, msg)
 
         # --- MARQUER COMME NON LU ---
         # Remet le fanion (flag) '\Seen' à zéro

@@ -1,11 +1,4 @@
 from collections import namedtuple
-import typing
-
-for metod in dir(typing):
-    if "literal" in metod.lower():
-        print(metod)
-
-fields: typing.LiteralString = "Un"
 
 
 # Définition du namedtuple (nom du type, liste des champs)
