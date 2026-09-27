@@ -4,6 +4,8 @@ import pygame
 from os import getcwd, chdir, sep as separator
 from typing import Callable, Tuple, Optional, List, Dict
 from functools import partial
+from cmail import Mail
+from threading import Thread
 
 
 class Variable:
@@ -36,6 +38,7 @@ def get_pygame_const_name(index):
 class Lien:
 
     font: pygame.font.Font
+    id: str
     libelle: str
     posx: int
     posy: int 
@@ -44,17 +47,22 @@ class Lien:
 
     mouse_over: bool
     selected: bool
+    visible: bool
 
     def __init__(self, 
             font: pygame.font.Font,
             libelle: str, 
             posx: int, posy: int, 
             getColor: Optional[Callable],
-            callback: Optional[Callable]):
+            callback: Optional[Callable],
+            **options):
         
         self.font = font
         self.libelle = libelle
         self.set_get_color(getColor)
+
+        self.id = options.get("id", "")
+        self.visible = options.get("visible", True)
 
         self.x = posx
         self.y = posy
@@ -65,6 +73,24 @@ class Lien:
         self.callback = callback
         self.mouse_over = False
         self.selected = False
+
+    def toggle(self):
+        self.visible = not self.visible
+
+    def set_visible(self, visible: bool):
+        self.visible = visible
+
+    def set_libelle(self, libelle: str):
+        self.libelle = libelle
+        self.surface = self.font.render(self.libelle, False, self.color)
+
+    def set_max_width(self, width):
+        taille = len(self.libelle)
+        while self.w > width:
+            taille -= 1
+            libelle = self.libelle[:taille]
+            self.surface = self.font.render(libelle, False, self.color)
+            self.w = self.surface.get_width()
 
     def set_get_color(self, get_color: Optional[Callable]):
 
@@ -109,6 +135,7 @@ class Headers:
     w: int
     h: int
     visible: bool
+    liens: List[Lien]
 
     def __init__(self, screen: pygame.surface.Surface, coords: Tuple):
         self.coords = coords
@@ -124,6 +151,13 @@ class Headers:
         self.x, self.y, self.w, h = self.coords
         self.h = h - 1
 
+    def get(self, ident: str) -> Lien:
+        for lien in self.liens:
+            if lien.id == ident:
+                return lien
+
+        raise Exception("Le lien {ident!r} n'existe pas")
+
     def get_color(self, index):
         if index == 1:
             return (255, 255, 255)
@@ -131,10 +165,10 @@ class Headers:
         return (160, 240, 220)
 
     def load(self, datas: Dict):
-        self.liens: List[Lien] = list()
+        self.liens = list()
 
         for key, values in datas.items():
-            lib, position = values
+            ident, lib, position = values
 
             lien1 = Lien(Lecteur.SysFont3, key,
                 position, 4, partial(self.get_color, 1), None)
@@ -142,7 +176,8 @@ class Headers:
 
             largeur = lien1.w
             lien2 = Lien(Lecteur.SysFont4, lib,
-                position+largeur, 3, partial(self.get_color, 2), None)
+                position+largeur, 3, partial(self.get_color, 2), None,
+                id=ident)
             self.liens.append(lien2)
 
     def draw(self):
@@ -155,7 +190,7 @@ class Headers:
 
 class ListeMessages:
 
-    hauteur_ligne: int = 24
+    hauteur_ligne: int = 28
 
     surface: pygame.surface.Surface
     x: int
@@ -165,12 +200,37 @@ class ListeMessages:
     visible: bool
 
     mouse_over: bool
-    titres: List 
+
+    directory: str
+    nb_mails: int 
+    selected: int 
+
+    nb_colonnes: int
+    data_titres: Dict
+    titres: List[Lien]
+
+    liens: List[Lien]
+    liste_datas: List[Dict]
+
+    actions: Optional[str]
 
     def __init__(self, screen: pygame.surface.Surface, coords: Tuple):
 
         self.update_screen(screen, coords)
         self.mouse_over = False
+        self.nb_mails = 0
+        self.selected = 0
+        self.set_titres()
+        self.actions = None
+        self.directory = "INBOX"
+
+    def get_actions(self) -> Optional[str]:
+        if self.actions is None:
+            return None
+
+        actions = self.actions
+        self.actions = None
+        return actions
 
     def get_color(self, index):
         if index == 1:
@@ -184,7 +244,7 @@ class ListeMessages:
         return (160, 240, 220)
 
     def set_titres(self):
-        self.data_titres: Dict = {
+        self.data_titres = {
             "ATT": {"lib": "Attr", "pos": 10, "col": 1},
             "NUM": {"lib": "N°", "pos": 50, "col": 1},
             "EXP": {"lib": "Expéditeur", "pos": 50, "col": 1},
@@ -192,18 +252,46 @@ class ListeMessages:
             "DAT": {"lib": "Date", "pos": 580, "col": 1},
             "DIR": {"lib": r"\/", "pos": 50, "col": 2},
         }
-        self.titres: List[Lien] = list()
+        self.titres = list()
+        self.nb_colonnes = len(self.data_titres) - 1
 
         position: int = 0
+        position_old: int = 0
+        prev_key: str = ""
 
         for cle in self.data_titres:
+            position_old = position
             position += self.data_titres[cle]["pos"]
+            largeur = position - position_old
             self.data_titres[cle]["pos"] = position
+            if prev_key:
+                self.data_titres[prev_key]["lar"] = largeur
+
+            prev_key = cle
 
             lien = Lien(Lecteur.SysFont3, self.data_titres[cle]["lib"],
                     position, 5, 
                     partial(self.get_color, self.data_titres[cle]["col"]), None)
             self.titres.append(lien)
+
+    def mouse_exit(self):
+        self.mouse_over = False
+        self.selected = 0
+
+    def mouse_move(self, mouse_pos: Tuple):
+        self.mouse_over = True
+
+        if mouse_pos[1] < 30:
+            # ligne des titres
+            self.selected = 0
+            
+        else:
+            # ligne des messages
+            idx = mouse_pos[1] // ListeMessages.hauteur_ligne
+            if idx > self.nb_mails:
+                idx = 0
+
+            self.selected = idx
 
     @staticmethod
     def format_adresse(lib: str):
@@ -212,125 +300,75 @@ class ListeMessages:
 
         return lib
 
+    def get_mails(self):
+        mail = Mail()
+        user = mail.USERNAME
+
+        try:
+            mail.connect()
+            mail.select(self.directory)
+
+            status, response = mail.mail.status(self.directory, "(MESSAGES UNSEEN)")
+            if status == "OK":
+                # response contient une liste avec un seul élément en bytes
+                data = response[0].decode("utf-8").strip("()")
+                dossier, _, messages, _, unseen = data.split()
+
+                self.actions = f"USER={user};DIR={dossier};ALL={messages};UNSEEN={unseen}"
+
+                for contenu in mail.get_mails("UNSEEN"):
+                    self.liste_datas.append(contenu)
+
+            else:
+                fprint(self.directory, "Status:", status)
+
+        except Exception as erreur:
+            fprint("get_mails():", erreur)
+
+        try:
+            mail.disconnect()
+        except Exception:
+            pass
+
+        if self.actions is None:
+            self.actions = "LOADING=False"
+        else:
+            self.actions += ";LOADING=False"
+
+    def refresh(self):
+        self.load()
+
     def load(self):
-        self.messages: List[Lien] = list()
-        self.liste_datas: List[Dict] = list()
+        self.liens = list()
+        self.liste_datas = list()
+        self.nb_mails = 0
+        self.selected = 0
+        self.actions = "LOADING=True"
 
-        self.set_titres()
+        mails = Thread(target=self.load_mails)
+        mails.start()
 
-        # --- E-mail ID: 8 ---
-        # Date2 : 2026-09-13T16:17:01+00:00 De : Christophe <christophe.michael.jacques@proton.me>
-        # Sujet : test depuis proton
+    def load_mails(self):
+        # fprint("load_mails", self.directory)
+        # return 
 
-        datas: Dict = {
-            "ATT": "",
-            "NUM": "8",
-            "EXP": "Christophe <christophe.michael.jacques@proton.me>",
-            "OBJ": "test depuis proton",
-            "DAT": "2026-09-13T16:17:01+00:00"
-        }
-        self.liste_datas.append(datas)
-
-        # --- E-mail ID: 12 ---
-        # Date2 : 2026-09-17T20:31:13+00:00 De : xHamsterLive <noreply@inbox.xhamsterlive.com>
-        # Sujet : TiffanyDollxxx est en ligne
-
-        datas: Dict = {
-            "ATT": "x",
-            "NUM": "12",
-            "EXP": "xHamsterLive <noreply@inbox.xhamsterlive.com>",
-            "OBJ": "TiffanyDollxxx est en ligne",
-            "DAT": "2026-09-17T20:31:13+00:00"
-        }
-        self.liste_datas.append(datas)
-
-        # --- E-mail ID: 14 ---
-        # Date2 : 2026-09-22T03:10:47+00:00 De : xHamsterLive <noreply@inbox.xhamsterlive.com>
-        # Sujet : L'Oktoberfest te monte à la tête 🍺
-
-        datas: Dict = {
-            "ATT": "x",
-            "NUM": "14",
-            "EXP": "xHamsterLive <noreply@inbox.xhamsterlive.com>",
-            "OBJ": "L'Oktoberfest te monte à la tête 🍺",
-            "DAT": "2026-09-22T03:10:47+00:00"
-        }
-        self.liste_datas.append(datas)
-
-        # --- E-mail ID: 16 ---
-        # Date2 : 2026-09-22T20:40:20+00:00 De : xHamsterLive <noreply@inbox.xhamsterlive.com>
-        # Sujet : TiffanyDollxxx est en ligne
-
-        datas: Dict = {
-            "ATT": "x",
-            "NUM": "16",
-            "EXP": "xHamsterLive <noreply@inbox.xhamsterlive.com>",
-            "OBJ": "TiffanyDollxxx est en ligne",
-            "DAT": "2026-09-22T20:40:20+00:00"
-        }
-        self.liste_datas.append(datas)
-
-        # --- E-mail ID: 18 ---
-        # Date2 : 2026-09-23T06:04:10-06:00 De : "Carrefour Banque" <ne-pas-repondre@mail.carrefour-banque.fr>
-        # Sujet : Foire aux Vins : des offres à ne pas manquer !
-
-        datas: Dict = {
-            "ATT": "",
-            "NUM": "18",
-            "EXP": "\"Carrefour Banque\" <ne-pas-repondre@mail.carrefour-banque.fr>",
-            "OBJ": "Foire aux Vins : des offres à ne pas manquer !",
-            "DAT": "2026-09-23T06:04:10-06:00"
-        }
-        self.liste_datas.append(datas)
-
-        # --- E-mail ID: 19 ---
-        # Date2 : 2026-09-23T08:03:56-06:00 De : "Carrefour Banque" <ne-pas-repondre@mail.carrefour-banque.fr>
-        # Sujet : Découvrez vos offres PASS du moment !
-
-        datas: Dict = {
-            "ATT": "",
-            "NUM": "19",
-            "EXP": "\"Carrefour Banque\" <ne-pas-repondre@mail.carrefour-banque.fr>",
-            "OBJ": "Découvrez vos offres PASS du moment !",
-            "DAT": "2026-09-23T08:03:56-06:00"
-        }
-        self.liste_datas.append(datas)
-
-        # --- E-mail ID: 20 ---
-        # Date1 : Wed, 23 Sep 2026 18:00:30 +0000    De : Carrefour <carrefour@email.carrefour.fr>
-        # Sujet : Votre avis nous est précieux 💚
-
-        datas: Dict = {
-            "ATT": "",
-            "NUM": "20",
-            "EXP": "Carrefour <carrefour@email.carrefour.fr>",
-            "OBJ": "Votre avis nous est précieux",
-            "DAT": "Wed, 23 Sep 2026 18:00:30 +0000"
-        }
-        self.liste_datas.append(datas)
-
-        # --- E-mail ID: 21 ---
-        # Date2 : 2026-09-23T18:04:36+00:00 De : xHamsterLive <noreply@inbox.xhamsterlive.com>
-        # Sujet : JuliaKhaleesii- est en ligne
-
-        datas: Dict = {
-            "ATT": "x",
-            "NUM": "21",
-            "EXP": "xHamsterLive <noreply@inbox.xhamsterlive.com>",
-            "OBJ": "JuliaKhaleesii- est en ligne",
-            "DAT": "2026-09-23T18:04:36+00:00"
-        }
-        self.liste_datas.append(datas)
+        self.get_mails()
 
         dy = 5
-        for datas in self.liste_datas:
-            dy += 30
+        largeur_max = self.data_titres["OBJ"]["lar"] - 10
+        for datas in reversed(sorted(self.liste_datas, key=lambda x: x["DAT"])):
+            dy += ListeMessages.hauteur_ligne  # 30
             for cle in datas:
                 lib = self.format_adresse(datas[cle]) if cle == "EXP" else datas[cle]
                 lien = Lien(Lecteur.SysFont3, lib,
                         self.data_titres[cle]["pos"], dy, 
                         partial(self.get_color, "SEEN"), None)
-                self.messages.append(lien)
+                if cle == "OBJ":
+                    lien.set_max_width(largeur_max)
+
+                self.liens.append(lien)
+
+        self.nb_mails = len(self.liste_datas)
 
     def update_screen(self, 
             screen: pygame.surface.Surface, coords: Optional[Tuple] = None):
@@ -345,12 +383,22 @@ class ListeMessages:
     def draw(self):
         self.surface.fill((10, 20, 20))
 
+        # fond d'une ligne de message
+        for ligne in range(1, 1+self.nb_mails):
+            color = (30, 50, 50) if ligne == self.selected else (20, 30, 30)
+            if ligne % 2 and ligne != self.selected:
+                continue
+
+            pygame.draw.rect(self.surface, color, 
+                (0, ListeMessages.hauteur_ligne * ligne, 
+                    self.coords.w, ListeMessages.hauteur_ligne))
+
         # Ligne des titres
         self.surface.blits([titre.to_draw() for titre in self.titres])
         pygame.draw.line(self.surface, (50, 200, 150), (0, 30), (self.coords.w, 30))
 
-        # tableau des messages
-        self.surface.blits([msg.to_draw() for msg in self.messages])
+        # tableau des liens (messages)
+        self.surface.blits([lien.to_draw() for lien in self.liens])
 
 
 class Footers:
@@ -379,6 +427,13 @@ class Footers:
         self.x, self.y, self.w, h = self.coords
         self.h = h - 1
 
+    def get(self, ident: str) -> Lien:
+        for lien in self.liens:
+            if lien.id == ident:
+                return lien
+
+        raise Exception("Le lien {ident!r} n'existe pas")
+
     def get_color(self, lien):
         if lien.selected:
             return (50, 255, 150)
@@ -395,14 +450,18 @@ class Footers:
         lien: Lien
 
         for key, values in datas.items():
-            position, callback = values
+            position, ident, callback, *args = values
+
+            visible = args[0] if args else True
 
             if first:
-                lien = LienToggle(Lecteur.SysFont3, key, position, 4, None, callback)
+                lien = LienToggle(Lecteur.SysFont3, key, position, 4, None, 
+                    callback, id=ident)
                 first = False
                 lien.selected = True
             else:
-                lien = Lien(Lecteur.SysFont3, key, position, 4, None, callback)
+                lien = Lien(Lecteur.SysFont3, key, position, 4, None, 
+                    callback, id=ident, visible=visible)
 
             lien.set_get_color(partial(self.get_color, lien))
 
@@ -441,6 +500,9 @@ class Footers:
         # footer
         # self.surface.blits([lien.to_draw() for lien in self.liens])
         for lien in self.liens:
+            if not lien.visible:
+                continue
+
             self.surface.blit(*lien.to_draw())
             if lien.selected:
                 # ligne sous le lien selectionne
@@ -469,12 +531,16 @@ class Repertoire:
     w: int
     h: int
 
-    def __init__(self, libelle: str, niveau: int, selected: bool = False):
+    mouse_over: bool
 
+    def __init__(self, ident: str, libelle: str, niveau: int, selected: bool = False):
+
+        self.id = ident
         self.libelle = libelle
         self.niveau = niveau
         self.select(selected)
         self.x = Repertoire.largeur_niveau * self.niveau
+        self.mouse_over = False
 
     @staticmethod
     def y(ligne: int) -> int:
@@ -498,7 +564,7 @@ class Repertoires:
     liste: List[Repertoire]
 
     max: int 
-    selected: int 
+    selected: str
     decal: int 
 
     surface: pygame.surface.Surface
@@ -507,43 +573,135 @@ class Repertoires:
     w: int
     h: int
     visible: bool
+    mouse_over: bool
+
+    mouse_over_y: int
+
+    actions: Optional[str]
 
     def __init__(self, screen: pygame.surface.Surface, coords: Tuple):
         self.liste = list()
 
-        self.coords = coords
+        self.coords = pygame.Rect(coords)
         self.update_screen(screen, coords)
         self.set_visible(True)
 
-        self.max = 10
-        self.selected = 0
+        self.max = self.h // Repertoire.hauteur_ligne
+
+        self.selected = "INBOX"
         self.decal = 0
+
+        self.mouse_over = False
+        self.mouse_over_y = 0
+
+        self.actions = None
 
     def update_screen(self, 
             screen: pygame.surface.Surface, coords: Optional[Tuple] = None):
 
         if coords is not None:
-            self.coords = coords
+            self.coords = pygame.Rect(coords)
 
         self.surface = screen.subsurface(self.coords)
         self.x, self.y, w, self.h = self.coords
         self.w = w - 1
 
+    def get_actions(self) -> Optional[str]:
+        if self.actions is None:
+            return None
+
+        actions = self.actions
+        self.actions = None
+        return actions
+
+    def mouse_move(self, mouse_pos: Tuple):
+        self.mouse_over = True
+        self.mouse_over_y = 0
+
+        for idx, repertoire in enumerate(self.liste[self.decal:self.decal+self.max]):
+            if repertoire.id == "MAIL":
+                continue
+
+            surface, (x, y) = repertoire.to_screen(idx)
+
+            if y < mouse_pos[1] < y + repertoire.hauteur_ligne:
+                repertoire.mouse_over = True
+                self.mouse_over_y = y - 2
+
+            elif repertoire.mouse_over:
+                repertoire.mouse_over = False
+
+    def mouse_exit(self):
+        self.mouse_over = False
+        self.mouse_over_y = 0
+
+    def mouse_button_up(self, mouse_pos: Tuple, button: int):
+        for idx, repertoire in enumerate(self.liste[self.decal:self.decal+self.max]):
+            if repertoire.id == "MAIL":
+                continue
+
+            surface, (x, y) = repertoire.to_screen(idx)
+            if y < mouse_pos[1] < y + repertoire.hauteur_ligne:
+                self.select(repertoire.id)
+                break
+
     def clear(self):
         self.liste.clear()
     
-    def load(self, liste_repertoires: List[str]):
-        self.liste.append(Repertoire("Boîte de réception", 1, False))
+    def load(self):
+        mail: Mail
 
-        for idx, repertoire in enumerate(liste_repertoires):
-            self.liste.append(Repertoire(repertoire, 2, idx == self.selected))
+        connu: bool
+        num: int
+        ident: str
+        repertoire: str
 
-    def select(self, numero: int):
+        repertoires_connus: List[Tuple] = list()
+        repertoires_autres: List[Tuple] = list()
+
+        self.liste.append(Repertoire("MAIL", "Boîte de réception", 1, False))
+
+        mail = Mail()
+
+        try:
+            mail.connect()
+            for connu, num, ident, repertoire in mail.get_dirs():
+                if connu:
+                    repertoires_connus.append((num, ident, repertoire))
+                else:
+                    repertoires_autres.append((num, ident, repertoire))
+
+        except Exception as erreur:
+            fprint("get_dirs():", erreur)
+
+        try:
+            mail.disconnect()
+        except Exception:
+            pass
+
+        # tri des repertoire par id
+        repertoires_connus.sort(key=lambda elt: elt[0])
+
+        # tri des repertoire par libelle
+        repertoires_autres.sort(key=lambda elt: elt[2])
+
+        for value in repertoires_connus + repertoires_autres:
+            num, ident, repertoire = value
+            self.liste.append(Repertoire(ident, repertoire, 2, 
+                ident == self.selected))
+
+    def select(self, ident: str):
+        if ident == self.selected:
+            return
+
         # on commence à 1 car le numero 0 ne correspond à aucun répertoire
         for idx, repertoire in enumerate(self.liste[1:]):
-            if idx == numero:
+            if ident == repertoire.id:
                 repertoire.select(True)
-                self.selected = idx
+                self.selected = repertoire.id
+                # fprint("repertoire selected:", self.selected)
+                self.actions = f"DIR={self.selected}"
+
             elif repertoire.selected:
                 repertoire.select(False)
 
@@ -556,13 +714,17 @@ class Repertoires:
     def to_screen(self) -> List[Tuple]:
         dirs_texte: List[Tuple] = list()
 
-        for idx, repertoire in enumerate(self.liste[self.decal:]):
-            if idx > self.max:
-                break
-
+        for idx, repertoire in enumerate(self.liste[self.decal:self.decal+self.max]):
             dirs_texte.append(repertoire.to_screen(idx))
 
         return dirs_texte
+
+    def index(self, ident: str) -> int:
+        for idx, repertoire in enumerate(self.liste[1:]):
+            if repertoire.id == ident:
+                return idx
+
+        raise Exception(f"L'identifiant {ident!r} n'existe pas")
 
     def draw(self):
         if not self.visible:
@@ -575,22 +737,25 @@ class Repertoires:
             (50, 200, 150), 
             (self.w, 0), (self.w, self.h))
 
+        if self.mouse_over_y:
+            pygame.draw.rect(self.surface, (30, 50, 50),
+                (0, self.mouse_over_y, self.w, Repertoire.hauteur_ligne))                
+
         self.surface.blits(self.to_screen())
 
-        if 1+self.selected < self.decal:
+        index = self.index(self.selected)
+        if 1+index < self.decal:
             return
 
-        color_dossiers = (50, 200, 150)
         # ligne indiquant que l'option est selectionnee
-
-        selected_repertoire = self.liste[1+self.selected]
+        selected_repertoire = self.liste[1+index]
         dx = selected_repertoire.x
-        dy = selected_repertoire.y(1+self.selected-self.decal) 
+        dy = selected_repertoire.y(1+index-self.decal) 
         dy += self.y - 10
 
         w = selected_repertoire.surface.get_width()
 
-        pygame.draw.line(self.surface, color_dossiers, (dx, dy), (dx+w, dy))
+        pygame.draw.line(self.surface, (50, 200, 150), (dx, dy), (dx+w, dy))
 
 
 class Lecteur:
@@ -667,19 +832,31 @@ class Lecteur:
     def shutdown(self):
         pygame.quit()
 
-    def mouse_enter_leave(self): ...
+    def mouse_enter_leave(self): 
+        self.liste_messages.mouse_exit()
+        self.repertoires.mouse_exit()
     
     def mouse_move(self, pos):
         self.mouse = Mouse(*pos)
+
+        if self.repertoires.visible and self.repertoires.coords.collidepoint(pos):
+            self.repertoires.mouse_move((pos[0], pos[1]-self.repertoires.y))
+
+        elif self.repertoires.mouse_over:
+            self.repertoires.mouse_exit()
+
+        if self.liste_messages.coords.collidepoint(pos):
+            dx = self.repertoires.w if self.repertoires.visible else 0
+            self.liste_messages.mouse_move((pos[0]-dx, pos[1]-self.repertoires.y))
+
+        elif self.liste_messages.mouse_over:
+            self.liste_messages.mouse_exit()
 
         if self.footers.coords.collidepoint(pos):
             self.footers.mouse_move((pos[0], pos[1]-self.footers.y))
 
         elif self.footers.mouse_over:
             self.footers.mouse_exit()
-
-        # self.idxx = (self.mouse.x-10) // self.block_size
-        # self.idxy = (self.mouse.y-10) // self.block_size
 
     def mouse_button_down(self, pos, button): ...
 
@@ -688,7 +865,8 @@ class Lecteur:
         if self.footers.coords.collidepoint(pos):
             self.footers.mouse_button_up(mouse_pos, button)
 
-        #     self.repertoires.toggle()
+        elif self.repertoires.visible and self.repertoires.coords.collidepoint(pos):
+            self.repertoires.mouse_button_up((pos[0], pos[1]-self.repertoires.y), button)
 
     def mouse_wheel(self, x, y): ...
     def keypressed(self, event): ...
@@ -769,24 +947,70 @@ class Lecteur:
                     fprint(event.type, get_pygame_const_name(event.type))
                     pass
 
-    def cadrillage(self):
+    def update_repertoires(self):
+        actions = self.repertoires.get_actions()
+        if actions is None:
+            return
 
-        for idy in range(self.nb_lines):
-            for idx in range(self.nb_cols):
-                if idx == self.idxx and idy == self.idxy:
-                    color = (50, 200, 150)
-                else:
-                    colors = 3*(self.color_diff*(idx+idy), )
-                    color = tuple(min(255, c) for c in colors)
+        key: str
+        value: str
 
-                pygame.draw.rect(self.screen, color, 
-                    (self.block_size*idx+10, idy*self.block_size+10, 
-                        self.block_size, self.block_size))
+        for action in actions.split(";"):
+            key, value = action.split("=")
+            match key:
+                case "DIR":
+                    if value != self.liste_messages.directory:
+                        self.liste_messages.directory = value
+                        self.liste_messages.load()
+
+                case _:
+                    raise Exception(f"Paramètre {key} inconnu.")
+
+    def update_liste_messages(self):
+        actions = self.liste_messages.get_actions()
+        if actions is None:
+            return
+
+        key: str
+        value: str
+        repertoire: str = ""
+
+        for action in actions.split(";"):
+            key, value = action.split("=")
+            match key:
+                case "USER":
+                    if value != self.headers.liens[1].libelle:
+                        # compte connecte
+                        self.headers.get("ADDR").set_libelle(value)
+
+                case "DIR":
+                    repertoire = value
+                    repertoire = repertoire
+
+                case "ALL":
+                    self.nb_messages = int(value)
+
+                case "UNSEEN":
+                    self.messages_non_vu = int(value)
+
+                case "LOADING":
+                    # self.footers.get("LOD").toggle()
+                    self.footers.get("LOD").set_visible(eval(value))
+
+        if self.nb_messages != int(self.headers.liens[3].libelle):
+            # nb total de messages
+            self.headers.get("ALL").set_libelle(str(self.nb_messages))
+
+        if self.messages_non_vu != int(self.headers.liens[5].libelle):
+            # nb de messages non lu
+            self.headers.get("UNSEEN").set_libelle(str(self.messages_non_vu))
+
+    def update(self):
+        self.update_repertoires()
+        self.update_liste_messages()
 
     def draw(self):
         self.clock.tick(60)
-
-        self.screen.fill((0, 0, 0))
 
         self.headers.draw()
         self.repertoires.draw()
@@ -794,6 +1018,9 @@ class Lecteur:
         self.footers.draw()
 
         pygame.display.update()
+
+    def refresh_mails(self):
+        self.liste_messages.refresh()
 
     def toggle_repertoire(self): 
         self.repertoires.toggle()
@@ -811,11 +1038,14 @@ class Lecteur:
         self.dirs_size: int = 300
         self.line_height: int = 30
 
+        self.nb_messages = 0
+        self.messages_non_vu = 0
+
         self.headers = Headers(self.screen, (0, 0, self.screen_width, self.line_height))
         self.headers.load({
-            "Adresse : ": ("christophe.michael.jacques@numericable.fr", 10),
-            "Messages : ": ("24", 500),
-            "Non lus : ": ("7", 680)
+            "Adresse : ": ("ADDR", "", 10),
+            "Messages : ": ("ALL", "0", 500),
+            "Non lus : ": ("UNSEEN", "0", 680)
         })
 
         self.liste_messages = ListeMessages(self.screen, 
@@ -828,26 +1058,21 @@ class Lecteur:
 
         self.repertoires = Repertoires(self.screen,
             (0, self.line_height, self.dirs_size, self.screen_height-2*self.line_height))
-        self.repertoires.load([
-            "Courrier entrant", 
-            "Brouillons", 
-            "Envoyés", 
-            "Indésirables", 
-            "Corbeille"])
-
-        # self.repertoires.select(1)
+        self.repertoires.load()
 
         self.footers = Footers(self.screen,
             (0, self.screen_height-self.line_height, self.screen_width, self.line_height))
         self.footers.load({
-            " Dossiers ": (10, self.toggle_repertoire),
-            " Rafraichir ": (100, None)
+            " Dossiers ": (10, "DIR", self.toggle_repertoire),
+            " Rafraichir ": (100, "REF", self.refresh_mails),
+            " Loading ... ": (300, "LOD", None, True)
         })
 
     def run(self):
         self.boot()
         self.init_draw()
         while self.running:
+            self.update()
             self.draw()
             self.get_pygame_events()
 

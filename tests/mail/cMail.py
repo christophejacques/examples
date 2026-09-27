@@ -1,8 +1,10 @@
 import email
 import imaplib
+import re
 
 from email.header import decode_header
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
+from typing import Optional, Dict
 
 
 class Mail:
@@ -38,7 +40,7 @@ class Mail:
             # 1. Connexion sécurisée au serveur IMAP (port 993)
             self.mail = imaplib.IMAP4_SSL(self.IMAP_SERVER)
             self.connected = True
-            print(f"connected to {self.IMAP_SERVER}.")
+            # print(f"connected to {self.IMAP_SERVER}.")
 
         except Exception as e:
             self.connected = False
@@ -50,7 +52,7 @@ class Mail:
             # 2. Authentification
             self.mail.login(self.USERNAME, self.PASSWORD)
             self.logged = True
-            print(f"Utilisateur {self.USERNAME} authentifié.")
+            # print(f"Utilisateur {self.USERNAME} authentifié.")
 
         except Exception as e:
             self.logged = False
@@ -66,6 +68,8 @@ class Mail:
         # 2. Sélection de la boîte de réception ("INBOX")
         self.mail.select(self.directory)
 
+        return
+    
         status, response = self.mail.status(self.directory, "(MESSAGES UNSEEN)")
         if status == "OK":
             # response contient une liste avec un seul élément en bytes
@@ -152,6 +156,93 @@ class Mail:
         print("Corps :")
         self.print_body(body)
 
+    def get_dirs(self, directory: Optional[str] = None):
+        association: Dict = {
+            "inbox": (1, "Courrier"),
+            "outbox": (2, "A envoyer"),
+            "junk": (4, "Indésirables"),
+            "draft": (6, "Brouillon"),
+            "drafts": (7, "Brouillons"),
+            "sent": (9, "Envoyés"),
+            "trash": (10, "Corbeille")
+        }
+
+        # 2. Récupération de la liste des répertoires
+        # parametres :  directory='INBOX', pattern='%'
+        if directory is None:
+            status, folder_list = self.mail.list(pattern='%')  
+        else:
+            status, folder_list = self.mail.list(directory=directory)
+
+        if status == "OK":
+            for folder in folder_list:
+                if folder is None or isinstance(folder, tuple):
+                    continue
+
+                # Décodage de la réponse brute (bytes -> str)
+                folder_str = folder.decode("utf-8")
+
+                # Extraction du nom du dossier via une expression régulière
+                # La réponse a la forme : '(\\HasNoChildren) "/" "INBOX"'
+                match = re.search(r'\(.*?\) "[^"]*?" "?([^"]*)"?$', folder_str)
+                if match:
+                    folder_str = match.group(1)
+                    folder_assoc = association.get(folder_str.lower())
+                    if folder_assoc is None:
+                        yield (False, 0, folder_str, folder_str)
+
+                    else:                        
+                        yield (True, folder_assoc[0], folder_str, folder_assoc[1])
+
+                else:
+                    print(f"get_dirs(), Erreur: {folder_str}")
+
+    def get_mails(self, mail_type: str):
+        status, messages = self.mail.search(None, mail_type)
+        email_ids = messages[0].split()
+        for mail_id in email_ids[:]:
+            status, msg_data = self.mail.fetch(mail_id, "BODY.PEEK[]")
+            if status != "OK":
+                print(f"Erreur {mail_id=}")
+                continue
+
+            for response_part in msg_data:
+                if isinstance(response_part, tuple):
+                    msg = email.message_from_bytes(response_part[1])
+                    id_mail = mail_id.decode()
+                    expediteur = " ".join(self.decoder_texte(msg.get("From")).split())
+                    sujet = self.decoder_texte(msg.get("Subject"))
+                    date_reception = self.decoder_texte(msg.get("Date"))[:31]
+
+                    try:
+                        if date_reception.strip()[0].isdigit():
+                            datep = datetime.strptime(date_reception, "%d %b %Y %H:%M:%S %z")
+                            
+                        else:
+                            datep = datetime.strptime(date_reception, "%a, %d %b %Y %H:%M:%S %z")
+                            
+                        dateparis = datep.astimezone(timezone(timedelta(hours=1)))
+                        date = dateparis.strftime("%Y-%m-%d %H:%M:%S %z")
+
+                    except Exception:
+                        date = date_reception
+
+                    datas: dict = {
+                        "ATT": "",
+                        "NUM": f"{id_mail}",
+                        "EXP": f"{expediteur}",
+                        "OBJ": f"{sujet}",
+                        "DAT": f"{date}"
+                    }
+                    yield datas
+
+    def read_dirs(self):
+        print("Répertoires trouvés :")
+        # for dir in self.get_dirs("Jeux"):
+        for dir in self.get_dirs():
+            print("-", dir)
+        print()
+
     def read(self, mail_type: str):
         # 3. Recherche des e-mails (ici, récupération des e-mails non lus : "UNSEEN")
         # Pour tous les e-mails, utilisez "ALL"
@@ -188,21 +279,36 @@ class Mail:
                     # Conversion des données brutes en objet email
                     msg = email.message_from_bytes(response_part[1])
 
+                    id_mail = mail_id.decode()
                     expediteur = " ".join(self.decoder_texte(msg.get("From")).split())
                     sujet = self.decoder_texte(msg.get("Subject"))
-                    date_reception = self.decoder_texte(msg.get("Date"))
+                    date_reception = self.decoder_texte(msg.get("Date"))[:31]
 
-                    print(f"\n--- E-mail ID: {mail_id.decode()} ---")
+                    print(f"\n--- E-mail ID: {id_mail} ---")
                     try:
-                        date = datetime.strptime(date_reception, "%a, %d %b %Y %H:%M:%S %z")
-                        print(f"Date2 : {date.isoformat()} ", end="")
+                        print(f"Date1 : *{date_reception}* ", end="")
+                        if date_reception.strip()[0].isdigit():
+                            datep = datetime.strptime(date_reception, "%d %b %Y %H:%M:%S %z")
+                            
+                        else:
+                            datep = datetime.strptime(date_reception, "%a, %d %b %Y %H:%M:%S %z")
+
+                        # dateparis = datep.astimezone(timezone.utc)
+                        dateparis = datep.astimezone(timezone(timedelta(hours=1)))
+                        date = dateparis.isoformat()
+                        print(f"Date2 : {date} ", end="")
                         # .strftime("%Y-%m-%d %H:%M:%S")
-                    except Exception:
-                        print(f"Date1 : {date_reception[:32]:34} ", end="")
+                    except Exception as erreur:
+                        print(erreur)
+                        print(f"Date3 : {date_reception[:32]:34} ", end="")
+                        date = date_reception[:31]
 
                     # decodage : "%a, %d %b %Y %H:%M:%S %z"
                     print(f"De : {expediteur}")
                     print(f"Sujet : {sujet}")
+
+                    # supprimer le continue pour voir le contenu du mail
+                    continue
 
                     # Extraction du corps de l'e-mail
                     if msg.is_multipart():
@@ -229,7 +335,7 @@ class Mail:
             self.connected = False
             try:
                 self.mail.close()
-                print(f"Utilisateur {self.USERNAME} déconnecté.")
+                # print(f"Utilisateur {self.USERNAME} déconnecté.")
             except Exception as e:
                 print("close error:", e)
 
@@ -237,12 +343,13 @@ class Mail:
             self.logged = False
             try:
                 self.mail.logout()
-                print(f"serveur {self.IMAP_SERVER} déconnecté.")
+                # print(f"serveur {self.IMAP_SERVER} déconnecté.")
             except Exception as e:
                 print("logout error:", e)
 
     def run(self):
         self.connect()
+        self.read_dirs()
         self.select("INBOX")
         self.read("UNSEEN")  # ALL
         self.disconnect()
