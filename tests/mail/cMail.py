@@ -201,18 +201,31 @@ class Mail:
         status, messages = self.mail.search(None, mail_type)
         email_ids = messages[0].split()
         for mail_id in email_ids[:]:
-            status, msg_data = self.mail.fetch(mail_id, "BODY.PEEK[]")
+            status, msg_data = self.mail.fetch(mail_id, "(BODY.PEEK[HEADER] FLAGS)")
             if status != "OK":
                 print(f"Erreur {mail_id=}")
                 continue
 
             for response_part in msg_data:
                 if isinstance(response_part, tuple):
+                    imap_response_header = response_part[0].decode('utf-8')
                     msg = email.message_from_bytes(response_part[1])
                     id_mail = mail_id.decode()
                     expediteur = " ".join(self.decoder_texte(msg.get("From")).split())
                     sujet = self.decoder_texte(msg.get("Subject"))
-                    date_reception = self.decoder_texte(msg.get("Date"))[:31]
+                    date_reception = self.decoder_texte(msg.get("Date"))[:31].strip()
+
+                    flags: str = ""
+                    if "FLAGS" in imap_response_header:
+                        flags_part = imap_response_header.split("FLAGS (")[1].split(")")[0]
+                        flags_list = flags_part.split()
+                        
+                        for flag in flags_list:
+                            if flag == "\\Seen": flags += "S"
+                            elif flag == "NEWSLETTER": flags += "N"
+                            elif flag == "Junk": flags += "J"
+                            elif flag == "Attachment": flags += "A"
+                            elif flag == "\\Answered": flags += "R"
 
                     try:
                         if date_reception.strip()[0].isdigit():
@@ -228,7 +241,7 @@ class Mail:
                         date = date_reception
 
                     datas: dict = {
-                        "ATT": "",
+                        "ATT": f"{flags}",
                         "NUM": f"{id_mail}",
                         "EXP": f"{expediteur}",
                         "OBJ": f"{sujet}",
@@ -269,7 +282,8 @@ class Mail:
             # INTERNALDATE      Récupère la date et l'heure de réception du message sur le serveur IMAP.
             # RFC822.SIZE       Récupère la taille du message en octets.
             # UID               Récupère l'identifiant unique (UID) du message.
-            status, msg_data = self.mail.fetch(mail_id, "BODY.PEEK[]")
+            # status, msg_data = self.mail.fetch(mail_id, "BODY.PEEK[]")
+            status, msg_data = self.mail.fetch(mail_id, "(BODY.PEEK[HEADER] FLAGS)")
             if status != "OK":
                 print(f"Erreur {mail_id=}")
                 continue
@@ -277,14 +291,21 @@ class Mail:
             for response_part in msg_data:
                 if isinstance(response_part, tuple):
                     # Conversion des données brutes en objet email
+                    imap_response_header = response_part[0].decode('utf-8')
                     msg = email.message_from_bytes(response_part[1])
 
                     id_mail = mail_id.decode()
                     expediteur = " ".join(self.decoder_texte(msg.get("From")).split())
                     sujet = self.decoder_texte(msg.get("Subject"))
-                    date_reception = self.decoder_texte(msg.get("Date"))[:31]
+                    date_reception = self.decoder_texte(msg.get("Date"))[:31].strip()
 
                     print(f"\n--- E-mail ID: {id_mail} ---")
+
+                    if "FLAGS" in imap_response_header:
+                        flags_part = imap_response_header.split("FLAGS (")[1].split(")")[0]
+                        flags_list = flags_part.split()
+                        print("Liste des flags :", flags_list)
+
                     try:
                         print(f"Date1 : *{date_reception}* ", end="")
                         if date_reception.strip()[0].isdigit():

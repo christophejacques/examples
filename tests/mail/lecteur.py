@@ -1,11 +1,13 @@
-import pygame
+from os import getcwd, chdir, sep as separator, environ
+# Supprime l'affichage du chargement de pygame
+environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "1"
 
-# from collections import namedtuple
-from os import getcwd, chdir, sep as separator
-from typing import Callable, Tuple, Optional, List, Dict
-from functools import partial
-from cmail import Mail
-from threading import Thread
+import pygame  # noqa: E402
+
+from typing import Callable, Tuple, Optional, List, Dict  # noqa: E402
+from functools import partial  # noqa: E402
+from cmail import Mail  # noqa: E402
+from threading import Thread  # noqa: E402
 
 
 class Variable:
@@ -203,7 +205,12 @@ class ListeMessages:
 
     directory: str
     nb_mails: int 
+    nb_lignes: int
+    nb_lignes_max: int
     selected: int 
+    max: int
+    decal: int
+    debut: int
 
     nb_colonnes: int
     data_titres: Dict
@@ -216,11 +223,16 @@ class ListeMessages:
 
     def __init__(self, screen: pygame.surface.Surface, coords: Tuple):
 
+        self.decal = 0
+        self.nb_lignes = 0
+        self.nb_lignes_max = 0
+
+        self.load_titres()
         self.update_screen(screen, coords)
         self.mouse_over = False
         self.nb_mails = 0
         self.selected = 0
-        self.set_titres()
+
         self.actions = None
         self.directory = "INBOX"
 
@@ -243,7 +255,7 @@ class ListeMessages:
 
         return (160, 240, 220)
 
-    def set_titres(self):
+    def load_titres(self):
         self.data_titres = {
             "ATT": {"lib": "Attr", "pos": 10, "col": 1},
             "NUM": {"lib": "N°", "pos": 50, "col": 1},
@@ -293,6 +305,16 @@ class ListeMessages:
 
             self.selected = idx
 
+    def mouse_wheel(self, x, y): 
+        if y < 0 and self.decal - y + self.nb_lignes_max > self.nb_lignes:
+            return
+
+        self.decal += -y
+        if self.decal < 0:
+            self.decal = 0
+
+        self.debut = self.decal * self.nb_colonnes 
+    
     @staticmethod
     def format_adresse(lib: str):
         if "<" in lib:
@@ -355,7 +377,10 @@ class ListeMessages:
         self.get_mails()
 
         dy = 5
-        largeur_max = self.data_titres["OBJ"]["lar"] - 10
+        largeur_max: Dict = dict()
+        largeur_max["EXP"] = self.data_titres["EXP"]["lar"] - 10
+        largeur_max["OBJ"] = self.data_titres["OBJ"]["lar"] - 10
+
         for datas in reversed(sorted(self.liste_datas, key=lambda x: x["DAT"])):
             dy += ListeMessages.hauteur_ligne  # 30
             for cle in datas:
@@ -363,12 +388,13 @@ class ListeMessages:
                 lien = Lien(Lecteur.SysFont3, lib,
                         self.data_titres[cle]["pos"], dy, 
                         partial(self.get_color, "SEEN"), None)
-                if cle == "OBJ":
-                    lien.set_max_width(largeur_max)
+                if cle in ("EXP", "OBJ"):
+                    lien.set_max_width(largeur_max[cle])
 
                 self.liens.append(lien)
 
         self.nb_mails = len(self.liste_datas)
+        self.nb_lignes = self.nb_mails
 
     def update_screen(self, 
             screen: pygame.surface.Surface, coords: Optional[Tuple] = None):
@@ -379,6 +405,16 @@ class ListeMessages:
         self.surface = screen.subsurface(self.coords)
         self.x, self.y, self.w, h = self.coords
         self.h = h - 1
+
+        # nombre maximal de messages à afficher
+        hauteur = h // ListeMessages.hauteur_ligne
+        self.nb_lignes_max = hauteur - 1
+        self.max = hauteur * self.nb_colonnes 
+
+        if self.decal + self.nb_lignes_max > self.nb_lignes:
+            self.decal = max(0, self.nb_lignes - self.nb_lignes_max)
+
+        self.debut = self.decal * self.nb_colonnes 
 
     def draw(self):
         self.surface.fill((10, 20, 20))
@@ -398,7 +434,13 @@ class ListeMessages:
         pygame.draw.line(self.surface, (50, 200, 150), (0, 30), (self.coords.w, 30))
 
         # tableau des liens (messages)
-        self.surface.blits([lien.to_draw() for lien in self.liens])
+        for lien in self.liens[self.debut:self.max+self.debut]:
+            surface, coords = lien.to_draw()
+            if self.decal > 0:
+                self.surface.blit(surface, 
+                    (coords.x, coords.y - self.decal * ListeMessages.hauteur_ligne))
+            else:
+                self.surface.blit(surface, coords)
 
 
 class Footers:
@@ -774,6 +816,7 @@ class Lecteur:
     running: bool
 
     def __init__(self):
+
         # change le repertoire courant afin de trouver 
         # toutes les applications et le parametrage
         directory: str = separator.join(__file__.split(separator)[:-1])
@@ -788,8 +831,6 @@ class Lecteur:
         # print(f"Nombre total de polices disponibles : {len(polices)}")
         # for police in polices:
         #     print(f"{police:40}", end="")
-
-        self.mouse = Mouse(-1, -1)
 
     def init_fonts(self):
         Lecteur.SysFont1 = pygame.font.SysFont("couriernew", 18)
@@ -813,6 +854,8 @@ class Lecteur:
         # self.screen = pygame.display.set_mode(desktops[0], pygame.FULLSCREEN, 24)
         self.screen = pygame.display.set_mode(disp_size, pygame.RESIZABLE, 24)
         self.screen_width, self.screen_height = self.screen.get_size()
+
+        self.mouse = Mouse(*pygame.mouse.get_pos())
 
         # Initialisation du cadrillage
         self.block_size: int = 40
@@ -847,7 +890,8 @@ class Lecteur:
 
         if self.liste_messages.coords.collidepoint(pos):
             dx = self.repertoires.w if self.repertoires.visible else 0
-            self.liste_messages.mouse_move((pos[0]-dx, pos[1]-self.repertoires.y))
+            self.liste_messages.mouse_move(
+                (pos[0]-dx, pos[1]-self.liste_messages.y))
 
         elif self.liste_messages.mouse_over:
             self.liste_messages.mouse_exit()
@@ -868,7 +912,10 @@ class Lecteur:
         elif self.repertoires.visible and self.repertoires.coords.collidepoint(pos):
             self.repertoires.mouse_button_up((pos[0], pos[1]-self.repertoires.y), button)
 
-    def mouse_wheel(self, x, y): ...
+    def mouse_wheel(self, x, y): 
+        if self.liste_messages.coords.collidepoint(Mouse.x, Mouse.y):
+            self.liste_messages.mouse_wheel(x, y)
+
     def keypressed(self, event): ...
 
     def keyreleased(self, event): 
@@ -879,7 +926,9 @@ class Lecteur:
         # fprint("update_screen() =", self.screen.get_size())
         self.screen_width, self.screen_height = self.screen.get_size()
 
-        self.headers.update_screen(self.screen, (0, 0, self.screen_width, self.line_height))
+        self.headers.update_screen(self.screen, 
+            (0, 0, self.screen_width, self.line_height))
+        
         self.repertoires.update_screen(self.screen,
             (0, self.line_height, self.dirs_size, self.screen_height-2*self.line_height))
 
@@ -1057,11 +1106,13 @@ class Lecteur:
         self.liste_messages.load()
 
         self.repertoires = Repertoires(self.screen,
-            (0, self.line_height, self.dirs_size, self.screen_height-2*self.line_height))
+            (0, self.line_height, self.dirs_size, 
+                self.screen_height-2*self.line_height))
         self.repertoires.load()
 
         self.footers = Footers(self.screen,
-            (0, self.screen_height-self.line_height, self.screen_width, self.line_height))
+            (0, self.screen_height-self.line_height, 
+                self.screen_width, self.line_height))
         self.footers.load({
             " Dossiers ": (10, "DIR", self.toggle_repertoire),
             " Rafraichir ": (100, "REF", self.refresh_mails),
