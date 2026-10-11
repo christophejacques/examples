@@ -1,13 +1,15 @@
 from os import getcwd, chdir, sep as separator, environ
+
+from typing import Callable, Tuple, Optional, List, Dict, Generator
+from functools import partial
+from threading import Thread
+from time import perf_counter
+
+from cmail import Mail
+
 # Supprime l'affichage du chargement de pygame
 environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "1"
-
 import pygame  # noqa: E402
-
-from typing import Callable, Tuple, Optional, List, Dict  # noqa: E402
-from functools import partial  # noqa: E402
-from cmail import Mail  # noqa: E402
-from threading import Thread  # noqa: E402
 
 
 class Variable:
@@ -26,7 +28,7 @@ class Mouse:
         cls.y = y
 
 
-def fprint(*args, **kwargs):
+def fprint(*args, **kwargs) -> None:
     print(*args, **kwargs, flush=True)
 
 
@@ -76,17 +78,20 @@ class Lien:
         self.mouse_over = False
         self.selected = False
 
-    def toggle(self):
+    def toggle(self) -> None:
         self.visible = not self.visible
 
-    def set_visible(self, visible: bool):
+    def set_visible(self, visible: bool) -> None:
         self.visible = visible
 
-    def set_libelle(self, libelle: str):
+    def set_libelle(self, libelle: str) -> None:
         self.libelle = libelle
         self.surface = self.font.render(self.libelle, False, self.color)
 
-    def set_max_width(self, width):
+    def set_max_width(self, width: int) -> None:
+        libelle: str
+        taille: int
+
         taille = len(self.libelle)
         while self.w > width:
             taille -= 1
@@ -94,7 +99,7 @@ class Lien:
             self.surface = self.font.render(libelle, False, self.color)
             self.w = self.surface.get_width()
 
-    def set_get_color(self, get_color: Optional[Callable]):
+    def set_get_color(self, get_color: Optional[Callable]) -> None:
 
         if get_color is None:
             self.color = (255, 0, 0)
@@ -105,23 +110,28 @@ class Lien:
         self.color = (0, 0, 0)
         self.update_color()
 
-    def update_color(self):
+    def update_color(self) -> None:
+        new_color: Tuple
+
+        if self.getColor is None:
+            return
+
         new_color = self.getColor()
         if self.color != new_color:
             self.color = new_color
             self.surface = self.font.render(self.libelle, False, self.color)
 
-    def click(self):
+    def click(self) -> None:
         if self.callback:
             self.callback()
 
-    def to_draw(self):
+    def to_draw(self) -> Tuple:
         return (self.surface, self.coords)
 
 
 class LienToggle(Lien):
 
-    def click(self):
+    def click(self) -> None:
         self.selected = not self.selected
         if self.callback:
             self.callback()
@@ -144,7 +154,7 @@ class Headers:
         self.update_screen(screen, coords)
 
     def update_screen(self, 
-            screen: pygame.surface.Surface, coords: Optional[Tuple] = None):
+            screen: pygame.surface.Surface, coords: Optional[Tuple] = None) -> None:
 
         if coords is not None:
             self.coords = coords
@@ -154,26 +164,38 @@ class Headers:
         self.h = h - 1
 
     def get(self, ident: str) -> Lien:
+        lien: Lien
+
         for lien in self.liens:
             if lien.id == ident:
                 return lien
 
         raise Exception("Le lien {ident!r} n'existe pas")
 
-    def get_color(self, index):
+    def get_color(self, index) -> Tuple:
         if index == 1:
             return (255, 255, 255)
 
         return (160, 240, 220)
 
-    def load(self, datas: Dict):
+    def load(self, datas: Dict) -> None:
+        key: str
+        values: Tuple
+        ident: str
+        lib: str
+        position: int
+        largeur: int
+
+        lien1: Lien
+        lien2: Lien
+
         self.liens = list()
 
         for key, values in datas.items():
             ident, lib, position = values
 
             lien1 = Lien(Lecteur.SysFont3, key,
-                position, 4, partial(self.get_color, 1), None)
+                position, 7, partial(self.get_color, 1), None)
             self.liens.append(lien1)
 
             largeur = lien1.w
@@ -182,12 +204,96 @@ class Headers:
                 id=ident)
             self.liens.append(lien2)
 
-    def draw(self):
+    def draw(self) -> None:
         self.surface.fill((40, 30, 0))
 
         # header
         self.surface.blits([lien.to_draw() for lien in self.liens])
         pygame.draw.line(self.surface, (50, 200, 150), (0, self.h), (self.w, self.h))
+
+
+class Texte:
+    font: pygame.font.Font
+    surface: pygame.surface.Surface
+    width: int
+
+    libelle: str
+    getColor: Optional[Callable]
+
+    mouse_over: bool
+    visible: bool
+
+    def __init__(self, 
+            font: pygame.font.Font,
+            libelle: str, 
+            getColor: Optional[Callable],
+            *args,
+            **options):
+        
+        self.font = font
+        self.color = (1, 1, 1)
+        self.set_libelle(libelle)
+        self.set_get_color(getColor, *args)
+
+        self.mouse_over = False
+        self.visible = options.get("visible", True)
+        if "max_width" in options:
+            self.set_max_width(options.get("max_width", 999))
+
+    def set_visible(self, visible: bool) -> None:
+        self.visible = visible
+
+    def set_libelle(self, libelle: str) -> None:
+        self.libelle = libelle
+        self.surface = self.font.render(self.libelle, False, self.color)
+        self.width = self.surface.get_width()
+
+    def set_max_width(self, width: int) -> None:
+        libelle: str
+
+        taille: int = len(self.libelle)
+        while self.width > width:
+            taille -= 1
+            libelle = self.libelle[:taille]
+            self.surface = self.font.render(libelle, False, self.color)
+            self.width = self.surface.get_width()
+
+    def set_get_color(self, get_color: Optional[Callable], *args) -> None:
+        self.color_args = args
+        if get_color is None:
+            self.color = (255, 0, 0)
+            self.surface = self.font.render(self.libelle, False, self.color)
+            return
+
+        self.getColor = get_color
+        self.color = (-1, -1, -1)
+        self.update_color()
+
+    def update_color(self) -> None:
+        new_color: Tuple
+
+        if self.getColor is None:
+            return
+
+        new_color = self.getColor(self, *self.color_args)
+        if self.color != new_color:
+            self.color = new_color
+            self.surface = self.font.render(self.libelle, False, self.color)
+
+
+class Message:
+    data: Dict[str, Texte]
+
+    def __init__(self):
+        self.data = dict()
+
+    def load(self, cle: str, texte: Texte) -> None:
+        self.data[cle] = texte
+
+    def to_draw(self) -> Generator:
+        for cle in self.data:
+            texte = self.data[cle]
+            yield cle, texte.surface
 
 
 class ListeMessages:
@@ -208,7 +314,7 @@ class ListeMessages:
     nb_lignes: int
     nb_lignes_max: int
     selected: int 
-    max: int
+
     decal: int
     debut: int
 
@@ -216,8 +322,8 @@ class ListeMessages:
     data_titres: Dict
     titres: List[Lien]
 
-    liens: List[Lien]
     liste_datas: List[Dict]
+    liste_messages: List[Message]
 
     actions: Optional[str]
 
@@ -237,6 +343,8 @@ class ListeMessages:
         self.directory = "INBOX"
 
     def get_actions(self) -> Optional[str]:
+        actions: str
+
         if self.actions is None:
             return None
 
@@ -244,18 +352,32 @@ class ListeMessages:
         self.actions = None
         return actions
 
-    def get_color(self, index):
+    def get_texte_color(self, *args) -> Tuple:
+        attr = args[1]
+        if "V" in attr:
+            return (150, 150, 150)
+
+        return (200, 240, 240)
+
+    def get_color(self, index) -> Tuple:
         if index == 1:
             return (255, 255, 255)
+
         elif index == 2:
             return (255, 100, 100)
 
         elif index == "SEEN":
-            return (200, 200, 200)
+            return (150, 150, 150)
+
+        elif index == "UNSEEN":
+            return (200, 240, 240)
 
         return (160, 240, 220)
 
-    def load_titres(self):
+    def load_titres(self) -> None:
+        cle: str
+        lien: Lien
+
         self.data_titres = {
             "ATT": {"lib": "Attr", "pos": 10, "col": 1},
             "NUM": {"lib": "N°", "pos": 50, "col": 1},
@@ -265,6 +387,8 @@ class ListeMessages:
             "DIR": {"lib": r"\/", "pos": 50, "col": 2},
         }
         self.titres = list()
+        self.coord_x: Dict = dict()
+
         self.nb_colonnes = len(self.data_titres) - 1
 
         position: int = 0
@@ -282,15 +406,20 @@ class ListeMessages:
             prev_key = cle
 
             lien = Lien(Lecteur.SysFont3, self.data_titres[cle]["lib"],
-                    position, 5, 
-                    partial(self.get_color, self.data_titres[cle]["col"]), None)
+                    position, 7, 
+                    partial(self.get_color, self.data_titres[cle]["col"]), None,
+                    id=cle)
             self.titres.append(lien)
 
-    def mouse_exit(self):
+            self.coord_x[cle] = lien.x
+
+    def mouse_exit(self) -> None:
         self.mouse_over = False
         self.selected = 0
 
-    def mouse_move(self, mouse_pos: Tuple):
+    def mouse_move(self, mouse_pos: Tuple) -> None:
+        idx: int
+
         self.mouse_over = True
 
         if mouse_pos[1] < 30:
@@ -305,7 +434,7 @@ class ListeMessages:
 
             self.selected = idx
 
-    def mouse_wheel(self, x, y): 
+    def mouse_wheel(self, x, y) -> None: 
         if y < 0 and self.decal - y + self.nb_lignes_max > self.nb_lignes:
             return
 
@@ -313,16 +442,27 @@ class ListeMessages:
         if self.decal < 0:
             self.decal = 0
 
-        self.debut = self.decal * self.nb_colonnes 
+        self.ascenseur.update(self.decal)
     
     @staticmethod
-    def format_adresse(lib: str):
+    def format_adresse(lib: str) -> str:
         if "<" in lib:
             return lib[:lib.index("<")-1]
 
         return lib
 
-    def get_mails(self):
+    def get_mails(self) -> None:
+        mail: Mail
+        user: str
+        status: str
+        response: List
+        contenu: Dict
+
+        data: str
+        dossier: str
+        messages: str
+        unseen: str
+
         mail = Mail()
         user = mail.USERNAME
 
@@ -338,7 +478,7 @@ class ListeMessages:
 
                 self.actions = f"USER={user};DIR={dossier};ALL={messages};UNSEEN={unseen}"
 
-                for contenu in mail.get_mails("UNSEEN"):
+                for contenu in mail.get_mails("ALL"):  # ALL, UNSEEN
                     self.liste_datas.append(contenu)
 
             else:
@@ -357,12 +497,63 @@ class ListeMessages:
         else:
             self.actions += ";LOADING=False"
 
-    def refresh(self):
-        self.load()
+    def load_mails(self) -> None:
 
-    def load(self):
-        self.liens = list()
+        cle: str
+        lib: str
+        attr: str
+
+        largeur_max: Dict[str, int]
+
+        debut: float
+        fin: float
+
+        message: Message
+
+        debut = perf_counter()
+
+        self.get_mails()
+
+        largeur_max = dict()
+        for cle in self.data_titres:
+            if cle == "DIR":
+                continue
+
+            largeur_max[cle] = self.data_titres[cle]["lar"] - 10
+
+        for datas in reversed(sorted(self.liste_datas, key=lambda x: x["DAT"])):
+            message = Message()
+            attr = ""
+            for cle in datas:
+                if cle == "ATT":
+                    attr = datas[cle]
+
+                lib = self.format_adresse(datas[cle]) if cle == "EXP" else datas[cle]
+                texte = Texte( 
+                    Lecteur.SysFont3, 
+                    lib, 
+                    self.get_texte_color, attr)
+
+                if cle != "DAT":
+                    texte.set_max_width(largeur_max[cle])
+
+                message.load(cle, texte)
+
+            self.liste_messages.append(message)
+
+        self.nb_mails = len(self.liste_datas)
+        self.nb_lignes = self.nb_mails
+
+        fin = perf_counter()
+        fprint(f"load messages : {fin - debut:.4f} secondes")
+
+        self.ascenseur = Ascenseur(self.surface, self.w, self.h, self.nb_lignes, self.nb_lignes_max)
+
+    def load(self) -> None:
+        mails: Thread
+
         self.liste_datas = list()
+        self.liste_messages = list()
         self.nb_mails = 0
         self.selected = 0
         self.actions = "LOADING=True"
@@ -370,34 +561,13 @@ class ListeMessages:
         mails = Thread(target=self.load_mails)
         mails.start()
 
-    def load_mails(self):
-        # fprint("load_mails", self.directory)
-        # return 
-
-        self.get_mails()
-
-        dy = 5
-        largeur_max: Dict = dict()
-        largeur_max["EXP"] = self.data_titres["EXP"]["lar"] - 10
-        largeur_max["OBJ"] = self.data_titres["OBJ"]["lar"] - 10
-
-        for datas in reversed(sorted(self.liste_datas, key=lambda x: x["DAT"])):
-            dy += ListeMessages.hauteur_ligne  # 30
-            for cle in datas:
-                lib = self.format_adresse(datas[cle]) if cle == "EXP" else datas[cle]
-                lien = Lien(Lecteur.SysFont3, lib,
-                        self.data_titres[cle]["pos"], dy, 
-                        partial(self.get_color, "SEEN"), None)
-                if cle in ("EXP", "OBJ"):
-                    lien.set_max_width(largeur_max[cle])
-
-                self.liens.append(lien)
-
-        self.nb_mails = len(self.liste_datas)
-        self.nb_lignes = self.nb_mails
+    def refresh(self) -> None:
+        self.load()
 
     def update_screen(self, 
-            screen: pygame.surface.Surface, coords: Optional[Tuple] = None):
+            screen: pygame.surface.Surface, coords: Optional[Tuple] = None) -> None:
+        hauteur: int
+        h: int
 
         if coords is not None:
             self.coords = pygame.Rect(coords)
@@ -409,18 +579,25 @@ class ListeMessages:
         # nombre maximal de messages à afficher
         hauteur = h // ListeMessages.hauteur_ligne
         self.nb_lignes_max = hauteur - 1
-        self.max = hauteur * self.nb_colonnes 
 
         if self.decal + self.nb_lignes_max > self.nb_lignes:
             self.decal = max(0, self.nb_lignes - self.nb_lignes_max)
 
-        self.debut = self.decal * self.nb_colonnes 
+        self.ascenseur = Ascenseur(self.surface, self.w, self.h, self.nb_lignes, self.nb_lignes_max)
+        self.ascenseur.update(self.decal)
 
-    def draw(self):
+    def draw(self) -> None:
+        coord_y: int
+        ligne: int
+        color: Tuple
+        cle: str
+        message: Message
+        surface: pygame.surface.Surface
+
         self.surface.fill((10, 20, 20))
 
         # fond d'une ligne de message
-        for ligne in range(1, 1+self.nb_mails):
+        for ligne in range(1, 1+min(self.nb_mails, self.nb_lignes_max)):
             color = (30, 50, 50) if ligne == self.selected else (20, 30, 30)
             if ligne % 2 and ligne != self.selected:
                 continue
@@ -433,14 +610,54 @@ class ListeMessages:
         self.surface.blits([titre.to_draw() for titre in self.titres])
         pygame.draw.line(self.surface, (50, 200, 150), (0, 30), (self.coords.w, 30))
 
-        # tableau des liens (messages)
-        for lien in self.liens[self.debut:self.max+self.debut]:
-            surface, coords = lien.to_draw()
-            if self.decal > 0:
-                self.surface.blit(surface, 
-                    (coords.x, coords.y - self.decal * ListeMessages.hauteur_ligne))
-            else:
-                self.surface.blit(surface, coords)
+        # tableau des messages
+        coord_y = 6
+        for message in self.liste_messages[self.decal:self.decal+self.nb_lignes_max]:
+            coord_y += ListeMessages.hauteur_ligne
+            for cle, surface in message.to_draw():
+                self.surface.blit(surface, (self.coord_x[cle], coord_y))
+
+        if self.nb_lignes <= self.nb_lignes_max:
+            return
+
+        self.ascenseur.draw()
+
+
+class Ascenseur:
+
+    def __init__(self, surface, width: int, height: int, nb_lignes: int, nb_lignes_max: int):
+        self.surface = surface
+        self.nb_lignes = nb_lignes
+        self.nb_lignes_max = nb_lignes_max
+
+        self.espace = 2
+        self.largeur = 20
+        self.largeur_a = self.largeur - 2 - 2 * self.espace
+
+        self.hauteur = height - ListeMessages.hauteur_ligne 
+        self.hauteur_d = self.hauteur - 2 - 2 * self.espace
+        if self.nb_lignes == 0:
+            self.hauteur_a = 0
+        else:
+            self.hauteur_a = int(self.nb_lignes_max / self.nb_lignes * self.hauteur_d) 
+
+        self.posx = width - self.largeur
+        self.posx_a = self.posx + 1 + self.espace
+
+        self.posy = ListeMessages.hauteur_ligne+2 
+        self.coords = (self.posx, self.posy, self.largeur, self.hauteur)
+
+        self.coef = (self.hauteur_d - self.hauteur_a) / (self.nb_lignes - self.nb_lignes_max) 
+        self.update(0)
+
+    def update(self, decal: int) -> None:
+        self.posy_a = self.posy + 1 + self.espace + int(decal * self.coef)
+        self.coords_a = (self.posx_a, self.posy_a, self.largeur_a, self.hauteur_a)
+
+    def draw(self) -> None:
+        pygame.draw.rect(self.surface, (50, 80, 80), self.coords)
+        pygame.draw.rect(self.surface, (50, 200, 150), self.coords, 1)
+        pygame.draw.rect(self.surface, (50, 200, 150), self.coords_a)
 
 
 class Footers:
@@ -460,7 +677,7 @@ class Footers:
         self.mouse_over = False
 
     def update_screen(self, 
-            screen: pygame.surface.Surface, coords: Optional[Tuple] = None):
+            screen: pygame.surface.Surface, coords: Optional[Tuple] = None) -> None:
 
         if coords is not None:
             self.coords = pygame.Rect(coords)
@@ -476,7 +693,7 @@ class Footers:
 
         raise Exception("Le lien {ident!r} n'existe pas")
 
-    def get_color(self, lien):
+    def get_color(self, lien) -> Tuple:
         if lien.selected:
             return (50, 255, 150)
 
@@ -486,7 +703,7 @@ class Footers:
 
         return (255, 255, 255)
 
-    def load(self, datas: Dict):
+    def load(self, datas: Dict) -> None:
         self.liens: List[Lien] = list()
         first: bool = True
         lien: Lien
@@ -497,26 +714,26 @@ class Footers:
             visible = args[0] if args else True
 
             if first:
-                lien = LienToggle(Lecteur.SysFont3, key, position, 4, None, 
+                lien = LienToggle(Lecteur.SysFont3, key, position, 8, None, 
                     callback, id=ident)
                 first = False
                 lien.selected = True
             else:
-                lien = Lien(Lecteur.SysFont3, key, position, 4, None, 
+                lien = Lien(Lecteur.SysFont3, key, position, 8, None, 
                     callback, id=ident, visible=visible)
 
             lien.set_get_color(partial(self.get_color, lien))
 
             self.liens.append(lien)
 
-    def mouse_exit(self):
+    def mouse_exit(self) -> None:
         self.mouse_over = False
         for lien in self.liens:
             if lien.mouse_over:
                 lien.mouse_over = False
                 lien.update_color() 
 
-    def mouse_move(self, mouse_pos: Tuple):
+    def mouse_move(self, mouse_pos: Tuple) -> None:
         self.mouse_over = True
         for lien in self.liens:
             if not lien.coords.collidepoint(mouse_pos):
@@ -529,14 +746,14 @@ class Footers:
             lien.update_color()   
             # fprint("mouse over", lien.libelle)
 
-    def mouse_button_up(self, mouse_pos: Tuple, button: int):
+    def mouse_button_up(self, mouse_pos: Tuple, button: int) -> None:
         for lien in self.liens:
             if not lien.coords.collidepoint(mouse_pos):
                 continue
 
             lien.click()
 
-    def draw(self):
+    def draw(self) -> None:
         self.surface.fill((40, 40, 60))
 
         # footer
@@ -588,7 +805,7 @@ class Repertoire:
     def y(ligne: int) -> int:
         return 10 + Repertoire.hauteur_ligne * ligne
     
-    def select(self, selected: bool):
+    def select(self, selected: bool) -> None:
         self.selected = selected
         self.surface = Lecteur.SysFont2.render(
                 self.libelle, False, 
@@ -597,8 +814,7 @@ class Repertoire:
         self.w, self.h = self.surface.get_size()
 
     def to_screen(self, ligne: int) -> Tuple:
-        return (
-            self.surface, (self.x, self.y(ligne)))
+        return (self.surface, (self.x, self.y(ligne)))
         
 
 class Repertoires:
@@ -615,6 +831,7 @@ class Repertoires:
     w: int
     h: int
     visible: bool
+    loaded: bool
     mouse_over: bool
 
     mouse_over_y: int
@@ -628,8 +845,7 @@ class Repertoires:
         self.update_screen(screen, coords)
         self.set_visible(True)
 
-        self.max = self.h // Repertoire.hauteur_ligne
-
+        self.loaded = False
         self.selected = "INBOX"
         self.decal = 0
 
@@ -639,7 +855,7 @@ class Repertoires:
         self.actions = None
 
     def update_screen(self, 
-            screen: pygame.surface.Surface, coords: Optional[Tuple] = None):
+            screen: pygame.surface.Surface, coords: Optional[Tuple] = None) -> None:
 
         if coords is not None:
             self.coords = pygame.Rect(coords)
@@ -647,6 +863,7 @@ class Repertoires:
         self.surface = screen.subsurface(self.coords)
         self.x, self.y, w, self.h = self.coords
         self.w = w - 1
+        self.max = self.h // Repertoire.hauteur_ligne
 
     def get_actions(self) -> Optional[str]:
         if self.actions is None:
@@ -656,7 +873,7 @@ class Repertoires:
         self.actions = None
         return actions
 
-    def mouse_move(self, mouse_pos: Tuple):
+    def mouse_move(self, mouse_pos: Tuple) -> None:
         self.mouse_over = True
         self.mouse_over_y = 0
 
@@ -673,11 +890,11 @@ class Repertoires:
             elif repertoire.mouse_over:
                 repertoire.mouse_over = False
 
-    def mouse_exit(self):
+    def mouse_exit(self) -> None:
         self.mouse_over = False
         self.mouse_over_y = 0
 
-    def mouse_button_up(self, mouse_pos: Tuple, button: int):
+    def mouse_button_up(self, mouse_pos: Tuple, button: int) -> None:
         for idx, repertoire in enumerate(self.liste[self.decal:self.decal+self.max]):
             if repertoire.id == "MAIL":
                 continue
@@ -687,10 +904,10 @@ class Repertoires:
                 self.select(repertoire.id)
                 break
 
-    def clear(self):
+    def clear(self) -> None:
         self.liste.clear()
     
-    def load(self):
+    def get_repertoires(self) -> None:
         mail: Mail
 
         connu: bool
@@ -700,6 +917,8 @@ class Repertoires:
 
         repertoires_connus: List[Tuple] = list()
         repertoires_autres: List[Tuple] = list()
+
+        debut = perf_counter()
 
         self.liste.append(Repertoire("MAIL", "Boîte de réception", 1, False))
 
@@ -732,7 +951,20 @@ class Repertoires:
             self.liste.append(Repertoire(ident, repertoire, 2, 
                 ident == self.selected))
 
-    def select(self, ident: str):
+        self.loaded = True
+
+        fin = perf_counter()
+        temps_execution = fin - debut
+        fprint(f"load repertoires : {temps_execution:.4f} secondes")
+
+    def load(self) -> None:
+        thread: Thread
+
+        self.loaded = False
+        thread = Thread(target=self.get_repertoires)
+        thread.start()
+
+    def select(self, ident: str) -> None:
         if ident == self.selected:
             return
 
@@ -747,10 +979,10 @@ class Repertoires:
             elif repertoire.selected:
                 repertoire.select(False)
 
-    def toggle(self):
+    def toggle(self) -> None:
         self.visible = not self.visible
 
-    def set_visible(self, visible: bool):
+    def set_visible(self, visible: bool) -> None:
         self.visible = visible
 
     def to_screen(self) -> List[Tuple]:
@@ -768,7 +1000,7 @@ class Repertoires:
 
         raise Exception(f"L'identifiant {ident!r} n'existe pas")
 
-    def draw(self):
+    def draw(self) -> None:
         if not self.visible:
             return 
 
@@ -778,6 +1010,9 @@ class Repertoires:
             self.surface, 
             (50, 200, 150), 
             (self.w, 0), (self.w, self.h))
+
+        if not self.loaded:
+            return 
 
         if self.mouse_over_y:
             pygame.draw.rect(self.surface, (30, 50, 50),
@@ -812,8 +1047,27 @@ class Lecteur:
     screen_width: int
     screen_height: int
 
+    dirs_size: int 
+    line_height: int
+    block_size: int
+
+    nb_lines: int
+    nb_cols: int
+    color_diff: int
+
+    idxx: int
+    idxy: int
+
     mouse: Mouse
     running: bool
+
+    nb_messages: int
+    messages_non_vu: int
+
+    headers: Headers
+    liste_messages: ListeMessages
+    repertoires: Repertoires
+    footers: Footers
 
     def __init__(self):
 
@@ -832,13 +1086,13 @@ class Lecteur:
         # for police in polices:
         #     print(f"{police:40}", end="")
 
-    def init_fonts(self):
+    def init_fonts(self) -> None:
         Lecteur.SysFont1 = pygame.font.SysFont("couriernew", 18)
         Lecteur.SysFont2 = pygame.font.SysFont("dejavuserif", 16)
-        Lecteur.SysFont3 = pygame.font.SysFont("dejavusans", 17)
+        Lecteur.SysFont3 = pygame.font.SysFont(["segoeuiemoji"], 17)
         Lecteur.SysFont4 = pygame.font.SysFont("linuxlibertineg", 18, bold=False, italic=True)
 
-    def initialize(self):
+    def initialize(self) -> None:
         self.clock = pygame.time.Clock()
         self.running = True
 
@@ -858,28 +1112,65 @@ class Lecteur:
         self.mouse = Mouse(*pygame.mouse.get_pos())
 
         # Initialisation du cadrillage
-        self.block_size: int = 40
+        self.block_size = 40
 
         self.nb_lines = (self.screen_height-20) // self.block_size 
         self.nb_cols = (self.screen_width-20) // self.block_size 
         self.color_diff = 255 // (self.nb_lines + self.nb_cols)
 
-        self.idxx: int = (self.mouse.x-10) // self.block_size
-        self.idxy: int = (self.mouse.y-10) // self.block_size
+        self.idxx = (self.mouse.x-10) // self.block_size
+        self.idxy = (self.mouse.y-10) // self.block_size
 
-    def boot(self):
+    def init_draw(self) -> None:
+        self.dirs_size = 300
+        self.line_height = 30
+
+        self.nb_messages = 0
+        self.messages_non_vu = 0
+
+        self.headers = Headers(self.screen, (0, 0, self.screen_width, self.line_height))
+        self.headers.load({
+            "Adresse : ": ("ADDR", "", 10),
+            "Messages : ": ("ALL", "0", 500),
+            "Non lus : ": ("UNSEEN", "0", 680)
+        })
+
+        self.liste_messages = ListeMessages(self.screen, 
+            (
+                self.dirs_size, 
+                self.line_height, 
+                self.screen_width-self.dirs_size, 
+                self.screen_height-2*self.line_height))
+        self.liste_messages.load()
+
+        self.repertoires = Repertoires(self.screen,
+            (0, self.line_height, self.dirs_size, 
+                self.screen_height-2*self.line_height))
+        self.repertoires.load()
+
+        self.footers = Footers(self.screen,
+            (0, self.screen_height-self.line_height, 
+                self.screen_width, self.line_height))
+        self.footers.load({
+            " Dossiers ": (10, "DIR", self.toggle_repertoire),
+            " Rafraichir ": (100, "REF", self.refresh_mails),
+            " Loading ... ": (300, "LOD", None, True)
+        })
+
+    def boot(self) -> None:
         pygame.init()
         self.init_fonts()
         self.initialize()
+        self.init_draw()
 
-    def shutdown(self):
+    def shutdown(self) -> None:
         pygame.quit()
 
-    def mouse_enter_leave(self): 
+    def mouse_enter_leave(self) -> None: 
         self.liste_messages.mouse_exit()
         self.repertoires.mouse_exit()
     
-    def mouse_move(self, pos):
+    def mouse_move(self, pos) -> None:
         self.mouse = Mouse(*pos)
 
         if self.repertoires.visible and self.repertoires.coords.collidepoint(pos):
@@ -904,7 +1195,7 @@ class Lecteur:
 
     def mouse_button_down(self, pos, button): ...
 
-    def mouse_button_up(self, pos, button): 
+    def mouse_button_up(self, pos, button) -> None: 
         mouse_pos = pos[0], pos[1]-self.screen_height+30
         if self.footers.coords.collidepoint(pos):
             self.footers.mouse_button_up(mouse_pos, button)
@@ -912,17 +1203,17 @@ class Lecteur:
         elif self.repertoires.visible and self.repertoires.coords.collidepoint(pos):
             self.repertoires.mouse_button_up((pos[0], pos[1]-self.repertoires.y), button)
 
-    def mouse_wheel(self, x, y): 
+    def mouse_wheel(self, x, y) -> None: 
         if self.liste_messages.coords.collidepoint(Mouse.x, Mouse.y):
             self.liste_messages.mouse_wheel(x, y)
 
     def keypressed(self, event): ...
 
-    def keyreleased(self, event): 
+    def keyreleased(self, event) -> None: 
         if event.key == pygame.K_ESCAPE:
             self.running = False
 
-    def update_screen(self): 
+    def update_screen(self) -> None: 
         # fprint("update_screen() =", self.screen.get_size())
         self.screen_width, self.screen_height = self.screen.get_size()
 
@@ -932,14 +1223,19 @@ class Lecteur:
         self.repertoires.update_screen(self.screen,
             (0, self.line_height, self.dirs_size, self.screen_height-2*self.line_height))
 
-        self.liste_messages.update_screen(self.screen, 
-            (self.dirs_size, self.line_height, 
-            self.screen_width-self.dirs_size, self.screen_height-2*self.line_height))
+        if self.repertoires.visible:
+            self.liste_messages.update_screen(self.screen, 
+                (self.dirs_size, self.line_height, 
+                self.screen_width-self.dirs_size, self.screen_height-2*self.line_height))
+        else:
+            self.liste_messages.update_screen(self.screen, 
+                (0, self.line_height, self.screen_width, 
+                    self.screen_height-2*self.line_height))
 
         self.footers.update_screen(self.screen,
             (0, self.screen_height-self.line_height, self.screen_width, self.line_height))
 
-    def get_pygame_events(self):
+    def get_pygame_events(self) -> None:
         for event in pygame.event.get():
             match event.type:
                 case pygame.KMOD_LGUI:
@@ -996,7 +1292,9 @@ class Lecteur:
                     fprint(event.type, get_pygame_const_name(event.type))
                     pass
 
-    def update_repertoires(self):
+    def update_repertoires(self) -> None:
+        actions: Optional[str]
+        
         actions = self.repertoires.get_actions()
         if actions is None:
             return
@@ -1015,7 +1313,9 @@ class Lecteur:
                 case _:
                     raise Exception(f"Paramètre {key} inconnu.")
 
-    def update_liste_messages(self):
+    def update_liste_messages(self) -> None:
+        actions: Optional[str]
+        
         actions = self.liste_messages.get_actions()
         if actions is None:
             return
@@ -1054,11 +1354,11 @@ class Lecteur:
             # nb de messages non lu
             self.headers.get("UNSEEN").set_libelle(str(self.messages_non_vu))
 
-    def update(self):
+    def update(self) -> None:
         self.update_repertoires()
         self.update_liste_messages()
 
-    def draw(self):
+    def draw(self) -> None:
         self.clock.tick(60)
 
         self.headers.draw()
@@ -1068,10 +1368,10 @@ class Lecteur:
 
         pygame.display.update()
 
-    def refresh_mails(self):
+    def refresh_mails(self) -> None:
         self.liste_messages.refresh()
 
-    def toggle_repertoire(self): 
+    def toggle_repertoire(self) -> None: 
         self.repertoires.toggle()
 
         if self.repertoires.visible:
@@ -1083,45 +1383,8 @@ class Lecteur:
                 (0, self.line_height, self.screen_width, 
                     self.screen_height-2*self.line_height))
 
-    def init_draw(self):
-        self.dirs_size: int = 300
-        self.line_height: int = 30
-
-        self.nb_messages = 0
-        self.messages_non_vu = 0
-
-        self.headers = Headers(self.screen, (0, 0, self.screen_width, self.line_height))
-        self.headers.load({
-            "Adresse : ": ("ADDR", "", 10),
-            "Messages : ": ("ALL", "0", 500),
-            "Non lus : ": ("UNSEEN", "0", 680)
-        })
-
-        self.liste_messages = ListeMessages(self.screen, 
-            (
-                self.dirs_size, 
-                self.line_height, 
-                self.screen_width-self.dirs_size, 
-                self.screen_height-2*self.line_height))
-        self.liste_messages.load()
-
-        self.repertoires = Repertoires(self.screen,
-            (0, self.line_height, self.dirs_size, 
-                self.screen_height-2*self.line_height))
-        self.repertoires.load()
-
-        self.footers = Footers(self.screen,
-            (0, self.screen_height-self.line_height, 
-                self.screen_width, self.line_height))
-        self.footers.load({
-            " Dossiers ": (10, "DIR", self.toggle_repertoire),
-            " Rafraichir ": (100, "REF", self.refresh_mails),
-            " Loading ... ": (300, "LOD", None, True)
-        })
-
-    def run(self):
+    def run(self) -> None:
         self.boot()
-        self.init_draw()
         while self.running:
             self.update()
             self.draw()
@@ -1130,7 +1393,7 @@ class Lecteur:
         self.shutdown()
 
 
-def main():
+def main() -> None:
     lect: Lecteur
 
     lect = Lecteur()

@@ -221,11 +221,12 @@ class Mail:
                         flags_list = flags_part.split()
                         
                         for flag in flags_list:
-                            if flag == "\\Seen": flags += "S"
-                            elif flag == "NEWSLETTER": flags += "N"
+                            if flag == "\\Seen": flags += "V"
+                            elif flag == "NEWSLETTER": flags += "L"
                             elif flag == "Junk": flags += "J"
-                            elif flag == "Attachment": flags += "A"
+                            elif flag == "$HasAttachment": flags += "F"
                             elif flag == "\\Answered": flags += "R"
+                            elif flag == "\\Recent": flags += "N"
 
                     try:
                         if date_reception.strip()[0].isdigit():
@@ -372,7 +373,7 @@ class Mail:
         self.connect()
         self.read_dirs()
         self.select("INBOX")
-        self.read("UNSEEN")  # ALL
+        self.read("ALL")  # ALL, UNSEEN
         self.disconnect()
 
 
