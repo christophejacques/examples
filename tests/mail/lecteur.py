@@ -39,6 +39,215 @@ def get_pygame_const_name(index):
                 return c
 
 
+class Bouton:
+
+    surface: pygame.surface.Surface
+    text_surface: pygame.surface.Surface
+    rect: pygame.Rect
+
+    # BACK : couleur de fond
+    # AROUND : couleur du contour
+    # OVER : couleur si curseur souris sur bouton
+
+    color_over: Tuple
+    color_back: Tuple
+    color_around: Tuple
+
+    mouse_over: bool
+    mouse_button_down: bool
+
+    callback: Optional[Callable]
+
+    def __init__(self, 
+            surface: pygame.surface.Surface, 
+            colors: Dict[str, Tuple],
+            coords: Tuple,
+            libelle: str,
+            callback: Optional[Callable] = None,
+            *args, **kwargs):
+
+        self.surface = surface
+        self.rect = pygame.Rect(coords)
+
+        self.color_back = colors.get("BACK", (0, 0, 0))
+        self.color_around = colors.get("AROUND", self.color_back)
+        self.color_over = colors.get("OVER", self.color_back)
+
+        self.back_color = self.color_back
+        self.color = self.color_around
+
+        self.mouse_over = False
+        self.mouse_button_down = False
+        self.set_libelle(libelle)
+        self.set_callback(callback, *args, **kwargs)
+
+    def set_libelle(self, libelle: str):
+        color = (255, 255, 255)
+        self.text_surface = Lecteur.SysFont3.render(libelle, False, color)
+        width, height = self.text_surface.get_size()
+        self.text_coords = (self.rect.x + self.rect.w // 2 - width // 2,
+            self.rect.y + self.rect.h // 2 - height // 2)
+
+    def set_callback(self, callback: Optional[Callable], *args, **kwargs):
+        if callback:
+            self.callback = partial(callback, *args, **kwargs)
+        else:
+            self.callback = None
+
+    def set_mouse_over(self, mouse_over: bool):
+        if self.mouse_over == mouse_over:
+            return
+
+        self.mouse_over = mouse_over
+        if mouse_over:
+            self.back_color = self.color_over
+            self.color = self.color_around
+        else:
+            self.back_color = self.color_back
+            self.color = self.color_around
+
+        self.draw()
+
+    def draw(self):
+        pygame.draw.rect(self.surface, self.back_color, self.rect)
+        pygame.draw.rect(self.surface, self.color, self.rect, 1)
+        self.surface.blit(self.text_surface, self.text_coords)
+
+
+class MessageBox:
+
+    screen: pygame.surface.Surface
+    msg_screen: pygame.surface.Surface
+
+    text_surface: pygame.surface.Surface
+
+    coords: Tuple
+    coords_ombre: Tuple
+    pos_screen: Tuple
+    rect: pygame.Rect
+
+    bouton_oui: Bouton
+    bouton_non: Bouton
+
+    show: bool
+
+    @classmethod
+    def __init__(cls, 
+            screen: pygame.surface.Surface, 
+            liste_message: List[str] = [],
+            callback: Optional[Callable] = None, *args, **kwargs):
+        largeur = 400
+        hauteur = 200
+        cls.msg_screen = pygame.Surface((largeur+10, hauteur+10), pygame.SRCALPHA)
+
+        cls.coords = (0, 0, largeur, hauteur)
+        cls.coords_ombre = (10, 10, largeur, hauteur)
+
+        cls.update_screen(screen)
+
+        cls.bouton_oui = Bouton(cls.msg_screen, 
+            {"BACK": (25, 70, 40),
+             "AROUND": (50, 200, 150),
+             "OVER": (30, 80, 50)},
+            (32, 140, 128, 32), "Oui", callback, *args, **kwargs)
+
+        cls.bouton_non = Bouton(cls.msg_screen, 
+            {"BACK": (70, 40, 25),
+             "AROUND": (200, 150, 50),
+             "OVER": (80, 50, 30)},
+            (240, 140, 128, 32), "Non")
+
+        cls.set_message(liste_message)
+        cls.show = False
+
+    @classmethod
+    def update_screen(cls, screen: pygame.surface.Surface) -> None:
+        width, height = screen.get_size()
+        posx = width // 2 - 200
+        posy = height // 2 - 100
+
+        cls.pos_screen = (posx, posy)
+        cls.rect = pygame.Rect(*cls.pos_screen, *cls.coords[2:])
+        cls.screen = screen
+
+    @classmethod
+    def mouse_move(cls, pos: Tuple) -> None:
+        if not cls.rect.collidepoint(pos):
+            return
+
+        x, y = pos
+        sx, sy = cls.pos_screen
+        mouse_pos = x - sx, y - sy
+
+        if cls.bouton_oui.rect.collidepoint(mouse_pos):
+            cls.bouton_oui.set_mouse_over(True)
+            cls.bouton_non.set_mouse_over(False)
+
+        elif cls.bouton_non.rect.collidepoint(mouse_pos):
+            cls.bouton_oui.set_mouse_over(False)
+            cls.bouton_non.set_mouse_over(True)
+
+        else:
+            cls.bouton_oui.set_mouse_over(False)
+            cls.bouton_non.set_mouse_over(False)
+
+    @classmethod
+    def mouse_button_down(cls, pos: Tuple, button: int) -> None:
+        if button != 1:
+            return
+
+        cls.bouton_oui.mouse_button_down = cls.bouton_oui.mouse_over
+        cls.bouton_non.mouse_button_down = cls.bouton_non.mouse_over
+
+    @classmethod
+    def mouse_button_up(cls, pos: Tuple, button: int) -> None:
+
+        if button != 1:
+            cls.bouton_oui.mouse_button_down = False
+            cls.bouton_non.mouse_button_down = False
+            return
+
+        if cls.bouton_oui.mouse_over and cls.bouton_oui.mouse_button_down:
+            if cls.bouton_oui.callback:
+                cls.bouton_oui.callback()
+            MessageBox.deactivate()
+
+        elif cls.bouton_non.mouse_over and cls.bouton_non.mouse_button_down:
+            MessageBox.deactivate()
+            
+    @classmethod
+    def set_message(cls, liste_message: List[str]):
+        cls.msg_screen.fill((0, 0, 0, 0))
+        pygame.draw.rect(cls.msg_screen, (10, 20, 10), cls.coords_ombre)
+        pygame.draw.rect(cls.msg_screen, (30, 40, 40), cls.coords)
+        pygame.draw.rect(cls.msg_screen, (50, 200, 150), cls.coords, 1)
+
+        cls.bouton_oui.draw()
+        cls.bouton_non.draw()
+        
+        y = 50
+        for message in liste_message:
+            cls.text_surface = Lecteur.SysFont3.render(message, False, (255, 255, 255))
+            width, height = cls.text_surface.get_size()
+            cls.msg_screen.blit(cls.text_surface, (cls.rect.w // 2 - width // 2, y))
+            y += height + 4
+
+    @classmethod
+    def activate(cls):
+        cls.bouton_oui.set_mouse_over(False)
+        cls.bouton_non.set_mouse_over(False)
+        cls.show = True
+
+    @classmethod
+    def deactivate(cls):
+        cls.show = False
+
+    @classmethod
+    def draw(cls):
+        if cls.show:
+            cls.screen.blit(cls.msg_screen, cls.pos_screen)
+
+
 class Lien:
 
     font: pygame.font.Font
@@ -50,6 +259,7 @@ class Lien:
     callback: Optional[Callable]
 
     mouse_over: bool
+    mouse_button_pushed: bool
     selected: bool
     visible: bool
 
@@ -76,6 +286,7 @@ class Lien:
 
         self.callback = callback
         self.mouse_over = False
+        self.mouse_button_pushed = False
         self.selected = False
 
     def toggle(self) -> None:
@@ -124,6 +335,10 @@ class Lien:
     def click(self) -> None:
         if self.callback:
             self.callback()
+
+    def draw_underline(self):
+        pygame.draw.line(self.surface, (50, 255, 150), 
+            (0, self.h-1), (self.w, self.h-1))
 
     def to_draw(self) -> Tuple:
         return (self.surface, self.coords)
@@ -244,6 +459,10 @@ class Texte:
         self.visible = visible
 
     def set_libelle(self, libelle: str) -> None:
+        if "\x00" in libelle:
+            # print("Caractère nul détecté, nettoyage en cours...")
+            libelle = libelle.replace("\x00", "")
+
         self.libelle = libelle
         self.surface = self.font.render(self.libelle, False, self.color)
         self.width = self.surface.get_width()
@@ -313,7 +532,9 @@ class ListeMessages:
     nb_mails: int 
     nb_lignes: int
     nb_lignes_max: int
-    selected: int 
+
+    selected: Optional[int]
+    message_over: int 
 
     decal: int
     debut: int
@@ -337,10 +558,11 @@ class ListeMessages:
         self.update_screen(screen, coords)
         self.mouse_over = False
         self.nb_mails = 0
-        self.selected = 0
+        self.selected = None
+        self.message_over = 0
 
         self.actions = None
-        self.directory = "INBOX"
+        self.directory = '"INBOX"'
 
     def get_actions(self) -> Optional[str]:
         actions: str
@@ -415,7 +637,7 @@ class ListeMessages:
 
     def mouse_exit(self) -> None:
         self.mouse_over = False
-        self.selected = 0
+        self.message_over = 0
 
     def mouse_move(self, mouse_pos: Tuple) -> None:
         idx: int
@@ -424,7 +646,7 @@ class ListeMessages:
 
         if mouse_pos[1] < 30:
             # ligne des titres
-            self.selected = 0
+            self.message_over = 0
             
         else:
             # ligne des messages
@@ -432,17 +654,24 @@ class ListeMessages:
             if idx > self.nb_mails:
                 idx = 0
 
-            self.selected = idx
+            self.message_over = idx
 
     def mouse_wheel(self, x, y) -> None: 
         if y < 0 and self.decal - y + self.nb_lignes_max > self.nb_lignes:
             return
+
+        if self.selected is not None:
+            if self.decal-y >= 0:
+                self.selected += y
 
         self.decal += -y
         if self.decal < 0:
             self.decal = 0
 
         self.ascenseur.update(self.decal)
+
+    def mouse_button_up(self, mouse_pos: Tuple, button: int) -> None:
+        self.selected = self.message_over
     
     @staticmethod
     def format_adresse(lib: str) -> str:
@@ -474,7 +703,9 @@ class ListeMessages:
             if status == "OK":
                 # response contient une liste avec un seul élément en bytes
                 data = response[0].decode("utf-8").strip("()")
-                dossier, _, messages, _, unseen = data.split()
+
+                *lst_dossier, _, messages, _, unseen = data.split()
+                dossier = " ".join(lst_dossier)
 
                 self.actions = f"USER={user};DIR={dossier};ALL={messages};UNSEEN={unseen}"
 
@@ -486,6 +717,7 @@ class ListeMessages:
 
         except Exception as erreur:
             fprint("get_mails():", erreur)
+            raise
 
         try:
             mail.disconnect()
@@ -543,11 +775,13 @@ class ListeMessages:
 
         self.nb_mails = len(self.liste_datas)
         self.nb_lignes = self.nb_mails
+        self.decal = 0
 
         fin = perf_counter()
         fprint(f"load messages : {fin - debut:.4f} secondes")
 
-        self.ascenseur = Ascenseur(self.surface, self.w, self.h, self.nb_lignes, self.nb_lignes_max)
+        self.ascenseur = Ascenseur(self.surface, self.w, self.h, self.nb_lignes, self.nb_lignes_max,
+            hauteur=self.h - ListeMessages.hauteur_ligne, posy=ListeMessages.hauteur_ligne+2)
 
     def load(self) -> None:
         mails: Thread
@@ -555,11 +789,50 @@ class ListeMessages:
         self.liste_datas = list()
         self.liste_messages = list()
         self.nb_mails = 0
-        self.selected = 0
+        self.selected = None
+        self.message_over = 0
         self.actions = "LOADING=True"
 
         mails = Thread(target=self.load_mails)
         mails.start()
+
+    def delete_message(self, numero: int):
+
+        fprint("Delete : ", end="id=")
+        message = self.liste_messages[numero]
+        fprint(message.data["NUM"].libelle, end=" ")
+        fprint(f'{message.data["OBJ"].libelle!r}')
+
+        del self.liste_messages[numero]
+        self.nb_mails -= 1
+        self.nb_lignes -= 1
+
+        self.ascenseur = Ascenseur(self.surface, self.w, self.h, self.nb_lignes, self.nb_lignes_max,
+            hauteur=self.h - ListeMessages.hauteur_ligne, posy=ListeMessages.hauteur_ligne+2)
+
+        if self.decal + self.nb_lignes_max > self.nb_lignes and self.decal > 0:
+            self.decal -= 1
+
+        if self.selected and self.selected > self.nb_lignes:
+            if self.selected > 1:
+                self.selected -= 1
+            else:
+                self.selected = None
+
+        self.ascenseur.update(self.decal)
+
+    def delete_selected_message(self):
+        if not self.selected:
+            return
+
+        message = self.liste_messages[self.decal + self.selected - 1]
+        MessageBox.set_message([
+            "Voulez-vous supprimer le message",
+            f"Numéro : {message.data["NUM"].libelle} ?"])
+        
+        MessageBox.bouton_oui.set_callback(self.delete_message, self.decal + self.selected - 1)
+        MessageBox.activate()
+        MessageBox.mouse_move(pygame.mouse.get_pos())
 
     def refresh(self) -> None:
         self.load()
@@ -583,7 +856,8 @@ class ListeMessages:
         if self.decal + self.nb_lignes_max > self.nb_lignes:
             self.decal = max(0, self.nb_lignes - self.nb_lignes_max)
 
-        self.ascenseur = Ascenseur(self.surface, self.w, self.h, self.nb_lignes, self.nb_lignes_max)
+        self.ascenseur = Ascenseur(self.surface, self.w, self.h, self.nb_lignes, self.nb_lignes_max,
+            hauteur=self.h - ListeMessages.hauteur_ligne, posy=ListeMessages.hauteur_ligne+2)
         self.ascenseur.update(self.decal)
 
     def draw(self) -> None:
@@ -597,9 +871,16 @@ class ListeMessages:
         self.surface.fill((10, 20, 20))
 
         # fond d'une ligne de message
+        selected = self.selected if self.selected else 0
         for ligne in range(1, 1+min(self.nb_mails, self.nb_lignes_max)):
-            color = (30, 50, 50) if ligne == self.selected else (20, 30, 30)
-            if ligne % 2 and ligne != self.selected:
+            if ligne == selected:
+                color = (13, 64, 13)
+            elif ligne == self.message_over:
+                color = (20, 50, 50)
+            else:
+                color = (20, 30, 30)
+
+            if ligne % 2 and ligne not in (self.selected, self.message_over):
                 continue
 
             pygame.draw.rect(self.surface, color, 
@@ -625,37 +906,76 @@ class ListeMessages:
 
 class Ascenseur:
 
-    def __init__(self, surface, width: int, height: int, nb_lignes: int, nb_lignes_max: int):
+    surface: pygame.surface.Surface
+
+    espace: int
+    largeur_a: int
+    hauteur_a: int
+    posx_a: int
+    posy: int
+    coef: float
+
+    coords: Tuple
+    coords_a: Tuple
+
+    def __init__(self, surface: pygame.surface.Surface, 
+            width: int, height: int, nb_lignes: int, nb_lignes_max: int, **options):
+
+        largeur: int
+        hauteur: int
+        hauteur_d: int
+        posx: int
+
+        def do_nothing(*args):
+            pass
+
+        # fait en sort que les fonctions ne fassent rien
+        # puisque l'initialisation n'est pas terminee
+        self.update = do_nothing
+        self.draw = do_nothing
+
+        if nb_lignes <= nb_lignes_max:
+            return
+
         self.surface = surface
-        self.nb_lignes = nb_lignes
-        self.nb_lignes_max = nb_lignes_max
+        self.espace = options.get("espace", 2)
 
-        self.espace = 2
-        self.largeur = 20
-        self.largeur_a = self.largeur - 2 - 2 * self.espace
+        # largeur
+        largeur = options.get("largeur", 20)
+        self.largeur_a = largeur - 2 - 2 * self.espace
 
-        self.hauteur = height - ListeMessages.hauteur_ligne 
-        self.hauteur_d = self.hauteur - 2 - 2 * self.espace
-        if self.nb_lignes == 0:
-            self.hauteur_a = 0
-        else:
-            self.hauteur_a = int(self.nb_lignes_max / self.nb_lignes * self.hauteur_d) 
+        # hauteur
+        hauteur = options.get("hauteur", height)
+        hauteur_d = hauteur - 2 - 2 * self.espace
+        self.hauteur_a = int(nb_lignes_max / nb_lignes * hauteur_d) 
 
-        self.posx = width - self.largeur
-        self.posx_a = self.posx + 1 + self.espace
+        # position x
+        posx = options.get("posx", width - largeur)
+        self.posx_a = posx + 1 + self.espace
 
-        self.posy = ListeMessages.hauteur_ligne+2 
-        self.coords = (self.posx, self.posy, self.largeur, self.hauteur)
+        # position y
+        self.posy = options.get("posy", 0)
+        self.coords = (posx, self.posy, largeur, hauteur)
+        self.coords_ombre = (posx-4, self.posy+1, 4, hauteur-2)
 
-        self.coef = (self.hauteur_d - self.hauteur_a) / (self.nb_lignes - self.nb_lignes_max) 
+        self.coef = (hauteur_d - self.hauteur_a) / (nb_lignes - nb_lignes_max)
+
+        # puisque l'initialisation est terminee
+        # mise a jour des fonctions
+        self.update = self.update_real
+        self.draw = self.draw_real
+
         self.update(0)
 
-    def update(self, decal: int) -> None:
-        self.posy_a = self.posy + 1 + self.espace + int(decal * self.coef)
-        self.coords_a = (self.posx_a, self.posy_a, self.largeur_a, self.hauteur_a)
+    def update_real(self, decal: int) -> None:
+        posy_a: int
 
-    def draw(self) -> None:
-        pygame.draw.rect(self.surface, (50, 80, 80), self.coords)
+        posy_a = self.posy + 1 + self.espace + int(decal * self.coef)
+        self.coords_a = (self.posx_a, posy_a, self.largeur_a, self.hauteur_a)
+
+    def draw_real(self) -> None:
+        pygame.draw.rect(self.surface, (10, 20, 10), self.coords_ombre)
+        pygame.draw.rect(self.surface, (30, 40, 40), self.coords)
         pygame.draw.rect(self.surface, (50, 200, 150), self.coords, 1)
         pygame.draw.rect(self.surface, (50, 200, 150), self.coords_a)
 
@@ -699,7 +1019,9 @@ class Footers:
 
         elif lien.mouse_over:
             return (50, 200, 150)
-            return (160, 240, 220)
+
+        elif lien.id == "LOD":
+            return (255, 100, 100)
 
         return (255, 255, 255)
 
@@ -746,27 +1068,29 @@ class Footers:
             lien.update_color()   
             # fprint("mouse over", lien.libelle)
 
+    def mouse_button_down(self, mouse_pos: Tuple, button: int) -> None:
+        for lien in self.liens:
+            if lien.mouse_over:
+                lien.mouse_button_pushed = True
+
+            elif lien.mouse_button_pushed:
+                lien.mouse_button_pushed = False
+
     def mouse_button_up(self, mouse_pos: Tuple, button: int) -> None:
         for lien in self.liens:
-            if not lien.coords.collidepoint(mouse_pos):
-                continue
+            if lien.mouse_over and lien.mouse_button_pushed:
+                lien.mouse_button_pushed = False
+                lien.click()
 
-            lien.click()
+            elif lien.mouse_button_pushed:
+                lien.mouse_button_pushed = False
 
     def draw(self) -> None:
         self.surface.fill((40, 40, 60))
 
         # footer
-        # self.surface.blits([lien.to_draw() for lien in self.liens])
-        for lien in self.liens:
-            if not lien.visible:
-                continue
-
-            self.surface.blit(*lien.to_draw())
-            if lien.selected:
-                # ligne sous le lien selectionne
-                dy = lien.h - 1
-                pygame.draw.line(lien.surface, (50, 255, 150), (0, dy), (lien.w, dy))
+        self.surface.blits([lien.to_draw() for lien in self.liens if lien.visible])
+        [lien.draw_underline() for lien in self.liens if lien.selected]
 
         pygame.draw.line(self.surface, (50, 200, 150), (0, 0), (self.w, 0))
 
@@ -782,24 +1106,48 @@ class Repertoire:
     largeur_niveau: int = 12
 
     libelle: str
+    sdir_libelle: str
     selected: bool
     niveau: int
+    nb_sdir: int
 
     surface: pygame.surface.Surface
+    sdir_surf: pygame.surface.Surface
+
     x: int
     w: int
     h: int
+    sdir_x: int
+    sdir_w: int
+    sdir_h: int
+
+    has_sdir: bool
+    visible: bool
 
     mouse_over: bool
+    sdir_mouse_over: bool
+    mouse_button_pushed: bool
+    sdir_mouse_button_pushed: bool
 
-    def __init__(self, ident: str, libelle: str, niveau: int, selected: bool = False):
+    def __init__(self, ident: str, libelle: str, affichage: str, 
+            niveau: int, selected: bool = False, nb_dirs: int = 0):
 
         self.id = ident
         self.libelle = libelle
+        self.sdir_libelle = ""
+        self.affichage = affichage
         self.niveau = niveau
-        self.select(selected)
+        self.nb_sdir = nb_dirs
+        self.has_sdir = nb_dirs > 1
         self.x = Repertoire.largeur_niveau * self.niveau
+        self.sdir_x = self.x - 18
+
+        self.visible = True
         self.mouse_over = False
+        self.sdir_mouse_over = False
+        self.mouse_button_pushed = False
+        self.sdir_mouse_button_pushed = False
+        self.select(selected)
 
     @staticmethod
     def y(ligne: int) -> int:
@@ -807,11 +1155,29 @@ class Repertoire:
     
     def select(self, selected: bool) -> None:
         self.selected = selected
-        self.surface = Lecteur.SysFont2.render(
-                self.libelle, False, 
-                Repertoire.colors.get(selected, (255, 0, 0)))
+        self.set_libelle(self.libelle)
+        if self.has_sdir:
+            self.set_sdir_libelle("+")
+
+    def set_visible(self, visible: bool):
+        self.visible = visible
+
+    def set_libelle(self, libelle: str):
+        self.libelle = libelle
+        self.surface = Lecteur.SysFont2.render(libelle, False, 
+            Repertoire.colors.get(self.selected, (255, 0, 0)))
 
         self.w, self.h = self.surface.get_size()
+
+    def set_sdir_libelle(self, libelle: str):
+        self.sdir_libelle = libelle
+        self.sdir_surf = Lecteur.SysFont2.render(libelle, False, 
+            Repertoire.colors.get(self.selected, (255, 0, 0)))
+
+        self.sdir_w, self.sdir_h = self.sdir_surf.get_size()
+
+    def sdir_to_screen(self, ligne: int) -> Tuple:
+        return (self.sdir_surf, (self.sdir_x, self.y(ligne)))
 
     def to_screen(self, ligne: int) -> Tuple:
         return (self.surface, (self.x, self.y(ligne)))
@@ -824,6 +1190,7 @@ class Repertoires:
     max: int 
     selected: str
     decal: int 
+    nb_dirs: int
 
     surface: pygame.surface.Surface
     x: int
@@ -841,14 +1208,15 @@ class Repertoires:
     def __init__(self, screen: pygame.surface.Surface, coords: Tuple):
         self.liste = list()
 
+        self.decal = 0
+        self.nb_dirs = 0
+
         self.coords = pygame.Rect(coords)
         self.update_screen(screen, coords)
         self.set_visible(True)
 
         self.loaded = False
         self.selected = "INBOX"
-        self.decal = 0
-
         self.mouse_over = False
         self.mouse_over_y = 0
 
@@ -865,6 +1233,22 @@ class Repertoires:
         self.w = w - 1
         self.max = self.h // Repertoire.hauteur_ligne
 
+        if self.decal + self.max > self.nb_dirs:
+            self.decal = max(0, self.nb_dirs - self.max)
+
+        self.update_ascenseur()
+
+    def update_ascenseur(self) -> None:
+        liste: List[Repertoire]
+        nb_dirs: int
+
+        liste = list(filter(lambda x: x.visible, self.liste))
+        nb_dirs = len(liste)
+
+        self.ascenseur = Ascenseur(
+            self.surface, self.w, self.h, nb_dirs, self.max, posy=-1, hauteur=self.h+2)
+        self.ascenseur.update(self.decal)
+
     def get_actions(self) -> Optional[str]:
         if self.actions is None:
             return None
@@ -874,35 +1258,71 @@ class Repertoires:
         return actions
 
     def mouse_move(self, mouse_pos: Tuple) -> None:
+        mx: int
+        my: int
+        liste: List[Repertoire]
+
         self.mouse_over = True
         self.mouse_over_y = 0
+        mx, my = mouse_pos
 
-        for idx, repertoire in enumerate(self.liste[self.decal:self.decal+self.max]):
+        liste = list(filter(lambda x: x.visible, self.liste))[self.decal:self.decal+self.max]
+
+        for idx, repertoire in enumerate(liste):
             if repertoire.id == "MAIL":
                 continue
 
             surface, (x, y) = repertoire.to_screen(idx)
 
-            if y < mouse_pos[1] < y + repertoire.hauteur_ligne:
-                repertoire.mouse_over = True
+            if y < my < y + repertoire.hauteur_ligne:
                 self.mouse_over_y = y - 2
 
-            elif repertoire.mouse_over:
+                if repertoire.has_sdir:
+                    repertoire.sdir_mouse_over = mx < x
+                    repertoire.mouse_over = not repertoire.sdir_mouse_over
+                else:
+                    repertoire.mouse_over = True
+                    repertoire.sdir_mouse_over = False
+
+            else:
                 repertoire.mouse_over = False
+                repertoire.sdir_mouse_over = False
 
     def mouse_exit(self) -> None:
         self.mouse_over = False
         self.mouse_over_y = 0
 
-    def mouse_button_up(self, mouse_pos: Tuple, button: int) -> None:
+    def mouse_wheel(self, x, y) -> None: 
+        if y < 0 and self.decal - y + self.max > self.nb_dirs:
+            return
+
+        self.decal += -y
+        if self.decal < 0:
+            self.decal = 0
+
+        self.ascenseur.update(self.decal)
+
+    def mouse_button_down(self, mouse_pos: Tuple, button: int) -> None:
         for idx, repertoire in enumerate(self.liste[self.decal:self.decal+self.max]):
             if repertoire.id == "MAIL":
                 continue
 
-            surface, (x, y) = repertoire.to_screen(idx)
-            if y < mouse_pos[1] < y + repertoire.hauteur_ligne:
+            repertoire.mouse_button_pushed = repertoire.mouse_over
+            repertoire.sdir_mouse_button_pushed = repertoire.sdir_mouse_over
+    
+    def mouse_button_up(self, mouse_pos: Tuple, button: int) -> None:
+        for idx, repertoire in enumerate(self.liste[self.decal:self.decal+self.max]):
+            if repertoire.id == "MAIL" or not (
+                    repertoire.mouse_button_pushed or repertoire.sdir_mouse_button_pushed):
+                continue
+
+            if repertoire.mouse_button_pushed:
                 self.select(repertoire.id)
-                break
+            else:
+                self.toggle_sdir(repertoire.id)
+
+            repertoire.mouse_button_pushed = False
+            repertoire.sdir_mouse_button_pushed = False
 
     def clear(self) -> None:
         self.liste.clear()
@@ -920,25 +1340,20 @@ class Repertoires:
 
         debut = perf_counter()
 
-        self.liste.append(Repertoire("MAIL", "Boîte de réception", 1, False))
+        self.liste.append(Repertoire("MAIL", "Boîte de réception", "", 1, False, 0))
 
         mail = Mail()
 
         try:
             mail.connect()
-            for connu, num, ident, repertoire in mail.get_dirs():
+            for connu, num, ident, repertoire, true_name in mail.get_dirs():
                 if connu:
-                    repertoires_connus.append((num, ident, repertoire))
+                    repertoires_connus.append((num, ident, repertoire, true_name))
                 else:
-                    repertoires_autres.append((num, ident, repertoire))
+                    repertoires_autres.append((num, ident, repertoire, true_name))
 
         except Exception as erreur:
             fprint("get_dirs():", erreur)
-
-        try:
-            mail.disconnect()
-        except Exception:
-            pass
 
         # tri des repertoire par id
         repertoires_connus.sort(key=lambda elt: elt[0])
@@ -946,12 +1361,39 @@ class Repertoires:
         # tri des repertoire par libelle
         repertoires_autres.sort(key=lambda elt: elt[2])
 
-        for value in repertoires_connus + repertoires_autres:
-            num, ident, repertoire = value
-            self.liste.append(Repertoire(ident, repertoire, 2, 
-                ident == self.selected))
+        for value in repertoires_connus:
+            num, ident, repertoire, true_name = value
+            try:
+                nombre_sous_repertoires = len(list(mail.get_dirs(true_name)))
+            except Exception as erreur:
+                nombre_sous_repertoires = 0
+                fprint("Ss rep", true_name, ":", erreur)
+
+            self.liste.append(Repertoire(ident, repertoire, true_name, 2, 
+                ident == self.selected, nombre_sous_repertoires))
+
+        for value in repertoires_autres:
+            num, ident, repertoire, true_name = value
+            try:
+                nombre_sous_repertoires = len(list(mail.get_dirs(repertoire)))
+            except Exception as erreur:
+                nombre_sous_repertoires = 0
+                fprint("Ss rep", true_name, ":", erreur)
+
+            self.liste.append(Repertoire(ident, repertoire, true_name, 2, 
+                ident == self.selected, nombre_sous_repertoires))
+
+        try:
+            mail.disconnect()
+        except Exception:
+            pass
 
         self.loaded = True
+
+        self.nb_dirs = len(self.liste)
+
+        self.ascenseur = Ascenseur(self.surface, self.w, self.h, self.nb_dirs, self.max)
+        self.ascenseur.update(self.decal)
 
         fin = perf_counter()
         temps_execution = fin - debut
@@ -964,6 +1406,100 @@ class Repertoires:
         thread = Thread(target=self.get_repertoires)
         thread.start()
 
+    def get(self, ident: str) -> Repertoire:
+        for repertoire in self.liste:
+            if repertoire.id == ident:
+                return repertoire
+
+        raise Exception(f"Le repertoire {ident} n'existe pas")
+
+    def index(self, ident: str, visible_only: bool = False) -> int:
+        index: int
+
+        index = 0
+        for repertoire in self.liste:
+            if repertoire.id == ident:
+                return index
+
+            if visible_only:
+                index += 1 if repertoire.visible else 0
+            else:
+                index += 1
+
+        raise Exception(f"Le repertoire {ident} n'existe pas")
+
+    def set_visible_sdir(self, index: int, visible: bool) -> None:
+        niveau = self.liste[index].niveau
+
+        for repertoire in self.liste[index:]:
+            if repertoire.niveau < niveau:
+                break
+
+            repertoire.set_visible(visible)
+
+    def show_sdir(self, index: int) -> None:
+        self.set_visible_sdir(index, True)
+
+    def hide_sdir(self, index: int) -> None:
+        self.set_visible_sdir(index, False)
+
+    def toggle_sdir(self, ident: str) -> None:
+        repertoire = self.get(ident)
+
+        if not repertoire.has_sdir:
+            return
+
+        libelle = " - " if repertoire.sdir_libelle == "+" else "+"
+        repertoire.set_sdir_libelle(libelle)
+
+        index = 1 + self.index(ident)
+        if len(self.liste) > index and self.liste[index].niveau == 1+repertoire.niveau:
+            self.set_visible_sdir(index, not self.liste[index].visible)
+            self.update_ascenseur()
+            return
+        
+        mail = Mail()
+        repertoires = list()
+
+        try:
+            mail.connect()
+            for connu, num, new_ident, new_repertoire, true_name in mail.get_dirs(ident):
+                if new_ident == ident:
+                    continue
+
+                new_repertoire = new_repertoire.split("/")[-1]
+                repertoires.append((num, new_ident, new_repertoire, new_repertoire))
+
+        except Exception as erreur:
+            fprint("get_dirs():", erreur)
+
+        # tri des repertoire par libelle
+        repertoires.sort(key=lambda elt: elt[2])
+
+        for value in repertoires:
+            num, ident, new_repertoire, true_name = value
+            try:
+                search_repertoire = f'"{new_repertoire}"'
+                nombre_sous_repertoires = len(list(mail.get_dirs(search_repertoire)))
+            except Exception as erreur:
+                nombre_sous_repertoires = 0
+                fprint("Ss rep", true_name, ":", erreur)
+
+            self.liste.insert(index, Repertoire(
+                ident, new_repertoire, true_name, 1+repertoire.niveau, 
+                False, nombre_sous_repertoires))
+
+            index += 1
+
+        try:
+            mail.disconnect()
+        except Exception:
+            pass
+
+        self.nb_dirs = len(self.liste)
+        self.ascenseur = Ascenseur(self.surface, self.w, self.h, self.nb_dirs, self.max)
+        self.ascenseur.update(self.decal)
+
     def select(self, ident: str) -> None:
         if ident == self.selected:
             return
@@ -973,7 +1509,6 @@ class Repertoires:
             if ident == repertoire.id:
                 repertoire.select(True)
                 self.selected = repertoire.id
-                # fprint("repertoire selected:", self.selected)
                 self.actions = f"DIR={self.selected}"
 
             elif repertoire.selected:
@@ -987,18 +1522,20 @@ class Repertoires:
 
     def to_screen(self) -> List[Tuple]:
         dirs_texte: List[Tuple] = list()
+        index: int
 
-        for idx, repertoire in enumerate(self.liste[self.decal:self.decal+self.max]):
-            dirs_texte.append(repertoire.to_screen(idx))
+        index = 0
+        # for repertoire in self.liste[self.decal:self.decal+self.max]:
+        for repertoire in self.liste[self.decal:]:
+            if not repertoire.visible:
+                continue
+
+            dirs_texte.append(repertoire.to_screen(index))
+            index += 1
+            if index > self.max:
+                break
 
         return dirs_texte
-
-    def index(self, ident: str) -> int:
-        for idx, repertoire in enumerate(self.liste[1:]):
-            if repertoire.id == ident:
-                return idx
-
-        raise Exception(f"L'identifiant {ident!r} n'existe pas")
 
     def draw(self) -> None:
         if not self.visible:
@@ -1006,10 +1543,7 @@ class Repertoires:
 
         # directories
         self.surface.fill((10, 20, 20))
-        pygame.draw.line(
-            self.surface, 
-            (50, 200, 150), 
-            (self.w, 0), (self.w, self.h))
+        pygame.draw.line(self.surface, (50, 200, 150), (self.w, 0), (self.w, self.h))
 
         if not self.loaded:
             return 
@@ -1020,16 +1554,33 @@ class Repertoires:
 
         self.surface.blits(self.to_screen())
 
-        index = self.index(self.selected)
-        if 1+index < self.decal:
+        liste: List[Repertoire]
+        liste = list(filter(lambda x: x.visible, self.liste))[self.decal:self.decal+self.max]
+
+        for idx, repertoire in enumerate(liste):
+            if repertoire.has_sdir:
+                surface, coords = repertoire.sdir_to_screen(idx)
+                self.surface.blit(surface, coords)
+
+                if repertoire.sdir_mouse_over:
+                    rect_coords = (*coords, repertoire.sdir_w, repertoire.sdir_h)
+                    pygame.draw.rect(self.surface, (150, 200, 130), rect_coords, 1)
+
+        self.ascenseur.draw()
+
+        index1 = self.index(self.selected)
+        index2 = self.index(self.selected, True)
+        if index2 < self.decal:
             return
 
         # ligne indiquant que l'option est selectionnee
-        selected_repertoire = self.liste[1+index]
-        dx = selected_repertoire.x
-        dy = selected_repertoire.y(1+index-self.decal) 
-        dy += self.y - 10
+        selected_repertoire = self.liste[index1]
+        if not selected_repertoire.visible:
+            return
 
+        dx = selected_repertoire.x
+        dy = selected_repertoire.y(index2 - self.decal) 
+        dy += self.y - 10
         w = selected_repertoire.surface.get_width()
 
         pygame.draw.line(self.surface, (50, 200, 150), (dx, dy), (dx+w, dy))
@@ -1059,6 +1610,7 @@ class Lecteur:
     idxy: int
 
     mouse: Mouse
+    mouse_button_down_pos: Tuple
     running: bool
 
     nb_messages: int
@@ -1109,7 +1661,10 @@ class Lecteur:
         self.screen = pygame.display.set_mode(disp_size, pygame.RESIZABLE, 24)
         self.screen_width, self.screen_height = self.screen.get_size()
 
+        MessageBox(self.screen)
+
         self.mouse = Mouse(*pygame.mouse.get_pos())
+        self.mouse_button_down_pos = (0, 0)
 
         # Initialisation du cadrillage
         self.block_size = 40
@@ -1173,6 +1728,10 @@ class Lecteur:
     def mouse_move(self, pos) -> None:
         self.mouse = Mouse(*pos)
 
+        if MessageBox.show:
+            MessageBox.mouse_move(pos)
+            return
+
         if self.repertoires.visible and self.repertoires.coords.collidepoint(pos):
             self.repertoires.mouse_move((pos[0], pos[1]-self.repertoires.y))
 
@@ -1193,28 +1752,72 @@ class Lecteur:
         elif self.footers.mouse_over:
             self.footers.mouse_exit()
 
-    def mouse_button_down(self, pos, button): ...
-
-    def mouse_button_up(self, pos, button) -> None: 
+    def mouse_button_down(self, pos, button): 
+        if MessageBox.show:
+            MessageBox.mouse_button_down(pos, button)
+            return
+        
+        self.mouse_button_down_pos = pos
         mouse_pos = pos[0], pos[1]-self.screen_height+30
+
         if self.footers.coords.collidepoint(pos):
+            self.footers.mouse_button_down(mouse_pos, button)
+
+        elif (self.repertoires.visible and self.repertoires.coords.collidepoint(pos) and 
+                self.repertoires.coords.collidepoint(self.mouse_button_down_pos)):
+            self.repertoires.mouse_button_down((pos[0], pos[1]-self.repertoires.y), button)
+
+    def mouse_button_up(self, pos, button) -> None:
+        if MessageBox.show:
+            MessageBox.mouse_button_up(pos, button)
+            self.mouse_move(pygame.mouse.get_pos())
+            return
+
+        if button != 1:
+            return
+
+        mouse_pos = pos[0], pos[1]-self.screen_height+30
+        if (self.footers.coords.collidepoint(pos) and 
+                self.footers.coords.collidepoint(self.mouse_button_down_pos)):
             self.footers.mouse_button_up(mouse_pos, button)
 
-        elif self.repertoires.visible and self.repertoires.coords.collidepoint(pos):
+        elif (self.repertoires.visible and self.repertoires.coords.collidepoint(pos) and 
+                self.repertoires.coords.collidepoint(self.mouse_button_down_pos)):
             self.repertoires.mouse_button_up((pos[0], pos[1]-self.repertoires.y), button)
 
-    def mouse_wheel(self, x, y) -> None: 
+        elif self.liste_messages.coords.collidepoint(pos):
+            self.liste_messages.mouse_button_up((pos[0], pos[1]-self.liste_messages.y), button)
+
+    def mouse_wheel(self, x: int, y: int) -> None: 
+        if MessageBox.show:
+            MessageBox.mouse_move((x, y))
+            return
+
         if self.liste_messages.coords.collidepoint(Mouse.x, Mouse.y):
             self.liste_messages.mouse_wheel(x, y)
+
+        elif self.repertoires.visible and self.repertoires.coords.collidepoint(Mouse.x, Mouse.y):
+            self.repertoires.mouse_wheel(x, y)
 
     def keypressed(self, event): ...
 
     def keyreleased(self, event) -> None: 
         if event.key == pygame.K_ESCAPE:
-            self.running = False
+            if MessageBox.show:
+                MessageBox.deactivate()
+                self.mouse_move(pygame.mouse.get_pos())
+            else:
+                self.running = False
+            return
+
+        if event.key == pygame.K_DELETE:
+            if self.liste_messages.mouse_over:
+                self.liste_messages.mouse_exit()
+                self.liste_messages.delete_selected_message()
 
     def update_screen(self) -> None: 
-        # fprint("update_screen() =", self.screen.get_size())
+        decal_x: int
+
         self.screen_width, self.screen_height = self.screen.get_size()
 
         self.headers.update_screen(self.screen, 
@@ -1224,31 +1827,46 @@ class Lecteur:
             (0, self.line_height, self.dirs_size, self.screen_height-2*self.line_height))
 
         if self.repertoires.visible:
-            self.liste_messages.update_screen(self.screen, 
-                (self.dirs_size, self.line_height, 
-                self.screen_width-self.dirs_size, self.screen_height-2*self.line_height))
+            decal_x = self.dirs_size
         else:
-            self.liste_messages.update_screen(self.screen, 
-                (0, self.line_height, self.screen_width, 
-                    self.screen_height-2*self.line_height))
+            decal_x = 0
+
+        self.liste_messages.update_screen(self.screen, 
+            (decal_x, self.line_height, self.screen_width-decal_x, 
+                self.screen_height-2*self.line_height))
 
         self.footers.update_screen(self.screen,
             (0, self.screen_height-self.line_height, self.screen_width, self.line_height))
 
+        MessageBox.update_screen(self.screen)
+
     def get_pygame_events(self) -> None:
+        is_mouse_scrolling: bool = False
+        for event in pygame.event.get(pygame.MOUSEWHEEL):
+            is_mouse_scrolling = True
+            self.mouse_wheel(event.x, event.y)
+            break
+
         for event in pygame.event.get():
             match event.type:
                 case pygame.KMOD_LGUI:
                     self.mouse_move(event.pos)
 
                 case pygame.MOUSEBUTTONDOWN:
+                    if is_mouse_scrolling:
+                        continue
+
                     if event.button != 2:
                         self.mouse_button_down(event.pos, event.button)
 
                 case pygame.MOUSEBUTTONUP:
+                    if is_mouse_scrolling:
+                        continue
+                    
                     self.mouse_button_up(event.pos, event.button)
 
                 case pygame.MOUSEWHEEL:
+                    fprint("Event mouse wheel")
                     self.mouse_wheel(event.x, event.y)
 
                 case pygame.KEYDOWN:
@@ -1307,7 +1925,7 @@ class Lecteur:
             match key:
                 case "DIR":
                     if value != self.liste_messages.directory:
-                        self.liste_messages.directory = value
+                        self.liste_messages.directory = f'"{value}"'
                         self.liste_messages.load()
 
                 case _:
@@ -1365,6 +1983,8 @@ class Lecteur:
         self.repertoires.draw()
         self.liste_messages.draw()
         self.footers.draw()
+
+        MessageBox.draw()
 
         pygame.display.update()
 

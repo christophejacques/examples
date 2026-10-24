@@ -83,10 +83,17 @@ class Mail:
     @staticmethod
     def decoder_texte(header_val):
         """Décode les entêtes du mail si nécessaire."""
+        if header_val is None:
+            return "None"
+
         val, encoding = decode_header(header_val)[0]
-        if isinstance(val, bytes):
-            return val.decode(encoding or "utf-8", errors="ignore")
-        return val
+        try:
+            if isinstance(val, bytes):
+                return val.decode(encoding or "utf-8", errors="ignore")
+            return val
+
+        except Exception:
+            return "/!\\ " + val.decode("utf-8", errors="ignore")
 
     @staticmethod
     def print_body(body: str):
@@ -187,12 +194,13 @@ class Mail:
                 match = re.search(r'\(.*?\) "[^"]*?" "?([^"]*)"?$', folder_str)
                 if match:
                     folder_str = match.group(1)
+                    true_name = folder_str
                     folder_assoc = association.get(folder_str.lower())
                     if folder_assoc is None:
-                        yield (False, 0, folder_str, folder_str)
+                        yield (False, 0, folder_str, folder_str, true_name)
 
                     else:                        
-                        yield (True, folder_assoc[0], folder_str, folder_assoc[1])
+                        yield (True, folder_assoc[0], folder_str, folder_assoc[1], true_name)
 
                 else:
                     print(f"get_dirs(), Erreur: {folder_str}")
@@ -212,8 +220,13 @@ class Mail:
                     msg = email.message_from_bytes(response_part[1])
                     id_mail = mail_id.decode()
                     expediteur = " ".join(self.decoder_texte(msg.get("From")).split())
-                    sujet = self.decoder_texte(msg.get("Subject"))
-                    date_reception = self.decoder_texte(msg.get("Date"))[:31].strip()
+                    sujet = self.decoder_texte(msg.get("Subject")).replace("\n", "").replace("\r", "")
+                    response_date = self.decoder_texte(msg.get("Date"))
+
+                    while response_date and (
+                            response_date[0].lower() not in "azertyuiopmlkjhgfdsqwxcvbn0123456789"):
+                        response_date = response_date[1:]
+                    date_reception = response_date[:31].strip().replace("GMT", "+0000")
 
                     flags: str = ""
                     if "FLAGS" in imap_response_header:
@@ -238,7 +251,8 @@ class Mail:
                         dateparis = datep.astimezone(timezone(timedelta(hours=1)))
                         date = dateparis.strftime("%Y-%m-%d %H:%M:%S %z")
 
-                    except Exception:
+                    except Exception as erreur:
+                        print(date_reception, erreur)
                         date = date_reception
 
                     datas: dict = {
@@ -251,9 +265,9 @@ class Mail:
                     yield datas
 
     def read_dirs(self):
-        print("Répertoires trouvés :")
-        # for dir in self.get_dirs("Jeux"):
-        for dir in self.get_dirs():
+        print("Répertoires trouvés :", len(list(self.get_dirs("Jeux"))))
+        for dir in self.get_dirs("Jeux"):
+            # for dir in self.get_dirs():
             print("-", dir)
         print()
 
@@ -297,8 +311,14 @@ class Mail:
 
                     id_mail = mail_id.decode()
                     expediteur = " ".join(self.decoder_texte(msg.get("From")).split())
-                    sujet = self.decoder_texte(msg.get("Subject"))
+                    sujet = self.decoder_texte(msg.get("Subject")).replace("\n", "").replace("\r", "")
                     date_reception = self.decoder_texte(msg.get("Date"))[:31].strip()
+
+                    response_date = self.decoder_texte(msg.get("Date"))
+                    while response_date and (
+                            response_date[0].lower() not in "azertyuiopmlkjhgfdsqwxcvbn0123456789"):
+                        response_date = response_date[1:]
+                    date_reception = response_date[:31].strip().replace("GMT", "+0000")
 
                     print(f"\n--- E-mail ID: {id_mail} ---")
 
@@ -372,7 +392,8 @@ class Mail:
     def run(self):
         self.connect()
         self.read_dirs()
-        self.select("INBOX")
+        # self.select("INBOX")
+        self.select("Perso")
         self.read("ALL")  # ALL, UNSEEN
         self.disconnect()
 
