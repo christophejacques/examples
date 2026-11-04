@@ -47,6 +47,9 @@ class Texte:
         libelle: str
 
         taille: int = len(self.libelle)
+        self.surface = self.font.render(self.libelle, False, self.color)
+        self.width = self.surface.get_width()
+
         while self.width > width:
             taille -= 1
             libelle = self.libelle[:taille]
@@ -126,6 +129,10 @@ class Lien:
     def set_libelle(self, libelle: str) -> None:
         self.libelle = libelle
         self.surface = self.font.render(self.libelle, False, self.color)
+
+    def set_pos_x(self, posx: int) -> None:
+        self.x = posx
+        self.coords = pygame.Rect(self.x, self.y, self.w, self.h)
 
     def set_max_width(self, width: int) -> None:
         libelle: str

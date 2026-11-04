@@ -1,10 +1,8 @@
-import pygame  # noqa: E402
-
 from time import perf_counter
 from threading import Thread
 from typing import List, Tuple, Optional, Dict
 
-from general import Variable, fprint
+from general import Variable, fprint, pygame
 from outils import Ascenseur
 from mail import Mail
 
@@ -70,7 +68,7 @@ class Repertoire:
     def select(self, selected: bool) -> None:
         self.selected = selected
         self.set_libelle(self.libelle)
-        if self.has_sdir:
+        if self.has_sdir and self.sdir_libelle == "":
             self.set_sdir_libelle("+")
 
     def set_visible(self, visible: bool):
@@ -267,7 +265,7 @@ class Repertoires:
                     repertoires_autres.append((num, ident, repertoire, true_name))
 
         except Exception as erreur:
-            fprint("get_dirs():", erreur)
+            fprint("get_repertoires.get_dirs():", erreur)
 
         # tri des repertoire par id
         repertoires_connus.sort(key=lambda elt: elt[0])
@@ -278,10 +276,10 @@ class Repertoires:
         for value in repertoires_connus:
             num, ident, repertoire, true_name = value
             try:
-                nombre_sous_repertoires = len(list(mail.get_dirs(true_name)))
+                nombre_sous_repertoires = len(list(mail.get_dirs(f'"{true_name}"')))
             except Exception as erreur:
                 nombre_sous_repertoires = 0
-                fprint("Ss rep", true_name, ":", erreur)
+                fprint("get_repertoires.SsRep1", true_name, ":", erreur)
 
             self.liste.append(Repertoire(ident, repertoire, true_name, 2, 
                 ident == self.selected, nombre_sous_repertoires))
@@ -289,12 +287,12 @@ class Repertoires:
         for value in repertoires_autres:
             num, ident, repertoire, true_name = value
             try:
-                nombre_sous_repertoires = len(list(mail.get_dirs(repertoire)))
+                nombre_sous_repertoires = len(list(mail.get_dirs(f'"{true_name}"')))
             except Exception as erreur:
                 nombre_sous_repertoires = 0
-                fprint("Ss rep", true_name, ":", erreur)
+                fprint("get_repertoires.SsRep2", true_name, ":", erreur)
 
-            self.liste.append(Repertoire(ident, repertoire, true_name, 2, 
+            self.liste.append(Repertoire(true_name, repertoire, true_name, 2, 
                 ident == self.selected, nombre_sous_repertoires))
 
         try:
@@ -382,7 +380,7 @@ class Repertoires:
                     continue
 
                 new_repertoire = new_repertoire.split("/")[-1]
-                repertoires.append((num, new_ident, new_repertoire, new_repertoire))
+                repertoires.append((num, new_ident, new_repertoire, true_name))
 
         except Exception as erreur:
             fprint("get_dirs():", erreur)
@@ -393,11 +391,12 @@ class Repertoires:
         for value in repertoires:
             num, ident, new_repertoire, true_name = value
             try:
-                search_repertoire = f'"{new_repertoire}"'
+                # search_repertoire = f'"{new_repertoire}"'
+                search_repertoire = f'"{true_name}"'
                 nombre_sous_repertoires = len(list(mail.get_dirs(search_repertoire)))
             except Exception as erreur:
                 nombre_sous_repertoires = 0
-                fprint("Ss rep", true_name, ":", erreur)
+                fprint("repertoires.toggle_sdir.SsRep", true_name, ":", erreur)
 
             self.liste.insert(index, Repertoire(
                 ident, new_repertoire, true_name, 1+repertoire.niveau, 

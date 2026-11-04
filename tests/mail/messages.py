@@ -1,24 +1,33 @@
-import pygame  # noqa: E402
-
 from time import perf_counter
 from typing import List, Tuple, Optional, Dict, Generator
 from functools import partial
 from threading import Thread
 
+from general import Mouse, fprint, Variable, pygame
 from textes import Texte, Lien
 from outils import Ascenseur, MessageBox
-from general import Mouse, fprint, Variable
 from mail import Mail
 
 
 class Message:
     data: Dict[str, Texte]
+    selected: bool
 
     def __init__(self):
         self.data = dict()
+        self.selected = False
 
     def load(self, cle: str, texte: Texte) -> None:
         self.data[cle] = texte
+
+    def toggle(self):
+        self.selected = not self.selected
+
+    def select(self):
+        self.selected = True
+
+    def unselect(self):
+        self.selected = False
 
     def to_draw(self) -> Generator:
         for cle in self.data:
@@ -65,6 +74,8 @@ class ListeMessages:
         self.decal = 0
         self.nb_lignes = 0
         self.nb_lignes_max = 0
+
+        self.liste_messages = list()
 
         self.load_titres()
         self.update_screen(screen, coords)
@@ -120,6 +131,7 @@ class ListeMessages:
             "DAT": {"lib": "Date", "pos": 580, "col": 1},
             "DIR": {"lib": r"\/", "pos": 50, "col": 2},
         }
+
         self.titres = list()
         self.coord_x: Dict = dict()
 
@@ -147,6 +159,9 @@ class ListeMessages:
 
             self.coord_x[cle] = lien.x
 
+        # fprint(self.data_titres["OBJ"])
+        # fprint(self.data_titres["DAT"])
+
     def mouse_exit(self) -> None:
         self.mouse_over = False
         self.message_over = 0
@@ -167,6 +182,12 @@ class ListeMessages:
                 idx = 0
 
             self.message_over = idx
+
+    def update_mouse(self):
+        mx, my = pygame.mouse.get_pos()
+        mx -= self.x
+        my -= self.y
+        self.mouse_move((mx, my))
 
     def mouse_wheel(self, x, y) -> None: 
         if y < 0 and self.decal - y + self.nb_lignes_max > self.nb_lignes:
@@ -198,7 +219,7 @@ class ListeMessages:
                 self.ask_for_delete_message()
 
             case pygame.K_UP | pygame.K_DOWN:
-                shift: bool = event.mod & 1 == 1
+                # shift: bool = event.mod & 1 == 1
                 direction = 1 if event.key == pygame.K_UP else -1
                 self.mouse_wheel(Mouse.x, direction)
 
@@ -209,7 +230,7 @@ class ListeMessages:
 
                     self.decal = 0
                     self.update_ascenseur()
-                    self.mouse_move(pygame.mouse.get_pos())
+                    self.update_mouse()
 
             case pygame.K_PAGEUP:
                 if self.decal > 0:
@@ -219,7 +240,7 @@ class ListeMessages:
 
                     self.decal -= dy
                     self.update_ascenseur()
-                    self.mouse_move(pygame.mouse.get_pos())
+                    self.update_mouse()
 
             case pygame.K_PAGEDOWN:
                 if self.decal + self.nb_lignes_max < self.nb_lignes:
@@ -229,7 +250,7 @@ class ListeMessages:
 
                     self.decal += dy
                     self.update_ascenseur()
-                    self.mouse_move(pygame.mouse.get_pos())
+                    self.update_mouse()
 
             case pygame.K_END:
                 if self.decal + self.nb_lignes_max < self.nb_lignes:
@@ -238,7 +259,7 @@ class ListeMessages:
 
                     self.decal = self.nb_lignes - self.nb_lignes_max
                     self.update_ascenseur()
-                    self.mouse_move(pygame.mouse.get_pos())
+                    self.update_mouse()
 
     @staticmethod
     def format_adresse(lib: str) -> str:
@@ -264,6 +285,7 @@ class ListeMessages:
 
         try:
             mail.connect()
+            # fprint(f"mail.select({self.directory})")
             mail.select(self.directory)
 
             status, response = mail.mail.status(self.directory, "(MESSAGES UNSEEN)")
@@ -350,6 +372,8 @@ class ListeMessages:
         self.ascenseur = Ascenseur(self.surface, self.w, self.h, self.nb_lignes, self.nb_lignes_max,
             hauteur=self.h - ListeMessages.hauteur_ligne, posy=ListeMessages.hauteur_ligne+2)
 
+        self.update_mouse()
+
     def load(self) -> None:
         mails: Thread
 
@@ -397,7 +421,7 @@ class ListeMessages:
             "Voulez-vous supprimer le message",
             f"Numéro : {message.data["NUM"].libelle} ?"])
         
-        MessageBox.bouton_oui.set_callback(self.delete_message, self.decal + self.selected - 1)
+        MessageBox.get_bouton("OUI").set_callback(self.delete_message, self.decal + self.selected - 1)
         MessageBox.activate()
 
     def refresh(self) -> None:
@@ -429,6 +453,17 @@ class ListeMessages:
             hauteur=self.h - ListeMessages.hauteur_ligne, posy=ListeMessages.hauteur_ligne+2)
         self.update_ascenseur()
 
+        self.data_titres["DAT"]["pos"] = self.coords.w - 310
+        largeur_objet = self.data_titres["DAT"]["pos"] - self.data_titres["OBJ"]["pos"]
+        self.data_titres["OBJ"]["lar"] = largeur_objet
+
+        self.coord_x["DAT"] = self.coords.w - 310
+        self.titres[4].set_pos_x(self.coords.w - 310)
+        self.titres[5].set_pos_x(self.coords.w - 260)
+
+        for message in self.liste_messages:
+            message.data["OBJ"].set_max_width(largeur_objet)
+            
     def draw(self) -> None:
         coord_y: int
         ligne: int

@@ -1,12 +1,13 @@
 from os import getcwd, chdir, sep as separator
-from typing import Tuple, Optional, List
+from typing import Tuple, Optional, List, Dict
 
 from general import pygame, Variable, Mouse, fprint, get_pygame_const_name
-from outils import MessageBox
+from outils import MessageBox, Menu, Sauvegarde
 from headers import Headers
 from footers import Footers
 from repertoires import Repertoires
 from messages import ListeMessages
+from mail import MailConfig
 
 
 class Lecteur:
@@ -34,6 +35,7 @@ class Lecteur:
     nb_messages: int
     messages_non_vu: int
 
+    menu: Menu
     headers: Headers
     liste_messages: ListeMessages
     repertoires: Repertoires
@@ -63,11 +65,20 @@ class Lecteur:
         Variable.SysFont4 = pygame.font.SysFont("linuxlibertineg", 18, bold=False, italic=True)
 
     def initialize(self) -> None:
+        desktops: List[Tuple]
+        disp_size: Tuple
+
+        config: Sauvegarde
+
+        adresse: str
+        mail_config: MailConfig
+        ident: int
+        colors: Dict 
+        
         self.clock = pygame.time.Clock()
         self.running = True
 
-        desktops: List[Tuple] = pygame.display.get_desktop_sizes()
-        disp_size: Tuple
+        desktops = pygame.display.get_desktop_sizes()
 
         if desktops[0][1] > 1000:
             # Full HD max resolution
@@ -79,7 +90,31 @@ class Lecteur:
         self.screen = pygame.display.set_mode(disp_size, pygame.RESIZABLE, 24)
         self.screen_width, self.screen_height = self.screen.get_size()
 
+        with Sauvegarde() as config:
+            adresse = config.get_content("Lecteur.adresse", "")
+
         MessageBox(self.screen)
+
+        mail_config = MailConfig()
+        mail_config.read_config_json()
+
+        try:
+            ident = mail_config.get_config_ident(adresse)
+        except Exception as erreur:
+            fprint(erreur)
+            ident = 0
+
+        mail_config.set_config(ident)
+
+        # (20, 30, 30) - (30, 40, 40)
+        colors = {
+            "BACK": (20, 30, 30),
+            "AROUND": (50, 200, 150),
+            "OVER": (30, 80, 50)
+        }
+        self.menu = Menu()
+        self.menu.init(self.screen, colors, (80, 29, 400, 60), ident, self.init_draw)
+        self.menu.load(mail_config.get_usernames())
 
         self.mouse = Mouse(*pygame.mouse.get_pos())
         self.mouse_button_down_pos = (0, 0)
@@ -102,8 +137,9 @@ class Lecteur:
         self.messages_non_vu = 0
 
         self.headers = Headers(self.screen, (0, 0, self.screen_width, self.line_height))
+        self.headers.add_icone((84, 5, 20, 20))
         self.headers.load({
-            "Adresse : ": ("ADDR", "", 10),
+            "Adresse : ": ("ADDR", "", 10, 30),
             "Messages : ": ("ALL", "0", 500),
             "Non lus : ": ("UNSEEN", "0", 680)
         })
@@ -149,8 +185,19 @@ class Lecteur:
     def mouse_move(self, pos) -> None:
         self.mouse = Mouse(*pos)
 
-        if MessageBox.show:
-            MessageBox.mouse_move(pos)
+        for interruption in (MessageBox, ):
+            if interruption.show:
+                interruption.mouse_move(pos)
+                return
+
+        if self.headers.coords.collidepoint(pos):
+            self.headers.mouse_move(pos)
+
+        elif self.headers.mouse_over:
+            self.headers.mouse_exit()
+
+        if self.menu.show:
+            self.menu.mouse_move(pos)
             return
 
         if self.repertoires.visible and self.repertoires.coords.collidepoint(pos):
@@ -159,7 +206,9 @@ class Lecteur:
         elif self.repertoires.mouse_over:
             self.repertoires.mouse_exit()
 
-        if self.liste_messages.coords.collidepoint(pos):
+        lm = self.liste_messages
+        largeur = lm.coords.x + lm.coords.w - lm.ascenseur.get_width()
+        if pos[0] < largeur and self.liste_messages.coords.collidepoint(pos):
             dx = self.repertoires.w if self.repertoires.visible else 0
             self.liste_messages.mouse_move(
                 (pos[0]-dx, pos[1]-self.liste_messages.y))
@@ -174,14 +223,22 @@ class Lecteur:
             self.footers.mouse_exit()
 
     def mouse_button_down(self, pos, button): 
-        if MessageBox.show:
-            MessageBox.mouse_button_down(pos, button)
-            return
-        
+        for interruption in (MessageBox, ):
+            if interruption.show:
+                interruption.mouse_button_down(pos, button)
+                return
+
         self.mouse_button_down_pos = pos
         mouse_pos = pos[0], pos[1]-self.screen_height+30
 
-        if self.footers.coords.collidepoint(pos):
+        if self.headers.mouse_over:
+            self.headers.mouse_button_down(mouse_pos, button)
+
+        if self.menu.show:
+            self.menu.mouse_button_down(pos, button)
+            return
+
+        elif self.footers.mouse_over:
             self.footers.mouse_button_down(mouse_pos, button)
 
         elif (self.repertoires.visible and self.repertoires.coords.collidepoint(pos) and 
@@ -189,17 +246,28 @@ class Lecteur:
             self.repertoires.mouse_button_down((pos[0], pos[1]-self.repertoires.y), button)
 
     def mouse_button_up(self, pos, button) -> None:
-        if MessageBox.show:
-            MessageBox.mouse_button_up(pos, button)
-            self.mouse_move(pygame.mouse.get_pos())
-            return
+        for interruption in (MessageBox, ):
+            if interruption.show:
+                interruption.mouse_button_up(pos, button)
+                self.mouse_move(pygame.mouse.get_pos())
+                return
 
         if button != 1:
             return
 
-        mouse_pos = pos[0], pos[1]-self.screen_height+30
+        menu_show = self.menu.show
+        if self.headers.mouse_over:
+            self.headers.mouse_button_up(pos, button)
+
+        if menu_show and self.menu.show:
+            self.menu.mouse_button_up(pos, button)
+            self.menu.deactivate()
+            self.headers.icone.check()
+            return
+
         if (self.footers.coords.collidepoint(pos) and 
                 self.footers.coords.collidepoint(self.mouse_button_down_pos)):
+            mouse_pos = pos[0], pos[1]-self.screen_height+30
             self.footers.mouse_button_up(mouse_pos, button)
 
         elif (self.repertoires.visible and self.repertoires.coords.collidepoint(pos) and 
@@ -210,9 +278,10 @@ class Lecteur:
             self.liste_messages.mouse_button_up((pos[0], pos[1]-self.liste_messages.y), button)
 
     def mouse_wheel(self, x: int, y: int) -> None: 
-        if MessageBox.show:
-            MessageBox.mouse_move((x, y))
-            return
+        for interruption in (MessageBox, self.menu):
+            if interruption.show:
+                self.mouse_move((x, y))
+                return
 
         if self.liste_messages.coords.collidepoint(Mouse.x, Mouse.y):
             self.liste_messages.mouse_wheel(x, y)
@@ -222,7 +291,7 @@ class Lecteur:
 
     def ask_for_quit(self):
         MessageBox.set_message(["Voulez-vous fermer l'application ?"])
-        MessageBox.bouton_oui.set_callback(self.quit)
+        MessageBox.get_bouton("OUI").set_callback(self.quit)
         MessageBox.activate()
 
     def keypressed(self, event): ...
@@ -232,8 +301,14 @@ class Lecteur:
             if MessageBox.show:
                 MessageBox.deactivate()
                 self.mouse_move(pygame.mouse.get_pos())
-            else:
-                self.ask_for_quit()
+                return
+
+            elif self.menu.show:
+                self.menu.deactivate(self.headers.icone.check)
+                self.mouse_move(pygame.mouse.get_pos())
+                return
+
+            self.ask_for_quit()
             return
 
         if self.liste_messages.mouse_over:
@@ -274,7 +349,6 @@ class Lecteur:
         for event in pygame.event.get(pygame.MOUSEWHEEL):
             is_mouse_scrolling = True
             self.mouse_wheel(event.x, event.y)
-            break
 
         for event in pygame.event.get():
             match event.type:
@@ -296,6 +370,7 @@ class Lecteur:
 
                 case pygame.MOUSEWHEEL:
                     fprint("Event mouse wheel")
+                    is_mouse_scrolling = True
                     self.mouse_wheel(event.x, event.y)
 
                 case pygame.KEYDOWN:
@@ -346,6 +421,7 @@ class Lecteur:
         if actions is None:
             return
 
+        action: str
         key: str
         value: str
 
@@ -362,14 +438,17 @@ class Lecteur:
 
     def update_liste_messages(self) -> None:
         actions: Optional[str]
+        redraw: bool = False
         
         actions = self.liste_messages.get_actions()
         if actions is None:
             return
 
+        action: str
         key: str
         value: str
         repertoire: str = ""
+        loading: bool
 
         for action in actions.split(";"):
             key, value = action.split("=")
@@ -378,6 +457,7 @@ class Lecteur:
                     if value != self.headers.liens[1].libelle:
                         # compte connecte
                         self.headers.get("ADDR").set_libelle(value)
+                        redraw = True
 
                 case "DIR":
                     repertoire = value
@@ -392,15 +472,19 @@ class Lecteur:
                 case "LOADING":
                     loading = eval(value)
                     self.footers.get("LOD").set_visible(loading)
-                    self.mouse_move(pygame.mouse.get_pos())
 
         if self.nb_messages != int(self.headers.liens[3].libelle):
             # nb total de messages
             self.headers.get("ALL").set_libelle(str(self.nb_messages))
+            redraw = True
 
         if self.messages_non_vu != int(self.headers.liens[5].libelle):
             # nb de messages non lu
             self.headers.get("UNSEEN").set_libelle(str(self.messages_non_vu))
+            redraw = True
+
+        if redraw:
+            self.headers.redraw()
 
     def update(self) -> None:
         self.update_repertoires()
@@ -409,12 +493,10 @@ class Lecteur:
     def draw(self) -> None:
         self.clock.tick(60)
 
-        self.headers.draw()
-        self.repertoires.draw()
-        self.liste_messages.draw()
-        self.footers.draw()
-
-        MessageBox.draw()
+        for zone in (
+                self.headers, self.repertoires, self.liste_messages, 
+                self.footers, MessageBox, self.menu):
+            zone.draw()
 
         pygame.display.update()
 
