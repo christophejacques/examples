@@ -861,7 +861,7 @@ def _parseFlowableChunks(text, quotechars='>|%'):
     """
     # Match quotemarks with limited whitespace around them
     qm_match = re.compile(
-            '(^\s{{0,2}}([{0}]\s?)+)'.format(re.escape(quotechars)),
+            '(^\\s{{0,2}}([{0}]\\s?)+)'.format(re.escape(quotechars)),
             flags=re.UNICODE).match
     # Find all quotemarks
     qm_findall = re.compile(

@@ -6,7 +6,7 @@ import binascii
 
 from email.header import decode_header
 from email.utils import parsedate_to_datetime
-from typing import Optional, Dict, List, Generator
+from typing import Optional, Dict, List, Tuple, Generator
 
 from general import Unique
 
@@ -34,9 +34,22 @@ class MailConfig(Unique):
         self.USERNAME = config.get("USERNAME", "")
         self.PASSWORD = config.get("PASSWORD", "")
 
+    def get_config(self, ident: int = 0) -> Dict[str, str]:
+        config: Dict = self.configs[ident]
+        return_conf: Dict[str, str] = dict()
+
+        return_conf["IMAP_SERVER"] = config.get("IMAP_SERVER", "")
+        return_conf["USERNAME"] = config.get("USERNAME", "")
+        return_conf["PASSWORD"] = config.get("PASSWORD", "")
+
+        return return_conf
+
     def get_ident(self) -> int:
         return self.selected
 
+    def get_nombre_configs(self) -> int:
+        return len(self.configs)
+    
     def get_config_ident(self, username: str) -> int:
         for index, config in enumerate(self.configs):
             if config.get("USERNAME", "") == username:
@@ -95,6 +108,17 @@ class Mail:
             print(f"Authentication error : {e}")
             return
 
+    def status(self, directory: str) -> Tuple:
+        status, response = self.mail.status(directory, "(MESSAGES UNSEEN)")
+        if status != "OK":
+            return directory, None, None
+
+        # response contient une liste avec un seul élément en bytes
+        data = response[0].decode("utf-8").strip("()")
+        dossier, _, messages, _, unseen = data.split()
+
+        return dossier, messages, unseen
+
     def select(self, directory: str) -> None:
         if not self.logged:
             return
@@ -105,33 +129,36 @@ class Mail:
 
         # 2. Sélection de la boîte de réception ("INBOX")
         self.mail.select(self.directory)
-
-        return
     
-        status, response = self.mail.status(self.directory, "(MESSAGES UNSEEN)")
-        if status == "OK":
-            # response contient une liste avec un seul élément en bytes
-            data = response[0].decode("utf-8").strip("()")
-            dossier, _, messages, _, unseen = data.split()
-            print(dossier, " :")
-            print("  Message : ", messages)
-            print("  Non lu  : ", unseen)
-            print()
-
     @staticmethod
     def decoder_texte(header_val) -> str:
         """Décode les entêtes du mail si nécessaire."""
         if header_val is None:
             return "None"
 
-        val, encoding = decode_header(header_val)[0]
+        texte_final: str = ""
         try:
-            if isinstance(val, bytes):
-                return val.decode(encoding or "utf-8", errors="ignore")
-            return val
+            for partie_texte in decode_header(header_val):
 
-        except Exception:
-            return "/!\\ " + val.decode("utf-8", errors="ignore")
+                valeur, encoding = partie_texte
+                if encoding == "unknown-8bit":
+                    encoding = "windows-1252"
+
+                if not isinstance(valeur, bytes):
+                    texte_final += valeur
+
+                elif encoding is None:
+                    texte_final += (" " + valeur.decode("utf-8", errors="ignore"))
+
+                else:
+                    texte_final += (" " + 
+                        valeur.decode(encoding=encoding, errors="ignore"))
+
+            return texte_final.strip()
+
+        except Exception as erreur:
+            print("Mail.decoder_texte()", erreur)
+            return "/!\\ " + texte_final.strip()
 
     @staticmethod
     def decoder_date(date_val) -> str:
@@ -345,8 +372,10 @@ class Mail:
                     msg = email.message_from_bytes(response_part[1])
                     id_mail = mail_id.decode()
                     expediteur = " ".join(self.decoder_texte(msg.get("From")).split())
+
                     sujet = self.decoder_texte(msg.get("Subject")).replace("\n", "").replace("\r", "")
                     sujet = sujet.replace("\xa0", "")
+
                     response_date = self.decoder_texte(msg.get("Date"))
 
                     flags: str = ""
@@ -367,6 +396,7 @@ class Mail:
                     yield datas
 
     def read_dirs(self, directory=None) -> None:
+        return
         liste_repertoires = list(self.get_dirs(directory))
         print("Nomre de répertoires trouvés :", len(liste_repertoires))
         for dir in liste_repertoires:
@@ -386,6 +416,7 @@ class Mail:
             print(f'{mail["NUM"]:3}', end=" ")
             print(f'{mail["ATT"]:3}', end=" ")
             print(mail["DAT"], end=" ")
+            print(f'{mail["EXP"][:49]:<50}', end=" ")
             print(mail["OBJ"])
             pass
 
@@ -435,8 +466,10 @@ class Mail:
     def run(self) -> None:
 
         self.connect()
+        print(self.status("INBOX"))
 
         directory = "INBOX"
+        directory = "QUARANTAINE"
         # directory = '"El&AOk-ments envoy&AOk-s"'
         if True:
             self.read_dirs()
@@ -454,7 +487,7 @@ def main() -> None:
 
     config = MailConfig()
     config.read_config_json()
-    ident = config.get_config_ident("jacquesc@noos.fr")
+    ident = config.get_config_ident("cjacques@noos.fr")
     config.set_config(ident)  # ident
 
     mail = Mail()

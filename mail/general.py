@@ -36,14 +36,14 @@ class Mouse:
 
 class Unique:
 
-    _instance: Dict = dict()
+    __instance: Dict = dict()
 
-    def __new__(self):
-        if Unique._instance.get(self.__name__):
-            return Unique._instance.get(self.__name__)
+    def __new__(self, *args):
+        if self.__name__ in Unique.__instance:
+            return Unique.__instance.get(self.__name__)
 
         new_instance = super().__new__(self)
-        Unique._instance[self.__name__] = new_instance
+        Unique.__instance[self.__name__] = new_instance
         return new_instance
 
 

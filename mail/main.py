@@ -1,13 +1,38 @@
-from os import getcwd, chdir, sep as separator
-from typing import Tuple, Optional, List, Dict
+from ctypes import wintypes, windll, byref
+from os import getcwd, chdir, sep as separator, environ
+from typing import Optional, Callable, Tuple, List, Dict
 
 from general import pygame, Variable, Mouse, fprint, get_pygame_const_name
-from outils import MessageBox, Menu, Sauvegarde
+from outils import MessageBox, Menu, Sauvegarde, Tooltip
 from headers import Headers
 from footers import Footers
 from repertoires import Repertoires
 from messages import ListeMessages
 from mail import MailConfig
+
+
+def get_window_title_size():
+    # 1. Récupérer le handle de la fenêtre (HWND) active de Pygame
+    hwnd = pygame.display.get_wm_info()["window"]
+
+    # 2. Utiliser l'API Windows pour calculer la différence entre 
+    # la taille totale de la fenêtre (WindowRect) et sa zone de contenu (ClientRect)
+    rect_window = wintypes.RECT()
+    rect_client = wintypes.RECT()
+
+    windll.user32.GetWindowRect(hwnd, byref(rect_window))
+    windll.user32.GetClientRect(hwnd, byref(rect_client))
+
+    # La hauteur totale de la bordure verticale comprend la barre de titre en haut 
+    # et la bordure fine en bas. On peut isoler la barre de titre ou avoir le total :
+    total_border_height = (rect_window.bottom - rect_window.top) - (rect_client.bottom - rect_client.top)
+    horizontal_borders = (rect_window.right - rect_window.left) - (rect_client.right - rect_client.left)
+
+    # Sur Windows, les bordures latérales et du bas ont la même épaisseur
+    border_thickness = horizontal_borders // 2
+    title_bar_height = total_border_height - border_thickness
+
+    print(f"Hauteur barre de titre : {title_bar_height} + {border_thickness} pixels")
 
 
 class Lecteur:
@@ -28,7 +53,6 @@ class Lecteur:
     idxx: int
     idxy: int
 
-    mouse: Mouse
     mouse_button_down_pos: Tuple
     running: bool
 
@@ -40,6 +64,8 @@ class Lecteur:
     liste_messages: ListeMessages
     repertoires: Repertoires
     footers: Footers
+
+    tooltip: Tooltip
 
     def __init__(self):
 
@@ -78,22 +104,25 @@ class Lecteur:
         self.clock = pygame.time.Clock()
         self.running = True
 
-        desktops = pygame.display.get_desktop_sizes()
+        with Sauvegarde() as config:
+            adresse = config.get_content("Lecteur.email", "")
+            disp_size = config.get_content("Window.size", (1600, 788))
+            window_pos = config.get_content("Window.position", None)
 
-        if desktops[0][1] > 1000:
-            # Full HD max resolution
-            disp_size = (1600, 788)
-        else:
+        desktops = pygame.display.get_desktop_sizes()
+        if desktops[0][1] <= 1000:
             disp_size = desktops[0]
             
+        if window_pos is not None:
+            # position de la fenetre pygame "pos_x,pos_y"
+            environ['SDL_VIDEO_WINDOW_POS'] = ",".join(map(str, window_pos))
+
         # self.screen = pygame.display.set_mode(desktops[0], pygame.FULLSCREEN, 24)
-        self.screen = pygame.display.set_mode(disp_size, pygame.RESIZABLE, 24)
+        self.screen = pygame.display.set_mode(disp_size, pygame.RESIZABLE | pygame.SRCALPHA, 24)
         self.screen_width, self.screen_height = self.screen.get_size()
 
-        with Sauvegarde() as config:
-            adresse = config.get_content("Lecteur.adresse", "")
-
         MessageBox(self.screen)
+        self.tooltip = Tooltip(self.screen)
 
         mail_config = MailConfig()
         mail_config.read_config_json()
@@ -113,10 +142,10 @@ class Lecteur:
             "OVER": (30, 80, 50)
         }
         self.menu = Menu()
-        self.menu.init(self.screen, colors, (80, 29, 400, 60), ident, self.init_draw)
+        self.menu.init(self.screen, colors, (80, 29, 0, 60), ident, self.init_draw)
         self.menu.load(mail_config.get_usernames())
 
-        self.mouse = Mouse(*pygame.mouse.get_pos())
+        Mouse.update()
         self.mouse_button_down_pos = (0, 0)
 
         # Initialisation du cadrillage
@@ -126,8 +155,8 @@ class Lecteur:
         self.nb_cols = (self.screen_width-20) // self.block_size 
         self.color_diff = 255 // (self.nb_lines + self.nb_cols)
 
-        self.idxx = (self.mouse.x-10) // self.block_size
-        self.idxy = (self.mouse.y-10) // self.block_size
+        self.idxx = (Mouse.x-10) // self.block_size
+        self.idxy = (Mouse.y-10) // self.block_size
 
     def init_draw(self) -> None:
         self.dirs_size = 300
@@ -137,7 +166,6 @@ class Lecteur:
         self.messages_non_vu = 0
 
         self.headers = Headers(self.screen, (0, 0, self.screen_width, self.line_height))
-        self.headers.add_icone((84, 5, 20, 20))
         self.headers.load({
             "Adresse : ": ("ADDR", "", 10, 30),
             "Messages : ": ("ALL", "0", 500),
@@ -183,7 +211,7 @@ class Lecteur:
         self.repertoires.mouse_exit()
     
     def mouse_move(self, pos) -> None:
-        self.mouse = Mouse(*pos)
+        Mouse(*pos)
 
         for interruption in (MessageBox, ):
             if interruption.show:
@@ -262,7 +290,7 @@ class Lecteur:
         if menu_show and self.menu.show:
             self.menu.mouse_button_up(pos, button)
             self.menu.deactivate()
-            self.headers.icone.check()
+            self.headers.check()
             return
 
         if (self.footers.coords.collidepoint(pos) and 
@@ -289,9 +317,10 @@ class Lecteur:
         elif self.repertoires.visible and self.repertoires.coords.collidepoint(Mouse.x, Mouse.y):
             self.repertoires.mouse_wheel(x, y)
 
-    def ask_for_quit(self):
+    def ask_for_quit(self, callback_on_no: Optional[Callable] = None):
         MessageBox.set_message(["Voulez-vous fermer l'application ?"])
         MessageBox.get_bouton("OUI").set_callback(self.quit)
+        MessageBox.get_bouton("NON").set_callback(callback_on_no)
         MessageBox.activate()
 
     def keypressed(self, event): ...
@@ -304,7 +333,7 @@ class Lecteur:
                 return
 
             elif self.menu.show:
-                self.menu.deactivate(self.headers.icone.check)
+                self.menu.deactivate(self.headers.check)
                 self.mouse_move(pygame.mouse.get_pos())
                 return
 
@@ -343,6 +372,7 @@ class Lecteur:
             (0, self.screen_height-self.line_height, self.screen_width, self.line_height))
 
         MessageBox.update_screen(self.screen)
+        Tooltip(self.screen)
 
     def get_pygame_events(self) -> None:
         is_mouse_scrolling: bool = False
@@ -385,22 +415,37 @@ class Lecteur:
                         pygame.ACTIVEEVENT):
                     self.mouse_enter_leave()
 
-                case (pygame.WINDOWMAXIMIZED |
-                        pygame.WINDOWSIZECHANGED |
-                        pygame.WINDOWRESIZED |
-                        pygame.WINDOWRESTORED):
+                case pygame.WINDOWMAXIMIZED:
+                    # fprint("Window Maximized")
                     pass
+
+                case pygame.WINDOWRESTORED:
+                    # fprint("Window Restored")
+                    pass
+
+                case (pygame.WINDOWSIZECHANGED |
+                        pygame.WINDOWMINIMIZED |
+                        pygame.WINDOWRESIZED):
+                    pass
+
+                case pygame.WINDOWMOVED:
+                    # fprint("Window Moved", event.x, event.y)
+                    with Sauvegarde() as config:
+                        config.set_content("Window.position", (event.x, event.y))
 
                 case pygame.VIDEORESIZE:
                     self.update_screen()
+                    with Sauvegarde() as config:
+                        config.set_content("Window.size", 
+                            (self.screen_width, self.screen_height))
 
                 case pygame.QUIT:
                     self.running = False
 
                 case (pygame.WINDOWSHOWN | 
-                        pygame.WINDOWMOVED |
                         pygame.VIDEOEXPOSE | 
                         pygame.WINDOWCLOSE | 
+                        pygame.WINDOWFOCUSLOST |
                         pygame.WINDOWFOCUSGAINED):
                     pass
 
@@ -413,6 +458,27 @@ class Lecteur:
                 case _:
                     fprint(event.type, get_pygame_const_name(event.type))
                     pass
+
+    def update_header_properties(self):
+        properties = self.headers.get_icone_by_id("PROP")
+        properties.properties = False
+
+    def update_headers(self) -> None:
+        actions: Optional[str]
+        
+        actions = self.headers.get_actions()
+        if actions is None:
+            return
+
+        action: str
+
+        for action in actions.split(";"):
+            match action:
+                case "QUIT":
+                    self.ask_for_quit(self.update_header_properties)
+
+                case _:
+                    raise Exception(f"Paramètre {action} inconnu.")
 
     def update_repertoires(self) -> None:
         actions: Optional[str]
@@ -440,6 +506,8 @@ class Lecteur:
         actions: Optional[str]
         redraw: bool = False
         
+        self.liste_messages.update()
+
         actions = self.liste_messages.get_actions()
         if actions is None:
             return
@@ -487,6 +555,7 @@ class Lecteur:
             self.headers.redraw()
 
     def update(self) -> None:
+        self.update_headers()
         self.update_repertoires()
         self.update_liste_messages()
 
@@ -497,6 +566,9 @@ class Lecteur:
                 self.headers, self.repertoires, self.liste_messages, 
                 self.footers, MessageBox, self.menu):
             zone.draw()
+
+        if self.tooltip.show and not MessageBox.show:
+            self.tooltip.draw()
 
         pygame.display.update()
 

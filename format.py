@@ -11,7 +11,7 @@ if True:
     print("{:>30_}".format(1234567890))
     print("{:>30.2%}".format(0.78563))
 
-    print("{:%Y/%m/%d %H:%M:%S.%f}".format(dt.now()))
+    print("{:%Y/%m/%d %H:%M:%S.%f %z}".format(dt.now()))
 
     print(datetime.date.today().strftime("%d/%m/%Y"))
     print("{:%d/%m/%Y}".format(datetime.date.today()))
@@ -31,7 +31,7 @@ class INIT:
 
 class ENTER:
     def __init__(self, arg1, *arg2):
-        print("FUNC:", arg1)
+        print("ENTER:", arg1)
         PARAMS.__init__(self, *arg2)
 
 

@@ -1,6 +1,6 @@
-import pygame  # noqa: E402
-
 from typing import Callable, Tuple, Optional
+
+from general import pygame
 
 
 class Texte:
@@ -9,6 +9,10 @@ class Texte:
     width: int
 
     libelle: str
+    has_initial_tooltip: bool
+    has_tooltip: bool
+    tooltip: str
+
     getColor: Optional[Callable]
 
     mouse_over: bool
@@ -23,16 +27,28 @@ class Texte:
         
         self.font = font
         self.color = (1, 1, 1)
+
         self.set_libelle(libelle)
-        self.set_get_color(getColor, *args)
+        self.set_tooltip(options.get("tooltip", None))
 
         self.mouse_over = False
+        self.set_get_color(getColor, *args)
         self.visible = options.get("visible", True)
         if "max_width" in options:
             self.set_max_width(options.get("max_width", 999))
 
     def set_visible(self, visible: bool) -> None:
         self.visible = visible
+
+    def set_tooltip(self, tooltip: Optional[str]) -> None:
+        if tooltip is None:
+            self.has_initial_tooltip = False
+            self.has_tooltip = False
+            self.tooltip = ""
+        else:
+            self.has_initial_tooltip = True
+            self.has_tooltip = True
+            self.tooltip = tooltip
 
     def set_libelle(self, libelle: str) -> None:
         if "\x00" in libelle:
@@ -47,14 +63,24 @@ class Texte:
         libelle: str
 
         taille: int = len(self.libelle)
+        has_tooltip: bool = False
+
         self.surface = self.font.render(self.libelle, False, self.color)
         self.width = self.surface.get_width()
 
         while self.width > width:
             taille -= 1
             libelle = self.libelle[:taille]
+            has_tooltip = True
             self.surface = self.font.render(libelle, False, self.color)
             self.width = self.surface.get_width()
+
+        if self.has_initial_tooltip:
+            return
+
+        self.has_tooltip = has_tooltip
+        if has_tooltip and libelle != self.tooltip:
+            self.tooltip = self.libelle
 
     def set_get_color(self, get_color: Optional[Callable], *args) -> None:
         self.color_args = args
@@ -84,6 +110,7 @@ class Lien:
     font: pygame.font.Font
     id: str
     libelle: str
+    tooltip: bool
     posx: int
     posy: int 
     getColor: Optional[Callable]
@@ -104,6 +131,7 @@ class Lien:
         
         self.font = font
         self.libelle = libelle
+        self.tooltip = False
         self.set_get_color(getColor)
 
         self.id = options.get("id", "")
@@ -138,10 +166,12 @@ class Lien:
         libelle: str
         taille: int
 
+        self.tooltip = False
         taille = len(self.libelle)
         while self.w > width:
             taille -= 1
             libelle = self.libelle[:taille]
+            self.tooltip = True
             self.surface = self.font.render(libelle, False, self.color)
             self.w = self.surface.get_width()
 

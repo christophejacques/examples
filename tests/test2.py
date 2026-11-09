@@ -16,3 +16,8 @@ print(p1[2])       # Paris
 # Déstructuration (unpacking) directe
 nom, age, ville = p1
 print(f"{nom} a {age} ans et habite à {ville}.")
+
+Ville = namedtuple("Ville", ["codePostal", "codeInsee", "Libelle"])
+ville = Ville(45000, 45125, "orléans")
+
+print(ville)

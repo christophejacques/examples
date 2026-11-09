@@ -73,7 +73,7 @@ while running:
             coord[3] = 1 - abs(coord[0]) * abs(coord[1]) / (centre[0] * centre[1]) 
 
     pg.display.update()
-    clock.tick(60)
+    clock.tick(100)
     dt = perf_counter() - tick
     pg.display.set_caption(f"FPS: {clock.get_fps():.1f}  - Vitesse: {abs(acceleration)} pix/frame")
 

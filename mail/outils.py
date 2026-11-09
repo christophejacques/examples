@@ -1,8 +1,12 @@
-from general import Variable, fprint
-from typing import List, Tuple, Optional, Dict, Callable
-from functools import partial
+import random
 
-from general import Unique, Sauvegarde, pygame
+from general import Variable, fprint
+from typing import List, Tuple, Optional, Dict, Callable, Any
+from functools import partial
+from abc import ABCMeta, abstractmethod
+from math import pi, sin, cos
+
+from general import Unique, Sauvegarde, Mouse, pygame
 from mail import MailConfig
 from textes import Texte
 
@@ -16,14 +20,20 @@ class Bouton:
     surface: pygame.surface.Surface
     text_surface: pygame.surface.Surface
     rect: pygame.Rect
+    recto: pygame.Rect
+
+    text_coords: Tuple
+    text_coordso: Tuple
 
     # BACK : couleur de fond
     # AROUND : couleur du contour
-    # OVER : couleur si curseur souris sur bouton
+    # BACK_OVER : couleur de fond si curseur souris sur bouton
+    # OVER : couleur du contour si curseur souris sur bouton
 
-    color_over: Tuple
-    color_back: Tuple
     color_around: Tuple
+    color_back: Tuple
+    color_over: Tuple
+    color_back_over: Tuple
 
     mouse_over: bool
     mouse_button_down: bool
@@ -48,6 +58,7 @@ class Bouton:
         self.color_back = colors.get("BACK", (0, 0, 0))
         self.color_around = colors.get("AROUND", self.color_back)
         self.color_over = colors.get("OVER", self.color_back)
+        self.color_back_over = colors.get("BACK_OVER", self.color_back)
 
         self.back_color = self.color_back
         self.color = self.color_around
@@ -63,6 +74,9 @@ class Bouton:
         width, height = self.text_surface.get_size()
         self.text_coords = (self.rect.x + self.rect.w // 2 - width // 2,
             self.rect.y + self.rect.h // 2 - height // 2)
+        self.text_coordso = (
+            self.rect.x + self.rect.w // 2 - width // 2 + Bouton.espace,
+            self.rect.y + self.rect.h // 2 - height // 2 + Bouton.espace)
 
     def set_callback(self, callback: Optional[Callable], *args, **kwargs):
         if callback:
@@ -80,8 +94,8 @@ class Bouton:
 
         self.mouse_over = mouse_over
         if mouse_over:
-            self.back_color = self.color_over
-            self.color = self.color_around
+            self.back_color = self.color_back_over
+            self.color = self.color_over
         else:
             self.back_color = self.color_back
             self.color = self.color_around
@@ -91,14 +105,21 @@ class Bouton:
     def draw(self):
         # ombre
         if self.mouse_button_down and self.mouse_over:
-            pygame.draw.rect(self.surface, (30, 40, 40), self.recto)
+            pygame.draw.rect(self.surface, (30, 40, 40), self.rect)
+            # surface
+            pygame.draw.rect(self.surface, self.back_color, self.recto)
+            pygame.draw.rect(self.surface, self.color, self.recto, 1)
+
+            self.surface.blit(self.text_surface, self.text_coordso)
+
         else:
             pygame.draw.rect(self.surface, (10, 20, 10), self.recto)
 
-        # surface
-        pygame.draw.rect(self.surface, self.back_color, self.rect)
-        pygame.draw.rect(self.surface, self.color, self.rect, 1)
-        self.surface.blit(self.text_surface, self.text_coords)
+            # surface
+            pygame.draw.rect(self.surface, self.back_color, self.rect)
+            pygame.draw.rect(self.surface, self.color, self.rect, 1)
+
+            self.surface.blit(self.text_surface, self.text_coords)
 
 
 class MessageBox:
@@ -136,14 +157,16 @@ class MessageBox:
             Bouton(cls.msg_screen, "OUI",
                 {"BACK": (25, 70, 40),
                  "AROUND": (50, 200, 150),
-                 "OVER": (30, 80, 50)},
+                 "BACK_OVER": (30, 80, 50),
+                 "OVER": (50, 255, 150)},
                 (32, 140, 128, 32), "Oui", callback, *args, **kwargs))
 
         cls.boutons.append(
             Bouton(cls.msg_screen, "NON",
                 {"BACK": (70, 40, 25),
                  "AROUND": (200, 150, 50),
-                 "OVER": (80, 50, 30)},
+                 "BACK_OVER": (80, 50, 30),
+                 "OVER": (255, 150, 50)},
                 (240, 140, 128, 32), "Non"))
 
         cls.set_message(liste_message)
@@ -333,6 +356,64 @@ class Ascenseur:
         pygame.draw.rect(self.surface, (50, 200, 150), self.coords_a)
 
 
+class Ligne:
+
+    donnees: Dict[str, Any]
+
+    def __init__(self):
+        self.donnees = dict()
+
+    def load(self, donnees: Dict) -> None:
+        for key, value in donnees.items():
+            self.donnees[key] = value
+
+    def set(self, code_colonne: str, value: Any) -> None:
+        self.donnees[code_colonne] = value
+
+    def get(self, code_colonne: str) -> Any:
+        return self.donnees.get(code_colonne)
+
+    def __setitem__(self, code_colonne: str, value: Any) -> None:
+        self.set(code_colonne, value)
+
+    def __getitem__(self, code_colonne: str) -> Any:
+        return self.get(code_colonne)
+
+
+class Tableau:
+
+    positions: Ligne
+    content: List[Ligne]
+
+    def __init__(self, positions_colonnes: Ligne):
+        self.positions = positions_colonnes
+        self.reset()
+
+    def reset(self) -> None:
+        self.content = list()
+
+    def add(self, ligne: Ligne) -> None:
+        self.content.append(ligne)
+
+    def load(self, donnees: Dict) -> None:
+        ligne = Ligne()
+        for key, value in donnees.items():
+            ligne[key] = value
+
+        self.add(ligne)
+
+    def blits(self, decal: int, dy: int) -> List[Tuple]:
+        result: List[Tuple]
+        coords: Tuple
+
+        result = list()
+        for index, content in enumerate(self.content):
+            for titre in self.positions.donnees:
+                coords = (self.positions[titre], decal + index*dy)
+                result.append((content[titre], coords))
+        return result
+
+
 class Menu(Unique):
 
     hauteur_ligne: int = 28
@@ -347,7 +428,7 @@ class Menu(Unique):
     color_around: Tuple
     color_ombre: Tuple
 
-    liste: List[Texte]
+    content: Tableau
     mouse_over: Optional[int]
     selected: int
     selected_button_down: Optional[int]
@@ -368,21 +449,43 @@ class Menu(Unique):
 
         self.callback = callback
 
-        self.liste = list()
+        positions = Ligne()
+        positions.load({
+            "texte_surface": self.rect.x + 8, 
+            "nombre": 0})
+        self.content = Tableau(positions)
+
         self.mouse_over = None
         self.selected = selected
         self.selected_button_down = None
         self.show = False
 
     def load(self, usernames: List):
+        texte: Texte
+        max_size: int = 0
+        texte_size: int = 0
+
         def getColor(*args):
             return (200, 200, 200)
 
         for index, username in enumerate(sorted(usernames)):
-            self.liste.append(Texte(Variable.SysFont3, username, getColor))
+            texte = Texte(Variable.SysFont3, username, getColor)
+            texte_size = texte.surface.get_width()
+            if texte_size > max_size:
+                max_size = texte_size
+
+            nombre = Texte(Variable.SysFont3, f"({random.randint(1, 20)})", getColor)
+            self.content.load({
+                "libelle": username,
+                "texte_surface": texte.surface, 
+                "nombre": nombre.surface})
 
         self.rect.h = Menu.hauteur_ligne * (1+index)
         self.rect_ombre.h = Menu.hauteur_ligne * (1+index) + 5
+        max_size = max(400, 2*10 + 100 + max_size)
+        self.rect.w = max_size
+        self.content.positions["nombre"] = self.rect.x + self.rect.w - 50
+
         fprint("Nombre de messageries:", 1+index)
 
     def print(self) -> None:
@@ -430,7 +533,8 @@ class Menu(Unique):
                         self.callback()
                     with Sauvegarde() as config:
                         config.set_content(
-                            "Lecteur.adresse", self.liste[self.mouse_over].libelle)
+                            "Lecteur.email", 
+                            self.content.content[self.mouse_over]["libelle"])
 
                 except Exception as erreur:
                     fprint("Menu.mouse_button_up:", erreur)
@@ -444,29 +548,25 @@ class Menu(Unique):
         
         pygame.draw.rect(self.surface, self.color_ombre, self.rect_ombre)
         pygame.draw.rect(self.surface, self.color_back, self.rect)
-        dx = self.rect.x + 8
-        dy = self.rect.y + 6
 
-        for index, texte in enumerate(self.liste):
-            if index == self.selected:
-                pygame.draw.rect(self.surface, (20, 100, 30), 
-                    (self.rect.x, 
-                        self.rect.y+Menu.hauteur_ligne*index, 
-                        self.rect.w, Menu.hauteur_ligne))
+        if self.selected is not None:
+            pygame.draw.rect(self.surface, (20, 100, 30), 
+                (self.rect.x, self.rect.y+Menu.hauteur_ligne*self.selected, 
+                    self.rect.w, Menu.hauteur_ligne))
 
-            elif index == self.mouse_over:
-                pygame.draw.rect(self.surface, (20, 50, 50), 
-                    (self.rect.x, self.rect.y+Menu.hauteur_ligne*index, 
-                        self.rect.w, Menu.hauteur_ligne))
+        if self.mouse_over is not None and self.mouse_over != self.selected:
+            pygame.draw.rect(self.surface, (20, 50, 50), 
+                (self.rect.x, self.rect.y+Menu.hauteur_ligne*self.mouse_over, 
+                    self.rect.w, Menu.hauteur_ligne))
 
-            self.surface.blit(texte.surface, (dx, dy))
-            dy += Menu.hauteur_ligne
+        self.surface.blits(self.content.blits(self.rect.y + 6, Menu.hauteur_ligne))
 
         pygame.draw.rect(self.surface, self.color_around, self.rect, 1)
 
 
-class Icone:
+class Icone(metaclass=ABCMeta):
 
+    identifiant: str
     surface: pygame.surface.Surface
     rect: pygame.Rect
 
@@ -474,24 +574,154 @@ class Icone:
     color_back: Tuple
     color_around: Tuple
 
+    back_color: Tuple
+    color: Tuple
+
     is_mouse_over: bool
     is_mouse_button_down: bool
 
-    callback: Optional[Callable]
-
     def __init__(self, 
+            identifiant: str,
             surface: pygame.surface.Surface, 
             colors: Dict[str, Tuple],
             coords: Tuple,
-            callback: Optional[Callable] = None,
             *args, **kwargs):
 
-        espace: int = 5
-        
-        self.surface = surface
+        self.identifiant = identifiant
+        self.kwargs = kwargs
+
         self.rect = pygame.Rect(coords)
+        self.update_screen(surface)
+
+        self.color_back = colors.get("BACK", (0, 0, 0))
+        self.color_around = colors.get("AROUND", self.color_back)
+        self.color_over = colors.get("OVER", self.color_back)
+
+        self.back_color = self.color_back
+        self.color = self.color_around
+
+        self.is_mouse_over = False
+        self.is_mouse_button_down = False
+
+        self.__post_init__()
+
+    def __post_init__(self): ...
+
+    def update_screen(self, screen):
+        self.surface = screen
+        self.calc_draw()
+
+    def mouse_move(self, position: Tuple) -> None:
+        is_mouse_over: bool = self.is_mouse_over
+        self.is_mouse_over = True
+
+        if not is_mouse_over:
+            self.redraw()
+
+    def mouse_exit(self) -> None:
+        if self.is_mouse_over:
+            self.is_mouse_over = False
+            self.redraw()
+
+    def mouse_button_down(self):
+        self.is_mouse_button_down = self.is_mouse_over
+
+    def mouse_button_up(self):
+        if self.is_mouse_button_down and self.is_mouse_over:
+            self.click()
+
+        self.is_mouse_button_down = False
+
+    @abstractmethod
+    def calc_draw(self) -> None: ...
+
+    @abstractmethod
+    def check(self) -> None: ...
+
+    @abstractmethod
+    def click(self) -> None: ...
+
+    @abstractmethod
+    def redraw(self) -> None: ...
+    def draw(self) -> None: ...
+
+
+class Proprietes(Icone):
+
+    polyrect: List
+    polyrect_down: List
+
+    properties: bool
+
+    def __post_init__(self):
+        self.properties = False
+
+    def calc_draw(self):
+        # repositionne l'icone
+        for attribute in ("x", "y", "w", "h"):
+            formule = self.kwargs.get(f"formula_{attribute}")
+            if formule:
+                if attribute == "x":
+                    self.rect.x = eval(formule)
+                elif attribute == "y":
+                    self.rect.y = eval(formule)
+                elif attribute == "w":
+                    self.rect.w = eval(formule)
+                elif attribute == "h":
+                    self.rect.h = eval(formule)
+
+        rayon: float = (self.rect.w - 2) / 2
+
+        self.on_click = self.kwargs.get("on_click", None)
+        self.polyrect_down = list()
+
+        for angle in range(16):
+            if angle % 2:
+                posx = self.rect.centerx+int(rayon*cos(angle*pi/8))//2
+                posy = self.rect.centery+int(rayon*sin(angle*pi/8))//2
+            else:
+                posx = self.rect.centerx+int(rayon*cos(angle*pi/8))
+                posy = self.rect.centery+int(rayon*sin(angle*pi/8))
+
+            self.polyrect_down.append((posx, posy))
+
+        self.polyrect = self.polyrect_down
+
+    def check(self):
+        pass
+
+    def click(self):
+        self.properties = not self.properties
+        if self.properties and self.on_click:
+            self.on_click()
+
+        self.redraw()
+
+    def redraw(self):
+        pygame.draw.rect(self.surface, self.color_back, self.rect)
+        if self.is_mouse_over:
+            pygame.draw.rect(self.surface, self.color_around, self.rect, 1)
+
+        if self.properties:
+            pygame.draw.polygon(self.surface, self.color, self.polyrect)
+        else:
+            pygame.draw.polygon(self.surface, self.color, self.polyrect, 1)
+
+
+class Triangle(Icone):
+
+    polyrect_down: List
+    polyrect_up: List
+    polyrect: List
+
+    menu: Menu
+
+    def __post_init__(self):
         self.menu = Menu()
 
+    def calc_draw(self):
+        espace: int = 5
+        
         self.polyrect_down = [
             (self.rect.x+espace, self.rect.y+espace),
             (self.rect.x+self.rect.w-espace, self.rect.y+espace),
@@ -506,19 +736,6 @@ class Icone:
         ]
         self.polyrect = self.polyrect_down
 
-        self.color_back = colors.get("BACK", (0, 0, 0))
-        self.color_around = colors.get("AROUND", self.color_back)
-        self.color_over = colors.get("OVER", self.color_back)
-
-        self.back_color = self.color_back
-        self.color = self.color_around
-
-        self.is_mouse_over = False
-        self.is_mouse_button_down = False
-
-    def update_screen(self, screen):
-        self.surface = screen
-
     def check(self):
         if self.menu.show:
             if self.polyrect != self.polyrect_up:
@@ -529,28 +746,8 @@ class Icone:
                 self.polyrect = self.polyrect_down
                 self.redraw()
 
-    def mouse_move(self, position: Tuple) -> None:
-        is_mouse_over: bool = self.is_mouse_over
-        self.is_mouse_over = True
-
-        if not is_mouse_over:
-            # fprint("Icone.redraw()")
-            self.redraw()
-
-    def mouse_exit(self) -> None:
-        if self.is_mouse_over:
-            self.is_mouse_over = False
-            self.redraw()
-
-    def mouse_button_down(self):
-        self.is_mouse_button_down = self.is_mouse_over
-
-    def mouse_button_up(self):
-        if self.is_mouse_button_down and self.is_mouse_over:
-            # fprint("Icone.click()")
-            self.menu.toggle()
-
-        self.is_mouse_button_down = False
+    def click(self):
+        self.menu.toggle()
 
     def redraw(self):
         pygame.draw.rect(self.surface, self.color_back, self.rect)
@@ -559,15 +756,110 @@ class Icone:
 
         pygame.draw.polygon(self.surface, self.color, self.polyrect)
 
+
+class Tooltip(Unique):
+
+    surface_texte: pygame.surface.Surface
+    screen: pygame.surface.Surface
+
+    screen_width: int
+
+    libelle: str
+    width: int
+    color: Tuple
+    show: bool
+
+    def __init__(self, screen: Optional[pygame.surface.Surface] = None):
+        if screen is not None:
+            self.update_screen(screen)
+
+        self.show = False
+        self.color = (255, 255, 255)
+        self.set_libelle("")
+
+    def update_screen(self, screen: pygame.surface.Surface):
+        self.screen = screen
+        self.screen_width = self.screen.get_width()
+
+    def activate(self):
+        self.show = True
+
+    def deactivate(self):
+        self.show = False
+
+    def set_libelle(self, libelle: str) -> None:
+        self.libelle = libelle
+        self.surface_texte = Variable.SysFont3.render(libelle, False, self.color)
+        self.width = self.surface_texte.get_width()
+
     def draw(self) -> None:
-        pass
+        shape_surf: pygame.surface.Surface
+        hauteur_ligne: int
+        dx: int
+        dy: int
+
+        color_ombre: Tuple
+        coordso: Tuple
+
+        hauteur_ligne = 28
+
+        dx = Mouse.x - self.width // 2
+        dy = 2 + (Mouse.y - 30) // hauteur_ligne * hauteur_ligne
+        if dy - 10 < 30:
+            dy += 2 * hauteur_ligne + 10
+        if dx < 10:
+            dx = 10
+        elif dx + self.width > self.screen_width - 48:
+            dx = self.screen_width - self.width - 48  # 20+16+2
+
+        color_ombre = (10, 10, 10, 120)
+        coordso = (dx-10, dy-10, self.width+16+20, hauteur_ligne+20)
+
+        # Ombre
+        shape_surf = pygame.Surface(coordso[2:], pygame.SRCALPHA)
+        pygame.draw.rect(shape_surf, color_ombre, shape_surf.get_rect())
+        self.screen.blit(shape_surf, coordso)
+
+        # Rectangle
+        pygame.draw.rect(self.screen, (40, 60, 60), 
+            (dx, dy, self.width+16, hauteur_ligne))
+
+        # Texte
+        self.screen.blit(self.surface_texte, (dx + 8, dy + 6))
 
 
 class Test(Unique):
     pass
 
 
+def main():
+
+    positions = Ligne()
+    positions["email"] = 8
+    positions["nb"] = 120
+
+    tab = Tableau(positions)
+    tab.load({"email": "ligne1", "nb": 1})
+
+    li = Ligne()
+    li.set("email", "ligne2")
+    li.set("nb", 22)
+    tab.add(li)
+
+    li = Ligne()
+    li.set("email", "ligne3")
+    li.set("nb", 333)
+    tab.add(li)
+
+    for index, blit in enumerate(tab.blits(0, 20)):
+        print("-", blit, end="  ")
+        if index % 2:
+            print()
+
+
 if __name__ == "__main__":
     t1 = Test()
     t2 = Test()
     fprint("Instances 'Test' identiques:", id(t1) == id(t2))
+
+    main()

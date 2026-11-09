@@ -5,7 +5,7 @@ from functools import singledispatch
 @singledispatch
 def to_string(obj):
     # raise NotImplementedError(f"function to_string of type {obj.__class__.__name__} is not implemented.")
-    return (f"=> function to_string of type {obj.__class__.__name__!r} is not implemented.")
+    return f"=> type {obj.__class__.__name__!r} is not implemented."
 
 
 @to_string.register

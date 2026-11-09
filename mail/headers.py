@@ -1,11 +1,9 @@
-import pygame  # noqa: E402
-
 from typing import List, Tuple, Optional, Dict
 from textes import Lien
 from functools import partial
 
 from general import pygame, Variable, fprint
-from outils import Icone
+from outils import Icone, Triangle, Proprietes
 
 
 class Headers:
@@ -18,6 +16,8 @@ class Headers:
     visible: bool
     liens: List[Lien]
 
+    actions: Optional[str]
+
     mouse_over: bool
     is_mouse_button_down: bool
 
@@ -27,6 +27,7 @@ class Headers:
         self.coords = pygame.Rect(coords)
         self.icones = list()
         self.liens = list()
+        self.actions = None
 
         self.update_screen(screen, coords)
         self.mouse_over = False
@@ -46,6 +47,14 @@ class Headers:
             icone.update_screen(self.surface)
 
         self.redraw()
+
+    def get_actions(self) -> Optional[str]:
+        if self.actions is None:
+            return None
+
+        actions = self.actions
+        self.actions = None
+        return actions
 
     def get(self, ident: str) -> Lien:
         lien: Lien
@@ -93,51 +102,64 @@ class Headers:
                 id=ident)
             self.liens.append(lien2)
 
-            self.redraw()
-
-    def add_icone(self, coords: Tuple):
         # (40, 30, 0) - (25, 70, 40)
         colors: Dict = {
             "BACK": (40, 30, 0),
             "AROUND": (50, 200, 150),
             "OVER": (30, 80, 50)
         }
-        icone = Icone(self.surface, colors, coords)
-        self.icones.append(icone)
+        self.add_icone(Triangle("LIST", self.surface, colors, (84, 5, 20, 20)))
+        self.add_icone(Proprietes("PROP", self.surface, colors, (0, 5, 20, 20),
+            formula_x="self.surface.get_width() - 30",
+            on_click=self.ask_for_quit))
 
-    @property
-    def icone(self):
+        self.redraw()
+
+    def ask_for_quit(self):
+        self.actions = "QUIT"
+
+    def get_icone_by_id(self, identifiant: str):
         for icone in self.icones:
-            return icone
+            if icone.identifiant == identifiant:
+                return icone
 
-        raise Exception("Aucun icone de défini.")
+        raise Exception("Identifiant {identifiant!r} inconnu.")
+
+    def add_icone(self, icone: Icone):
+        self.icones.append(icone)
 
     def mouse_move(self, position: Tuple):
         self.mouse_over = True
 
-        if not self.icone.rect.collidepoint(position):
-            if self.icone.is_mouse_over:
-                self.icone.mouse_exit()
-            return
-
-        self.icone.mouse_move(position)
+        for icone in self.icones:
+            if icone.rect.collidepoint(position):
+                icone.mouse_move(position)
+            elif icone.is_mouse_over:
+                icone.mouse_exit()
 
     def mouse_exit(self):
         self.is_mouse_button_down = False
         if self.mouse_over:
             self.mouse_over = False
 
-        if self.icone.is_mouse_over:
-            self.icone.mouse_exit()            
+        for icone in self.icones:
+            if icone.is_mouse_over:
+                icone.mouse_exit()            
 
     def mouse_button_down(self, *args):
         self.is_mouse_button_down = self.mouse_over
-        self.icone.mouse_button_down()
+        for icone in self.icones:
+            icone.mouse_button_down()
 
     def mouse_button_up(self, *args):
         self.is_mouse_button_down = False
-        self.icone.mouse_button_up()
-        self.icone.check()
+        for icone in self.icones:
+            icone.mouse_button_up()
+            icone.check()
+
+    def check(self):
+        for icone in self.icones:
+            icone.check()
 
     def redraw(self):
         self.surface.fill((40, 30, 0))

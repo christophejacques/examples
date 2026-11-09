@@ -191,7 +191,7 @@ def sha_final(sha_info):
     lo_bit_count = sha_info['count_lo']
     hi_bit_count = sha_info['count_hi']
     count = (lo_bit_count >> 3) & 0x3f
-    sha_info['data'][count] = 0x80;
+    sha_info['data'][count] = 0x80
     count += 1
     if count > SHA_BLOCKSIZE - 8:
         # zero the bytes in data after the count
@@ -218,6 +218,7 @@ def sha_final(sha_info):
         dig.extend([ ((i>>24) & 0xff), ((i>>16) & 0xff), ((i>>8) & 0xff), (i & 0xff) ])
     return ''.join([chr(i) for i in dig])
 
+
 class sha256(object):
     digest_size = digestsize = SHA_DIGESTSIZE
     block_size = SHA_BLOCKSIZE
@@ -241,6 +242,7 @@ class sha256(object):
         new._sha = self._sha.copy()
         return new
 
+
 class sha224(sha256):
     digest_size = digestsize = 28
 
@@ -254,6 +256,7 @@ class sha224(sha256):
         new._sha = self._sha.copy()
         return new
 
+
 def test():
     a_str = "foo"
     
@@ -265,7 +268,7 @@ def test():
     s.update(a_str)
     assert '03d9963e05a094593190b6fc794cb1a3e1ac7d7883f0b5855268afeccc70d461' == s.hexdigest()
 
+
 if __name__ == "__main__":
     test()
     # input()
-

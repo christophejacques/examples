@@ -5,7 +5,7 @@ from threading import Thread
 
 from general import Mouse, fprint, Variable, pygame
 from textes import Texte, Lien
-from outils import Ascenseur, MessageBox
+from outils import Ascenseur, MessageBox, Tooltip
 from mail import Mail
 
 
@@ -48,11 +48,16 @@ class ListeMessages:
 
     ascenseur: Ascenseur
     mouse_over: bool
+    mouse_pos_x: int
+    mouse_over_colonne: str
 
     directory: str
     nb_mails: int 
     nb_lignes: int
     nb_lignes_max: int
+
+    last_mouse_moving_time: float
+    show_tooltips: bool
 
     selected: Optional[int]
     message_over: int 
@@ -63,11 +68,13 @@ class ListeMessages:
     nb_colonnes: int
     data_titres: Dict
     titres: List[Lien]
+    codes_titres: List[str]
 
     liste_datas: List[Dict]
     liste_messages: List[Message]
 
     actions: Optional[str]
+    tooltip: Tooltip
 
     def __init__(self, screen: pygame.surface.Surface, coords: Tuple):
 
@@ -76,13 +83,19 @@ class ListeMessages:
         self.nb_lignes_max = 0
 
         self.liste_messages = list()
+        self.tooltip = Tooltip()
 
         self.load_titres()
         self.update_screen(screen, coords)
         self.mouse_over = False
+        self.mouse_pos_x = -1
+        self.mouse_over_colonne = ""
+
         self.nb_mails = 0
         self.selected = None
         self.message_over = 0
+        self.last_mouse_moving_time = perf_counter()
+        self.show_tooltips = False
 
         self.actions = None
         self.directory = '"INBOX"'
@@ -123,6 +136,7 @@ class ListeMessages:
         cle: str
         lien: Lien
 
+        self.codes_titres = ["DAT", "OBJ", "EXP", "NUM", "ATT"]
         self.data_titres = {
             "ATT": {"lib": "Attr", "pos": 10, "col": 1},
             "NUM": {"lib": "N°", "pos": 50, "col": 1},
@@ -164,12 +178,17 @@ class ListeMessages:
 
     def mouse_exit(self) -> None:
         self.mouse_over = False
+        self.mouse_pos_x = -1
         self.message_over = 0
 
     def mouse_move(self, mouse_pos: Tuple) -> None:
         idx: int
+        message_over: int
 
+        message_over = self.message_over
+        
         self.mouse_over = True
+        self.mouse_pos_x = mouse_pos[0] 
 
         if mouse_pos[1] < 30:
             # ligne des titres
@@ -183,10 +202,14 @@ class ListeMessages:
 
             self.message_over = idx
 
+        if message_over != self.message_over:
+            self.last_mouse_moving_time = perf_counter()
+
     def update_mouse(self):
         mx, my = pygame.mouse.get_pos()
         mx -= self.x
         my -= self.y
+
         self.mouse_move((mx, my))
 
     def mouse_wheel(self, x, y) -> None: 
@@ -349,11 +372,13 @@ class ListeMessages:
                 if cle == "ATT":
                     attr = datas[cle]
 
-                lib = self.format_adresse(datas[cle]) if cle == "EXP" else datas[cle]
-                texte = Texte( 
-                    Variable.SysFont3, 
-                    lib, 
-                    self.get_texte_color, attr)
+                if cle == "EXP":
+                    lib = self.format_adresse(datas[cle])
+                    texte = Texte(Variable.SysFont3, lib, self.get_texte_color, attr,
+                        tooltip=datas[cle])
+                else:
+                    lib = datas[cle]
+                    texte = Texte(Variable.SysFont3, lib, self.get_texte_color, attr)
 
                 if cle != "DAT":
                     texte.set_max_width(largeur_max[cle])
@@ -421,7 +446,8 @@ class ListeMessages:
             "Voulez-vous supprimer le message",
             f"Numéro : {message.data["NUM"].libelle} ?"])
         
-        MessageBox.get_bouton("OUI").set_callback(self.delete_message, self.decal + self.selected - 1)
+        MessageBox.get_bouton("OUI").set_callback(self.delete_message, 
+            self.decal + self.selected - 1)
         MessageBox.activate()
 
     def refresh(self) -> None:
@@ -453,17 +479,60 @@ class ListeMessages:
             hauteur=self.h - ListeMessages.hauteur_ligne, posy=ListeMessages.hauteur_ligne+2)
         self.update_ascenseur()
 
-        self.data_titres["DAT"]["pos"] = self.coords.w - 310
+        self.data_titres["DAT"]["pos"] = self.coords.w - 250
         largeur_objet = self.data_titres["DAT"]["pos"] - self.data_titres["OBJ"]["pos"]
         self.data_titres["OBJ"]["lar"] = largeur_objet
 
-        self.coord_x["DAT"] = self.coords.w - 310
-        self.titres[4].set_pos_x(self.coords.w - 310)
-        self.titres[5].set_pos_x(self.coords.w - 260)
+        self.coord_x["DAT"] = self.coords.w - 250
+        self.titres[4].set_pos_x(self.coords.w - 250)
+        self.titres[5].set_pos_x(self.coords.w - 200)
 
         for message in self.liste_messages:
             message.data["OBJ"].set_max_width(largeur_objet)
             
+    def update(self):
+        if MessageBox.show:
+            return
+
+        if self.mouse_over:
+
+            mouse_over_colonne: str = ""
+
+            for titre in self.codes_titres:
+                if self.coord_x[titre] < self.mouse_pos_x:
+                    mouse_over_colonne = titre
+                    break
+
+            if mouse_over_colonne != self.mouse_over_colonne:
+                self.mouse_over_colonne = mouse_over_colonne
+                self.last_mouse_moving_time = perf_counter()
+
+            if perf_counter() - self.last_mouse_moving_time <= 1.0:
+                if self.show_tooltips:
+                    self.show_tooltips = False
+                    self.tooltip.deactivate()
+                    # fprint("End show tooltips")
+
+            elif not self.show_tooltips and self.mouse_over and self.message_over > 0:
+
+                for titre in self.codes_titres:
+                    if self.coord_x[titre] < self.mouse_pos_x:
+                        self.show_tooltips = True
+                        message = self.liste_messages[
+                            self.decal + self.message_over - 1].data[titre]
+
+                        if not message.has_tooltip:
+                            return
+
+                        self.tooltip.set_libelle(message.tooltip)
+                        self.tooltip.activate()
+                        return
+
+        elif self.show_tooltips:
+            self.show_tooltips = False
+            self.tooltip.deactivate()
+            # fprint("End show tooltips")
+
     def draw(self) -> None:
         coord_y: int
         ligne: int
